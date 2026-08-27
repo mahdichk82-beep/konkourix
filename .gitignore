@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.development.example
+!.env.production.example
+
+# Build outputs
+dist/
+build/
+coverage/
+
+# Logs
+*.log
+logs/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Uploads runtime data
+uploads/*
+!uploads/.gitkeep
+
+# Backups runtime data
+infrastructure/backups/*
+!infrastructure/backups/.gitkeep
+
+# Prisma / local database leftovers
+*.db
+*.db-journal
+
+# Certificates / secrets
+*.pem
+*.key
+*.crt
+
+# Docker local overrides
+compose.override.yml
+docker-compose.override.yml

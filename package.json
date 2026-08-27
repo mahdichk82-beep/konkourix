@@ -1,0 +1,11 @@
+{
+  "name": "konkourx",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.24.0",
+  "scripts": {
+    "dev": "echo \"Development scripts will be added soon\"",
+    "build": "echo \"Build scripts will be added soon\"",
+    "test": "echo \"Test scripts will be added soon\""
+  }
+}
