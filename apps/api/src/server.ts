@@ -1,4 +1,5 @@
 import Fastify from 'fastify'
+import { env } from './config/env.js'
 
 const app = Fastify({
   logger: true,
@@ -9,6 +10,7 @@ app.get('/health', async () => {
     success: true,
     data: {
       status: 'healthy',
+      environment: env.NODE_ENV,
     },
   }
 })
@@ -16,8 +18,8 @@ app.get('/health', async () => {
 const start = async () => {
   try {
     await app.listen({
-      port: 4000,
-      host: '0.0.0.0',
+      port: env.PORT,
+      host: env.HOST,
     })
   } catch (error) {
     app.log.error(error)
