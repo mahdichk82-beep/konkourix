@@ -1,4 +1,6 @@
 import type { FastifyInstance } from 'fastify'
+import { successResponse } from '../contracts/api-response.js'
+import { ApiError } from '../errors/api-error.js'
 
 export type HealthDatabase = {
   $queryRaw: (
@@ -16,35 +18,29 @@ export const registerHealthRoutes = (
   app: FastifyInstance,
   { environment, prisma }: HealthRouteOptions,
 ) => {
-  app.get('/health/live', async () => ({
-    success: true,
-    data: {
-      status: 'healthy',
-    },
-  }))
+  app.get('/health/live', async (request) =>
+    successResponse(
+      {
+        status: 'healthy',
+      },
+      request.context.requestId,
+    ),
+  )
 
-  app.get('/health', async (request, reply) => {
+  app.get('/health', async (request) => {
     try {
       await prisma.$queryRaw`SELECT 1`
 
-      return {
-        success: true,
-        data: {
+      return successResponse(
+        {
           status: 'healthy',
           environment,
           database: 'connected',
         },
-      }
-    } catch (error) {
-      request.log.warn({ err: error }, 'Database readiness check failed')
-
-      return reply.status(503).send({
-        success: false,
-        data: {
-          status: 'unhealthy',
-          database: 'disconnected',
-        },
-      })
+        request.context.requestId,
+      )
+    } catch {
+      throw new ApiError(503, 'DATABASE_UNAVAILABLE', 'Database is unavailable')
     }
   })
 }

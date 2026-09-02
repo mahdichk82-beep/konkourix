@@ -34,10 +34,12 @@ test('liveness health check does not access the database', async () => {
   const response = await app.inject({ method: 'GET', url: '/health/live' })
 
   assert.equal(response.statusCode, 200)
-  assert.deepEqual(response.json(), {
-    success: true,
-    data: { status: 'healthy' },
-  })
+  const body = response.json()
+
+  assert.equal(body.success, true)
+  assert.deepEqual(body.data, { status: 'healthy' })
+  assert.equal(typeof body.requestId, 'string')
+  assert.equal(response.headers['x-request-id'], body.requestId)
   assert.equal(prisma.queryCount, 0)
 
   await app.close()
@@ -50,14 +52,16 @@ test('readiness health check reports a connected database', async () => {
   const response = await app.inject({ method: 'GET', url: '/health' })
 
   assert.equal(response.statusCode, 200)
-  assert.deepEqual(response.json(), {
-    success: true,
-    data: {
-      status: 'healthy',
-      environment: 'test',
-      database: 'connected',
-    },
+  const body = response.json()
+
+  assert.equal(body.success, true)
+  assert.deepEqual(body.data, {
+    status: 'healthy',
+    environment: 'test',
+    database: 'connected',
   })
+  assert.equal(typeof body.requestId, 'string')
+  assert.equal(response.headers['x-request-id'], body.requestId)
   assert.equal(prisma.queryCount, 1)
 
   await app.close()
@@ -70,14 +74,15 @@ test('readiness health check hides database errors and returns service unavailab
   const response = await app.inject({ method: 'GET', url: '/health' })
 
   assert.equal(response.statusCode, 503)
-  assert.deepEqual(response.json(), {
-    success: false,
-    data: {
-      status: 'unhealthy',
-      database: 'disconnected',
-    },
+  const body = response.json()
+
+  assert.deepEqual(body.error, {
+    code: 'DATABASE_UNAVAILABLE',
+    message: 'Database is unavailable',
   })
+  assert.equal(body.success, false)
   assert.equal(response.body.includes('database connection failed'), false)
+  assert.equal(body.requestId, response.headers['x-request-id'])
   assert.equal(prisma.queryCount, 1)
 
   await app.close()
