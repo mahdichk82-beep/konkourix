@@ -4,9 +4,12 @@
   "private": true,
   "packageManager": "pnpm@11.24.0",
   "scripts": {
-    "dev": "echo \"Development scripts will be added soon\"",
-    "build": "echo \"Build scripts will be added soon\"",
-    "test": "echo \"Test scripts will be added soon\""
+    "dev": "pnpm --filter api dev",
+    "build": "pnpm --filter api build",
+    "test": "pnpm --filter api test",
+    "typecheck": "pnpm --filter api typecheck",
+    "db:validate": "pnpm --filter api exec prisma validate --config ../../prisma.config.ts",
+    "db:status": "pnpm --filter api exec prisma migrate status --config ../../prisma.config.ts"
   },
   "devDependencies": {
     "@types/node": "^26.3.0",
