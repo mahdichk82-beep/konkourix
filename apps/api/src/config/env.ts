@@ -22,6 +22,24 @@ export const envSchema = z.object({
     .default('0.0.0.0'),
 
   DATABASE_URL: z.string().min(1),
+
+  ACCESS_TOKEN_SECRET: z.string().min(32),
+
+  ACCESS_TOKEN_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(900),
+
+  REFRESH_TOKEN_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(2_592_000),
+
+  ACCESS_TOKEN_ISSUER: z.string().min(1).default('konkourx-api'),
+
+  ACCESS_TOKEN_AUDIENCE: z.string().min(1).default('konkourx-client'),
 })
 
 export const parseEnv = (input: NodeJS.ProcessEnv = process.env) =>

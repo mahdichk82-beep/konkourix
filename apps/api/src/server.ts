@@ -1,12 +1,28 @@
 import { buildApp } from './app.js'
+import { createAuthService } from './auth/auth-service.js'
+import { createPrismaAuthStore } from './auth/prisma-auth-store.js'
 import { env } from './config/env.js'
 import { closeResources } from './lib/lifecycle.js'
 import { prisma } from './lib/prisma.js'
 
 const app = buildApp({
+  auth: createAuthService({
+    config: {
+      accessToken: {
+        audience: env.ACCESS_TOKEN_AUDIENCE,
+        issuer: env.ACCESS_TOKEN_ISSUER,
+        secret: env.ACCESS_TOKEN_SECRET,
+        ttlSeconds: env.ACCESS_TOKEN_TTL_SECONDS,
+      },
+      refreshTokenTtlSeconds: env.REFRESH_TOKEN_TTL_SECONDS,
+    },
+    store: createPrismaAuthStore(prisma),
+  }),
+  cookieSecure: env.NODE_ENV === 'production',
   environment: env.NODE_ENV,
   logger: true,
   prisma,
+  refreshTokenTtlSeconds: env.REFRESH_TOKEN_TTL_SECONDS,
 })
 
 let shutdownPromise: Promise<void> | undefined
