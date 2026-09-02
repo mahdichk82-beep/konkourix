@@ -34,6 +34,10 @@ model User {
   updatedAt DateTime @updatedAt
 
   sessions AuthSession[]
+  studentProfile StudentProfile?
+  counselorProfile CounselorProfile?
+  studentRelationships StudentCounselor[] @relation("StudentCounselorStudent")
+  counselorRelationships StudentCounselor[] @relation("StudentCounselorCounselor")
 
   @@map("users")
 }
@@ -61,4 +65,55 @@ model AuthSession {
   @@index([expiresAt])
   @@index([userId, revokedAt])
   @@map("auth_sessions")
+}
+
+enum StudentCounselorStatus {
+  ACTIVE
+  INACTIVE
+}
+
+model StudentProfile {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @db.Uuid
+  educationLevel String?
+  schoolName     String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("student_profiles")
+}
+
+model CounselorProfile {
+  id             String   @id @default(uuid()) @db.Uuid
+  userId         String   @unique @db.Uuid
+  bio            String?
+  specialization String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("counselor_profiles")
+}
+
+model StudentCounselor {
+  id          String                 @id @default(uuid()) @db.Uuid
+  studentId   String                 @db.Uuid
+  counselorId String                 @db.Uuid
+  status      StudentCounselorStatus @default(ACTIVE)
+  startedAt   DateTime               @default(now())
+  endedAt     DateTime?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  student   User @relation("StudentCounselorStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  counselor User @relation("StudentCounselorCounselor", fields: [counselorId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, counselorId])
+  @@index([studentId])
+  @@index([counselorId])
+  @@index([status])
+  @@map("student_counselor_relationships")
 }

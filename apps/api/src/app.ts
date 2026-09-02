@@ -1,6 +1,7 @@
 import Fastify, { type FastifyInstance } from 'fastify'
 import cookie from '@fastify/cookie'
 import type { AuthService } from './auth/auth-service.js'
+import type { DomainService } from './domain/domain-service.js'
 import { generateRequestId, registerRequestContext } from './plugins/request-context.js'
 import { registerSecurityHeaders } from './plugins/security.js'
 import { registerErrorHandling } from './errors/error-handler.js'
@@ -9,6 +10,7 @@ import { registerV1Routes } from './routes/v1.js'
 
 export type BuildAppOptions = {
   auth?: AuthService
+  domain?: DomainService
   cookieSecure?: boolean
   environment: string
   logger?: boolean
@@ -19,6 +21,7 @@ export type BuildAppOptions = {
 export const buildApp = ({
   environment,
   auth,
+  domain,
   cookieSecure = false,
   logger = true,
   prisma,
@@ -37,6 +40,7 @@ export const buildApp = ({
 
   const routeOptions = {
     auth,
+    domain,
     cookieSecure,
     environment,
     prisma,

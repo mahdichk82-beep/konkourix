@@ -9,7 +9,8 @@
     "test": "pnpm --filter api test",
     "typecheck": "pnpm --filter api typecheck",
     "db:validate": "pnpm --filter api exec prisma validate --config ../../prisma.config.ts",
-    "db:status": "pnpm --filter api exec prisma migrate status --config ../../prisma.config.ts"
+    "db:status": "pnpm --filter api exec prisma migrate status --config ../../prisma.config.ts",
+    "db:seed": "pnpm --filter api seed"
   },
   "devDependencies": {
     "@types/node": "^26.3.0",

@@ -1,6 +1,8 @@
 import { buildApp } from './app.js'
 import { createAuthService } from './auth/auth-service.js'
 import { createPrismaAuthStore } from './auth/prisma-auth-store.js'
+import { createDomainService } from './domain/domain-service.js'
+import { createPrismaDomainStore } from './domain/prisma-domain-store.js'
 import { env } from './config/env.js'
 import { closeResources } from './lib/lifecycle.js'
 import { prisma } from './lib/prisma.js'
@@ -18,6 +20,7 @@ const app = buildApp({
     },
     store: createPrismaAuthStore(prisma),
   }),
+  domain: createDomainService(createPrismaDomainStore(prisma)),
   cookieSecure: env.NODE_ENV === 'production',
   environment: env.NODE_ENV,
   logger: true,

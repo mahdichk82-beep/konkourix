@@ -10,4 +10,7 @@
  */
 export type * from './models/User.ts'
 export type * from './models/AuthSession.ts'
+export type * from './models/StudentProfile.ts'
+export type * from './models/CounselorProfile.ts'
+export type * from './models/StudentCounselor.ts'
 export type * from './commonInputTypes.ts'

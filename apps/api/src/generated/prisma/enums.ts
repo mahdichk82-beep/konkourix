@@ -25,3 +25,11 @@ export const UserStatus = {
 } as const
 
 export type UserStatus = (typeof UserStatus)[keyof typeof UserStatus]
+
+
+export const StudentCounselorStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE'
+} as const
+
+export type StudentCounselorStatus = (typeof StudentCounselorStatus)[keyof typeof StudentCounselorStatus]

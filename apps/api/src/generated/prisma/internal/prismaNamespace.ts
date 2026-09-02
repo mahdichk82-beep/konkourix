@@ -398,7 +398,10 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   User: 'User',
-  AuthSession: 'AuthSession'
+  AuthSession: 'AuthSession',
+  StudentProfile: 'StudentProfile',
+  CounselorProfile: 'CounselorProfile',
+  StudentCounselor: 'StudentCounselor'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -414,7 +417,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "authSession"
+    modelProps: "user" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -566,6 +569,228 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    StudentProfile: {
+      payload: Prisma.$StudentProfilePayload<ExtArgs>
+      fields: Prisma.StudentProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StudentProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StudentProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.StudentProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StudentProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+        }
+        findMany: {
+          args: Prisma.StudentProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload>[]
+        }
+        create: {
+          args: Prisma.StudentProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+        }
+        createMany: {
+          args: Prisma.StudentProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StudentProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.StudentProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+        }
+        update: {
+          args: Prisma.StudentProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.StudentProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StudentProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StudentProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.StudentProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.StudentProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStudentProfile>
+        }
+        groupBy: {
+          args: Prisma.StudentProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StudentProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StudentProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StudentProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    CounselorProfile: {
+      payload: Prisma.$CounselorProfilePayload<ExtArgs>
+      fields: Prisma.CounselorProfileFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CounselorProfileFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CounselorProfileFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload>
+        }
+        findFirst: {
+          args: Prisma.CounselorProfileFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CounselorProfileFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload>
+        }
+        findMany: {
+          args: Prisma.CounselorProfileFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload>[]
+        }
+        create: {
+          args: Prisma.CounselorProfileCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload>
+        }
+        createMany: {
+          args: Prisma.CounselorProfileCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CounselorProfileCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload>[]
+        }
+        delete: {
+          args: Prisma.CounselorProfileDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload>
+        }
+        update: {
+          args: Prisma.CounselorProfileUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload>
+        }
+        deleteMany: {
+          args: Prisma.CounselorProfileDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CounselorProfileUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CounselorProfileUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload>[]
+        }
+        upsert: {
+          args: Prisma.CounselorProfileUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CounselorProfilePayload>
+        }
+        aggregate: {
+          args: Prisma.CounselorProfileAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCounselorProfile>
+        }
+        groupBy: {
+          args: Prisma.CounselorProfileGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CounselorProfileGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CounselorProfileCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CounselorProfileCountAggregateOutputType> | number
+        }
+      }
+    }
+    StudentCounselor: {
+      payload: Prisma.$StudentCounselorPayload<ExtArgs>
+      fields: Prisma.StudentCounselorFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StudentCounselorFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StudentCounselorFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload>
+        }
+        findFirst: {
+          args: Prisma.StudentCounselorFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StudentCounselorFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload>
+        }
+        findMany: {
+          args: Prisma.StudentCounselorFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload>[]
+        }
+        create: {
+          args: Prisma.StudentCounselorCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload>
+        }
+        createMany: {
+          args: Prisma.StudentCounselorCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StudentCounselorCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload>[]
+        }
+        delete: {
+          args: Prisma.StudentCounselorDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload>
+        }
+        update: {
+          args: Prisma.StudentCounselorUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload>
+        }
+        deleteMany: {
+          args: Prisma.StudentCounselorDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StudentCounselorUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StudentCounselorUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload>[]
+        }
+        upsert: {
+          args: Prisma.StudentCounselorUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentCounselorPayload>
+        }
+        aggregate: {
+          args: Prisma.StudentCounselorAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStudentCounselor>
+        }
+        groupBy: {
+          args: Prisma.StudentCounselorGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StudentCounselorGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StudentCounselorCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StudentCounselorCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -633,6 +858,44 @@ export const AuthSessionScalarFieldEnum = {
 } as const
 
 export type AuthSessionScalarFieldEnum = (typeof AuthSessionScalarFieldEnum)[keyof typeof AuthSessionScalarFieldEnum]
+
+
+export const StudentProfileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  educationLevel: 'educationLevel',
+  schoolName: 'schoolName',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StudentProfileScalarFieldEnum = (typeof StudentProfileScalarFieldEnum)[keyof typeof StudentProfileScalarFieldEnum]
+
+
+export const CounselorProfileScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  bio: 'bio',
+  specialization: 'specialization',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type CounselorProfileScalarFieldEnum = (typeof CounselorProfileScalarFieldEnum)[keyof typeof CounselorProfileScalarFieldEnum]
+
+
+export const StudentCounselorScalarFieldEnum = {
+  id: 'id',
+  studentId: 'studentId',
+  counselorId: 'counselorId',
+  status: 'status',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StudentCounselorScalarFieldEnum = (typeof StudentCounselorScalarFieldEnum)[keyof typeof StudentCounselorScalarFieldEnum]
 
 
 export const SortOrder = {
@@ -718,6 +981,20 @@ export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel
  * Reference to a field of type 'DateTime[]'
  */
 export type ListDateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime[]'>
+    
+
+
+/**
+ * Reference to a field of type 'StudentCounselorStatus'
+ */
+export type EnumStudentCounselorStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StudentCounselorStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'StudentCounselorStatus[]'
+ */
+export type ListEnumStudentCounselorStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StudentCounselorStatus[]'>
     
 
 
@@ -887,6 +1164,9 @@ export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaC
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   authSession?: Prisma.AuthSessionOmit
+  studentProfile?: Prisma.StudentProfileOmit
+  counselorProfile?: Prisma.CounselorProfileOmit
+  studentCounselor?: Prisma.StudentCounselorOmit
 }
 
 /* Types for Logging */
