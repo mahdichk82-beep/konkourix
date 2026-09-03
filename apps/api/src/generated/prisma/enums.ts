@@ -33,3 +33,22 @@ export const StudentCounselorStatus = {
 } as const
 
 export type StudentCounselorStatus = (typeof StudentCounselorStatus)[keyof typeof StudentCounselorStatus]
+
+
+export const StudyPlanStatus = {
+  DRAFT: 'DRAFT',
+  ACTIVE: 'ACTIVE',
+  COMPLETED: 'COMPLETED',
+  ARCHIVED: 'ARCHIVED'
+} as const
+
+export type StudyPlanStatus = (typeof StudyPlanStatus)[keyof typeof StudyPlanStatus]
+
+
+export const DailyTaskStatus = {
+  PENDING: 'PENDING',
+  COMPLETED: 'COMPLETED',
+  SKIPPED: 'SKIPPED'
+} as const
+
+export type DailyTaskStatus = (typeof DailyTaskStatus)[keyof typeof DailyTaskStatus]

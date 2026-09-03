@@ -1,0 +1,150 @@
+import type { FastifyInstance } from 'fastify'
+import { requireRoles } from '../auth/rbac.js'
+import type { AuthService } from '../auth/auth-service.js'
+import { successResponse } from '../contracts/api-response.js'
+import { ApiError } from '../errors/api-error.js'
+import type { StudentCoreServices } from '../student-core/services.js'
+import { authenticateRequest } from '../plugins/authentication.js'
+import {
+  createPlanSchema,
+  createSubjectSchema,
+  createTaskSchema,
+  listPlansSchema,
+  listSubjectsSchema,
+  listTasksSchema,
+  updatePlanSchema,
+  updateSubjectSchema,
+  updateTaskSchema,
+  uuidParamSchema,
+} from '../schemas/student-core.js'
+
+type StudentCoreRouteOptions = {
+  auth: AuthService
+  studentCore: StudentCoreServices
+}
+
+const parseBody = <T>(result: { success: boolean; data?: T }): T => {
+  if (!result.success || result.data === undefined) {
+    throw new ApiError(400, 'VALIDATION_ERROR', 'Request validation failed')
+  }
+  return result.data
+}
+
+const parseId = (params: unknown): string => parseBody(uuidParamSchema.safeParse(params)).id
+
+export const registerStudentCoreRoutes = (
+  app: FastifyInstance,
+  options: StudentCoreRouteOptions,
+): void => {
+  const studentOnly = {
+    preHandler: [authenticateRequest(options.auth), requireRoles('STUDENT')],
+  }
+
+  app.get('/student/subjects', studentOnly, async (request) => {
+    const query = parseBody(listSubjectsSchema.safeParse(request.query))
+    return successResponse(
+      await options.studentCore.subjects.list(request.user!, query),
+      request.context.requestId,
+    )
+  })
+
+  app.post('/student/subjects', studentOnly, async (request, reply) => {
+    const input = parseBody(createSubjectSchema.safeParse(request.body))
+    return reply.status(201).send(
+      successResponse(
+        await options.studentCore.subjects.create(request.user!, input),
+        request.context.requestId,
+      ),
+    )
+  })
+
+  app.get('/student/subjects/:id', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.subjects.get(request.user!, parseId(request.params)),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/subjects/:id', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.subjects.update(
+        request.user!,
+        parseId(request.params),
+        parseBody(updateSubjectSchema.safeParse(request.body)),
+      ),
+      request.context.requestId,
+    ),
+  )
+
+  app.get('/student/study-plans', studentOnly, async (request) => {
+    const query = parseBody(listPlansSchema.safeParse(request.query))
+    return successResponse(
+      await options.studentCore.plans.list(request.user!, query),
+      request.context.requestId,
+    )
+  })
+
+  app.post('/student/study-plans', studentOnly, async (request, reply) => {
+    const input = parseBody(createPlanSchema.safeParse(request.body))
+    return reply.status(201).send(
+      successResponse(
+        await options.studentCore.plans.create(request.user!, input),
+        request.context.requestId,
+      ),
+    )
+  })
+
+  app.get('/student/study-plans/:id', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.plans.get(request.user!, parseId(request.params)),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/study-plans/:id', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.plans.update(
+        request.user!,
+        parseId(request.params),
+        parseBody(updatePlanSchema.safeParse(request.body)),
+      ),
+      request.context.requestId,
+    ),
+  )
+
+  app.get('/student/daily-tasks', studentOnly, async (request) => {
+    const query = parseBody(listTasksSchema.safeParse(request.query))
+    return successResponse(
+      await options.studentCore.tasks.list(request.user!, query),
+      request.context.requestId,
+    )
+  })
+
+  app.post('/student/daily-tasks', studentOnly, async (request, reply) => {
+    const input = parseBody(createTaskSchema.safeParse(request.body))
+    return reply.status(201).send(
+      successResponse(
+        await options.studentCore.tasks.create(request.user!, input),
+        request.context.requestId,
+      ),
+    )
+  })
+
+  app.get('/student/daily-tasks/:id', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.tasks.get(request.user!, parseId(request.params)),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/daily-tasks/:id', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.tasks.update(
+        request.user!,
+        parseId(request.params),
+        parseBody(updateTaskSchema.safeParse(request.body)),
+      ),
+      request.context.requestId,
+    ),
+  )
+}

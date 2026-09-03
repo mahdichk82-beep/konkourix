@@ -80,6 +80,10 @@ model StudentProfile {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  studySubjects StudySubject[]
+  studyPlans    StudyPlan[]
+  dailyTasks    DailyTask[]
+
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("student_profiles")
@@ -116,4 +120,78 @@ model StudentCounselor {
   @@index([counselorId])
   @@index([status])
   @@map("student_counselor_relationships")
+}
+
+enum StudyPlanStatus {
+  DRAFT
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum DailyTaskStatus {
+  PENDING
+  COMPLETED
+  SKIPPED
+}
+
+model StudySubject {
+  id               String    @id @default(uuid()) @db.Uuid
+  studentProfileId String    @db.Uuid
+  name             String
+  normalizedName   String
+  archivedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  dailyTasks     DailyTask[]
+
+  @@unique([studentProfileId, normalizedName])
+  @@index([studentProfileId, archivedAt])
+  @@map("study_subjects")
+}
+
+model StudyPlan {
+  id               String          @id @default(uuid()) @db.Uuid
+  studentProfileId String          @db.Uuid
+  title            String
+  description      String?
+  status           StudyPlanStatus @default(DRAFT)
+  startsOn         DateTime        @db.Date
+  endsOn           DateTime?       @db.Date
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  dailyTasks     DailyTask[]
+
+  @@index([studentProfileId, status])
+  @@index([studentProfileId, startsOn, endsOn])
+  @@map("study_plans")
+}
+
+model DailyTask {
+  id               String          @id @default(uuid()) @db.Uuid
+  studentProfileId String          @db.Uuid
+  studyPlanId      String?         @db.Uuid
+  subjectId        String?         @db.Uuid
+  title            String
+  description      String?
+  scheduledFor     DateTime        @db.Date
+  estimatedMinutes Int?
+  status           DailyTaskStatus @default(PENDING)
+  completedAt      DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  studyPlan      StudyPlan?     @relation(fields: [studyPlanId], references: [id], onDelete: SetNull)
+  subject        StudySubject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([studentProfileId, scheduledFor])
+  @@index([studentProfileId, status, scheduledFor])
+  @@index([studyPlanId])
+  @@index([subjectId])
+  @@map("daily_tasks")
 }

@@ -17,6 +17,9 @@ test('development domain seed is deterministic and idempotent by key', async () 
     studentProfile: { upsert: upsert('studentProfile') },
     counselorProfile: { upsert: upsert('counselorProfile') },
     studentCounselor: { upsert: upsert('studentCounselor') },
+    studySubject: { upsert: upsert('studySubject') },
+    studyPlan: { upsert: upsert('studyPlan') },
+    dailyTask: { upsert: upsert('dailyTask') },
   }
   const prisma = {
     $transaction: async (callback: (tx: typeof transaction) => Promise<void>) => callback(transaction),
@@ -46,6 +49,11 @@ test('development domain seed is deterministic and idempotent by key', async () 
         },
       },
     },
+    { model: 'studySubject', where: { id: '00000000-0000-4000-8000-000000000011' } },
+    { model: 'studySubject', where: { id: '00000000-0000-4000-8000-000000000012' } },
+    { model: 'studyPlan', where: { id: '00000000-0000-4000-8000-000000000021' } },
+    { model: 'dailyTask', where: { id: '00000000-0000-4000-8000-000000000031' } },
+    { model: 'dailyTask', where: { id: '00000000-0000-4000-8000-000000000032' } },
   ])
 })
 

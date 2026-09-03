@@ -42,3 +42,18 @@ export type CounselorProfile = Prisma.CounselorProfileModel
  * 
  */
 export type StudentCounselor = Prisma.StudentCounselorModel
+/**
+ * Model StudySubject
+ * 
+ */
+export type StudySubject = Prisma.StudySubjectModel
+/**
+ * Model StudyPlan
+ * 
+ */
+export type StudyPlan = Prisma.StudyPlanModel
+/**
+ * Model DailyTask
+ * 
+ */
+export type DailyTask = Prisma.DailyTaskModel

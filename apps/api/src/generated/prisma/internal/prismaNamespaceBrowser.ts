@@ -55,7 +55,10 @@ export const ModelName = {
   AuthSession: 'AuthSession',
   StudentProfile: 'StudentProfile',
   CounselorProfile: 'CounselorProfile',
-  StudentCounselor: 'StudentCounselor'
+  StudentCounselor: 'StudentCounselor',
+  StudySubject: 'StudySubject',
+  StudyPlan: 'StudyPlan',
+  DailyTask: 'DailyTask'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -140,6 +143,52 @@ export const StudentCounselorScalarFieldEnum = {
 } as const
 
 export type StudentCounselorScalarFieldEnum = (typeof StudentCounselorScalarFieldEnum)[keyof typeof StudentCounselorScalarFieldEnum]
+
+
+export const StudySubjectScalarFieldEnum = {
+  id: 'id',
+  studentProfileId: 'studentProfileId',
+  name: 'name',
+  normalizedName: 'normalizedName',
+  archivedAt: 'archivedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StudySubjectScalarFieldEnum = (typeof StudySubjectScalarFieldEnum)[keyof typeof StudySubjectScalarFieldEnum]
+
+
+export const StudyPlanScalarFieldEnum = {
+  id: 'id',
+  studentProfileId: 'studentProfileId',
+  title: 'title',
+  description: 'description',
+  status: 'status',
+  startsOn: 'startsOn',
+  endsOn: 'endsOn',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StudyPlanScalarFieldEnum = (typeof StudyPlanScalarFieldEnum)[keyof typeof StudyPlanScalarFieldEnum]
+
+
+export const DailyTaskScalarFieldEnum = {
+  id: 'id',
+  studentProfileId: 'studentProfileId',
+  studyPlanId: 'studyPlanId',
+  subjectId: 'subjectId',
+  title: 'title',
+  description: 'description',
+  scheduledFor: 'scheduledFor',
+  estimatedMinutes: 'estimatedMinutes',
+  status: 'status',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type DailyTaskScalarFieldEnum = (typeof DailyTaskScalarFieldEnum)[keyof typeof DailyTaskScalarFieldEnum]
 
 
 export const SortOrder = {

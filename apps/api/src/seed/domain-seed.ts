@@ -4,6 +4,11 @@ export const developmentSeedIds = {
   student: '00000000-0000-4000-8000-000000000001',
   counselor: '00000000-0000-4000-8000-000000000002',
   admin: '00000000-0000-4000-8000-000000000003',
+  mathSubject: '00000000-0000-4000-8000-000000000011',
+  scienceSubject: '00000000-0000-4000-8000-000000000012',
+  studyPlan: '00000000-0000-4000-8000-000000000021',
+  mathTask: '00000000-0000-4000-8000-000000000031',
+  scienceTask: '00000000-0000-4000-8000-000000000032',
 } as const
 
 export const developmentSeedPassword = 'konkourix-dev-password'
@@ -90,6 +95,102 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
           counselorId: developmentSeedIds.counselor,
         },
       },
+    })
+
+    await transaction.studySubject.upsert({
+      create: {
+        id: developmentSeedIds.mathSubject,
+        studentProfileId: developmentSeedIds.student,
+        name: 'Mathematics',
+        normalizedName: 'mathematics',
+      },
+      update: {
+        name: 'Mathematics',
+        normalizedName: 'mathematics',
+        archivedAt: null,
+      },
+      where: { id: developmentSeedIds.mathSubject },
+    })
+    await transaction.studySubject.upsert({
+      create: {
+        id: developmentSeedIds.scienceSubject,
+        studentProfileId: developmentSeedIds.student,
+        name: 'Physics',
+        normalizedName: 'physics',
+      },
+      update: {
+        name: 'Physics',
+        normalizedName: 'physics',
+        archivedAt: null,
+      },
+      where: { id: developmentSeedIds.scienceSubject },
+    })
+    await transaction.studyPlan.upsert({
+      create: {
+        id: developmentSeedIds.studyPlan,
+        studentProfileId: developmentSeedIds.student,
+        title: 'Development exam preparation',
+        description: 'Deterministic development study plan',
+        status: 'ACTIVE',
+        startsOn: new Date('2026-09-01T00:00:00.000Z'),
+        endsOn: new Date('2026-09-30T00:00:00.000Z'),
+      },
+      update: {
+        title: 'Development exam preparation',
+        description: 'Deterministic development study plan',
+        status: 'ACTIVE',
+        startsOn: new Date('2026-09-01T00:00:00.000Z'),
+        endsOn: new Date('2026-09-30T00:00:00.000Z'),
+      },
+      where: { id: developmentSeedIds.studyPlan },
+    })
+    await transaction.dailyTask.upsert({
+      create: {
+        id: developmentSeedIds.mathTask,
+        studentProfileId: developmentSeedIds.student,
+        studyPlanId: developmentSeedIds.studyPlan,
+        subjectId: developmentSeedIds.mathSubject,
+        title: 'Review algebra fundamentals',
+        description: 'Deterministic mathematics task',
+        scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+        estimatedMinutes: 45,
+        status: 'PENDING',
+      },
+      update: {
+        studyPlanId: developmentSeedIds.studyPlan,
+        subjectId: developmentSeedIds.mathSubject,
+        title: 'Review algebra fundamentals',
+        description: 'Deterministic mathematics task',
+        scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+        estimatedMinutes: 45,
+        status: 'PENDING',
+        completedAt: null,
+      },
+      where: { id: developmentSeedIds.mathTask },
+    })
+    await transaction.dailyTask.upsert({
+      create: {
+        id: developmentSeedIds.scienceTask,
+        studentProfileId: developmentSeedIds.student,
+        studyPlanId: developmentSeedIds.studyPlan,
+        subjectId: developmentSeedIds.scienceSubject,
+        title: 'Read motion chapter',
+        description: 'Deterministic physics task',
+        scheduledFor: new Date('2026-09-04T00:00:00.000Z'),
+        estimatedMinutes: 30,
+        status: 'PENDING',
+      },
+      update: {
+        studyPlanId: developmentSeedIds.studyPlan,
+        subjectId: developmentSeedIds.scienceSubject,
+        title: 'Read motion chapter',
+        description: 'Deterministic physics task',
+        scheduledFor: new Date('2026-09-04T00:00:00.000Z'),
+        estimatedMinutes: 30,
+        status: 'PENDING',
+        completedAt: null,
+      },
+      where: { id: developmentSeedIds.scienceTask },
     })
   })
 }

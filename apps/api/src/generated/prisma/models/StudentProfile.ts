@@ -190,6 +190,9 @@ export type StudentProfileWhereInput = {
   schoolName?: Prisma.StringNullableFilter<"StudentProfile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StudentProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudentProfile"> | Date | string
+  studySubjects?: Prisma.StudySubjectListRelationFilter
+  studyPlans?: Prisma.StudyPlanListRelationFilter
+  dailyTasks?: Prisma.DailyTaskListRelationFilter
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
 
@@ -200,6 +203,9 @@ export type StudentProfileOrderByWithRelationInput = {
   schoolName?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+  studySubjects?: Prisma.StudySubjectOrderByRelationAggregateInput
+  studyPlans?: Prisma.StudyPlanOrderByRelationAggregateInput
+  dailyTasks?: Prisma.DailyTaskOrderByRelationAggregateInput
   user?: Prisma.UserOrderByWithRelationInput
 }
 
@@ -213,6 +219,9 @@ export type StudentProfileWhereUniqueInput = Prisma.AtLeast<{
   schoolName?: Prisma.StringNullableFilter<"StudentProfile"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StudentProfile"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudentProfile"> | Date | string
+  studySubjects?: Prisma.StudySubjectListRelationFilter
+  studyPlans?: Prisma.StudyPlanListRelationFilter
+  dailyTasks?: Prisma.DailyTaskListRelationFilter
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id" | "userId">
 
@@ -246,6 +255,9 @@ export type StudentProfileCreateInput = {
   schoolName?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  studySubjects?: Prisma.StudySubjectCreateNestedManyWithoutStudentProfileInput
+  studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
+  dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
   user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
 }
 
@@ -256,6 +268,9 @@ export type StudentProfileUncheckedCreateInput = {
   schoolName?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  studySubjects?: Prisma.StudySubjectUncheckedCreateNestedManyWithoutStudentProfileInput
+  studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
+  dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
 }
 
 export type StudentProfileUpdateInput = {
@@ -264,6 +279,9 @@ export type StudentProfileUpdateInput = {
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studySubjects?: Prisma.StudySubjectUpdateManyWithoutStudentProfileNestedInput
+  studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
+  dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
 }
 
@@ -274,6 +292,9 @@ export type StudentProfileUncheckedUpdateInput = {
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studySubjects?: Prisma.StudySubjectUncheckedUpdateManyWithoutStudentProfileNestedInput
+  studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
+  dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
 }
 
 export type StudentProfileCreateManyInput = {
@@ -334,6 +355,11 @@ export type StudentProfileMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type StudentProfileScalarRelationFilter = {
+  is?: Prisma.StudentProfileWhereInput
+  isNot?: Prisma.StudentProfileWhereInput
+}
+
 export type StudentProfileCreateNestedOneWithoutUserInput = {
   create?: Prisma.XOR<Prisma.StudentProfileCreateWithoutUserInput, Prisma.StudentProfileUncheckedCreateWithoutUserInput>
   connectOrCreate?: Prisma.StudentProfileCreateOrConnectWithoutUserInput
@@ -366,12 +392,57 @@ export type StudentProfileUncheckedUpdateOneWithoutUserNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.StudentProfileUpdateToOneWithWhereWithoutUserInput, Prisma.StudentProfileUpdateWithoutUserInput>, Prisma.StudentProfileUncheckedUpdateWithoutUserInput>
 }
 
+export type StudentProfileCreateNestedOneWithoutStudySubjectsInput = {
+  create?: Prisma.XOR<Prisma.StudentProfileCreateWithoutStudySubjectsInput, Prisma.StudentProfileUncheckedCreateWithoutStudySubjectsInput>
+  connectOrCreate?: Prisma.StudentProfileCreateOrConnectWithoutStudySubjectsInput
+  connect?: Prisma.StudentProfileWhereUniqueInput
+}
+
+export type StudentProfileUpdateOneRequiredWithoutStudySubjectsNestedInput = {
+  create?: Prisma.XOR<Prisma.StudentProfileCreateWithoutStudySubjectsInput, Prisma.StudentProfileUncheckedCreateWithoutStudySubjectsInput>
+  connectOrCreate?: Prisma.StudentProfileCreateOrConnectWithoutStudySubjectsInput
+  upsert?: Prisma.StudentProfileUpsertWithoutStudySubjectsInput
+  connect?: Prisma.StudentProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StudentProfileUpdateToOneWithWhereWithoutStudySubjectsInput, Prisma.StudentProfileUpdateWithoutStudySubjectsInput>, Prisma.StudentProfileUncheckedUpdateWithoutStudySubjectsInput>
+}
+
+export type StudentProfileCreateNestedOneWithoutStudyPlansInput = {
+  create?: Prisma.XOR<Prisma.StudentProfileCreateWithoutStudyPlansInput, Prisma.StudentProfileUncheckedCreateWithoutStudyPlansInput>
+  connectOrCreate?: Prisma.StudentProfileCreateOrConnectWithoutStudyPlansInput
+  connect?: Prisma.StudentProfileWhereUniqueInput
+}
+
+export type StudentProfileUpdateOneRequiredWithoutStudyPlansNestedInput = {
+  create?: Prisma.XOR<Prisma.StudentProfileCreateWithoutStudyPlansInput, Prisma.StudentProfileUncheckedCreateWithoutStudyPlansInput>
+  connectOrCreate?: Prisma.StudentProfileCreateOrConnectWithoutStudyPlansInput
+  upsert?: Prisma.StudentProfileUpsertWithoutStudyPlansInput
+  connect?: Prisma.StudentProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StudentProfileUpdateToOneWithWhereWithoutStudyPlansInput, Prisma.StudentProfileUpdateWithoutStudyPlansInput>, Prisma.StudentProfileUncheckedUpdateWithoutStudyPlansInput>
+}
+
+export type StudentProfileCreateNestedOneWithoutDailyTasksInput = {
+  create?: Prisma.XOR<Prisma.StudentProfileCreateWithoutDailyTasksInput, Prisma.StudentProfileUncheckedCreateWithoutDailyTasksInput>
+  connectOrCreate?: Prisma.StudentProfileCreateOrConnectWithoutDailyTasksInput
+  connect?: Prisma.StudentProfileWhereUniqueInput
+}
+
+export type StudentProfileUpdateOneRequiredWithoutDailyTasksNestedInput = {
+  create?: Prisma.XOR<Prisma.StudentProfileCreateWithoutDailyTasksInput, Prisma.StudentProfileUncheckedCreateWithoutDailyTasksInput>
+  connectOrCreate?: Prisma.StudentProfileCreateOrConnectWithoutDailyTasksInput
+  upsert?: Prisma.StudentProfileUpsertWithoutDailyTasksInput
+  connect?: Prisma.StudentProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StudentProfileUpdateToOneWithWhereWithoutDailyTasksInput, Prisma.StudentProfileUpdateWithoutDailyTasksInput>, Prisma.StudentProfileUncheckedUpdateWithoutDailyTasksInput>
+}
+
 export type StudentProfileCreateWithoutUserInput = {
   id?: string
   educationLevel?: string | null
   schoolName?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  studySubjects?: Prisma.StudySubjectCreateNestedManyWithoutStudentProfileInput
+  studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
+  dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
 }
 
 export type StudentProfileUncheckedCreateWithoutUserInput = {
@@ -380,6 +451,9 @@ export type StudentProfileUncheckedCreateWithoutUserInput = {
   schoolName?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  studySubjects?: Prisma.StudySubjectUncheckedCreateNestedManyWithoutStudentProfileInput
+  studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
+  dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
 }
 
 export type StudentProfileCreateOrConnectWithoutUserInput = {
@@ -404,6 +478,9 @@ export type StudentProfileUpdateWithoutUserInput = {
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studySubjects?: Prisma.StudySubjectUpdateManyWithoutStudentProfileNestedInput
+  studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
+  dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
 }
 
 export type StudentProfileUncheckedUpdateWithoutUserInput = {
@@ -412,8 +489,238 @@ export type StudentProfileUncheckedUpdateWithoutUserInput = {
   schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studySubjects?: Prisma.StudySubjectUncheckedUpdateManyWithoutStudentProfileNestedInput
+  studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
+  dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
 }
 
+export type StudentProfileCreateWithoutStudySubjectsInput = {
+  id?: string
+  educationLevel?: string | null
+  schoolName?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
+  dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
+  user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
+}
+
+export type StudentProfileUncheckedCreateWithoutStudySubjectsInput = {
+  id?: string
+  userId: string
+  educationLevel?: string | null
+  schoolName?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
+  dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
+}
+
+export type StudentProfileCreateOrConnectWithoutStudySubjectsInput = {
+  where: Prisma.StudentProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.StudentProfileCreateWithoutStudySubjectsInput, Prisma.StudentProfileUncheckedCreateWithoutStudySubjectsInput>
+}
+
+export type StudentProfileUpsertWithoutStudySubjectsInput = {
+  update: Prisma.XOR<Prisma.StudentProfileUpdateWithoutStudySubjectsInput, Prisma.StudentProfileUncheckedUpdateWithoutStudySubjectsInput>
+  create: Prisma.XOR<Prisma.StudentProfileCreateWithoutStudySubjectsInput, Prisma.StudentProfileUncheckedCreateWithoutStudySubjectsInput>
+  where?: Prisma.StudentProfileWhereInput
+}
+
+export type StudentProfileUpdateToOneWithWhereWithoutStudySubjectsInput = {
+  where?: Prisma.StudentProfileWhereInput
+  data: Prisma.XOR<Prisma.StudentProfileUpdateWithoutStudySubjectsInput, Prisma.StudentProfileUncheckedUpdateWithoutStudySubjectsInput>
+}
+
+export type StudentProfileUpdateWithoutStudySubjectsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
+  dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
+}
+
+export type StudentProfileUncheckedUpdateWithoutStudySubjectsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
+  dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
+}
+
+export type StudentProfileCreateWithoutStudyPlansInput = {
+  id?: string
+  educationLevel?: string | null
+  schoolName?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studySubjects?: Prisma.StudySubjectCreateNestedManyWithoutStudentProfileInput
+  dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
+  user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
+}
+
+export type StudentProfileUncheckedCreateWithoutStudyPlansInput = {
+  id?: string
+  userId: string
+  educationLevel?: string | null
+  schoolName?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studySubjects?: Prisma.StudySubjectUncheckedCreateNestedManyWithoutStudentProfileInput
+  dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
+}
+
+export type StudentProfileCreateOrConnectWithoutStudyPlansInput = {
+  where: Prisma.StudentProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.StudentProfileCreateWithoutStudyPlansInput, Prisma.StudentProfileUncheckedCreateWithoutStudyPlansInput>
+}
+
+export type StudentProfileUpsertWithoutStudyPlansInput = {
+  update: Prisma.XOR<Prisma.StudentProfileUpdateWithoutStudyPlansInput, Prisma.StudentProfileUncheckedUpdateWithoutStudyPlansInput>
+  create: Prisma.XOR<Prisma.StudentProfileCreateWithoutStudyPlansInput, Prisma.StudentProfileUncheckedCreateWithoutStudyPlansInput>
+  where?: Prisma.StudentProfileWhereInput
+}
+
+export type StudentProfileUpdateToOneWithWhereWithoutStudyPlansInput = {
+  where?: Prisma.StudentProfileWhereInput
+  data: Prisma.XOR<Prisma.StudentProfileUpdateWithoutStudyPlansInput, Prisma.StudentProfileUncheckedUpdateWithoutStudyPlansInput>
+}
+
+export type StudentProfileUpdateWithoutStudyPlansInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studySubjects?: Prisma.StudySubjectUpdateManyWithoutStudentProfileNestedInput
+  dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
+}
+
+export type StudentProfileUncheckedUpdateWithoutStudyPlansInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studySubjects?: Prisma.StudySubjectUncheckedUpdateManyWithoutStudentProfileNestedInput
+  dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
+}
+
+export type StudentProfileCreateWithoutDailyTasksInput = {
+  id?: string
+  educationLevel?: string | null
+  schoolName?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studySubjects?: Prisma.StudySubjectCreateNestedManyWithoutStudentProfileInput
+  studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
+  user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
+}
+
+export type StudentProfileUncheckedCreateWithoutDailyTasksInput = {
+  id?: string
+  userId: string
+  educationLevel?: string | null
+  schoolName?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studySubjects?: Prisma.StudySubjectUncheckedCreateNestedManyWithoutStudentProfileInput
+  studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
+}
+
+export type StudentProfileCreateOrConnectWithoutDailyTasksInput = {
+  where: Prisma.StudentProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.StudentProfileCreateWithoutDailyTasksInput, Prisma.StudentProfileUncheckedCreateWithoutDailyTasksInput>
+}
+
+export type StudentProfileUpsertWithoutDailyTasksInput = {
+  update: Prisma.XOR<Prisma.StudentProfileUpdateWithoutDailyTasksInput, Prisma.StudentProfileUncheckedUpdateWithoutDailyTasksInput>
+  create: Prisma.XOR<Prisma.StudentProfileCreateWithoutDailyTasksInput, Prisma.StudentProfileUncheckedCreateWithoutDailyTasksInput>
+  where?: Prisma.StudentProfileWhereInput
+}
+
+export type StudentProfileUpdateToOneWithWhereWithoutDailyTasksInput = {
+  where?: Prisma.StudentProfileWhereInput
+  data: Prisma.XOR<Prisma.StudentProfileUpdateWithoutDailyTasksInput, Prisma.StudentProfileUncheckedUpdateWithoutDailyTasksInput>
+}
+
+export type StudentProfileUpdateWithoutDailyTasksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studySubjects?: Prisma.StudySubjectUpdateManyWithoutStudentProfileNestedInput
+  studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
+}
+
+export type StudentProfileUncheckedUpdateWithoutDailyTasksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studySubjects?: Prisma.StudySubjectUncheckedUpdateManyWithoutStudentProfileNestedInput
+  studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
+}
+
+
+/**
+ * Count Type StudentProfileCountOutputType
+ */
+
+export type StudentProfileCountOutputType = {
+  studySubjects: number
+  studyPlans: number
+  dailyTasks: number
+}
+
+export type StudentProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  studySubjects?: boolean | StudentProfileCountOutputTypeCountStudySubjectsArgs
+  studyPlans?: boolean | StudentProfileCountOutputTypeCountStudyPlansArgs
+  dailyTasks?: boolean | StudentProfileCountOutputTypeCountDailyTasksArgs
+}
+
+/**
+ * StudentProfileCountOutputType without action
+ */
+export type StudentProfileCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StudentProfileCountOutputType
+   */
+  select?: Prisma.StudentProfileCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * StudentProfileCountOutputType without action
+ */
+export type StudentProfileCountOutputTypeCountStudySubjectsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StudySubjectWhereInput
+}
+
+/**
+ * StudentProfileCountOutputType without action
+ */
+export type StudentProfileCountOutputTypeCountStudyPlansArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.StudyPlanWhereInput
+}
+
+/**
+ * StudentProfileCountOutputType without action
+ */
+export type StudentProfileCountOutputTypeCountDailyTasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DailyTaskWhereInput
+}
 
 
 export type StudentProfileSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -423,7 +730,11 @@ export type StudentProfileSelect<ExtArgs extends runtime.Types.Extensions.Intern
   schoolName?: boolean
   createdAt?: boolean
   updatedAt?: boolean
+  studySubjects?: boolean | Prisma.StudentProfile$studySubjectsArgs<ExtArgs>
+  studyPlans?: boolean | Prisma.StudentProfile$studyPlansArgs<ExtArgs>
+  dailyTasks?: boolean | Prisma.StudentProfile$dailyTasksArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  _count?: boolean | Prisma.StudentProfileCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["studentProfile"]>
 
 export type StudentProfileSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -457,7 +768,11 @@ export type StudentProfileSelectScalar = {
 
 export type StudentProfileOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "userId" | "educationLevel" | "schoolName" | "createdAt" | "updatedAt", ExtArgs["result"]["studentProfile"]>
 export type StudentProfileInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  studySubjects?: boolean | Prisma.StudentProfile$studySubjectsArgs<ExtArgs>
+  studyPlans?: boolean | Prisma.StudentProfile$studyPlansArgs<ExtArgs>
+  dailyTasks?: boolean | Prisma.StudentProfile$dailyTasksArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  _count?: boolean | Prisma.StudentProfileCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type StudentProfileIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -469,6 +784,9 @@ export type StudentProfileIncludeUpdateManyAndReturn<ExtArgs extends runtime.Typ
 export type $StudentProfilePayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "StudentProfile"
   objects: {
+    studySubjects: Prisma.$StudySubjectPayload<ExtArgs>[]
+    studyPlans: Prisma.$StudyPlanPayload<ExtArgs>[]
+    dailyTasks: Prisma.$DailyTaskPayload<ExtArgs>[]
     user: Prisma.$UserPayload<ExtArgs>
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
@@ -872,6 +1190,9 @@ readonly fields: StudentProfileFieldRefs;
  */
 export interface Prisma__StudentProfileClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  studySubjects<T extends Prisma.StudentProfile$studySubjectsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentProfile$studySubjectsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StudySubjectPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  studyPlans<T extends Prisma.StudentProfile$studyPlansArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentProfile$studyPlansArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StudyPlanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  dailyTasks<T extends Prisma.StudentProfile$dailyTasksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentProfile$dailyTasksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DailyTaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -1306,6 +1627,78 @@ export type StudentProfileDeleteManyArgs<ExtArgs extends runtime.Types.Extension
    * Limit how many StudentProfiles to delete.
    */
   limit?: number
+}
+
+/**
+ * StudentProfile.studySubjects
+ */
+export type StudentProfile$studySubjectsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StudySubject
+   */
+  select?: Prisma.StudySubjectSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StudySubject
+   */
+  omit?: Prisma.StudySubjectOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StudySubjectInclude<ExtArgs> | null
+  where?: Prisma.StudySubjectWhereInput
+  orderBy?: Prisma.StudySubjectOrderByWithRelationInput | Prisma.StudySubjectOrderByWithRelationInput[]
+  cursor?: Prisma.StudySubjectWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StudySubjectScalarFieldEnum | Prisma.StudySubjectScalarFieldEnum[]
+}
+
+/**
+ * StudentProfile.studyPlans
+ */
+export type StudentProfile$studyPlansArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the StudyPlan
+   */
+  select?: Prisma.StudyPlanSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the StudyPlan
+   */
+  omit?: Prisma.StudyPlanOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.StudyPlanInclude<ExtArgs> | null
+  where?: Prisma.StudyPlanWhereInput
+  orderBy?: Prisma.StudyPlanOrderByWithRelationInput | Prisma.StudyPlanOrderByWithRelationInput[]
+  cursor?: Prisma.StudyPlanWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.StudyPlanScalarFieldEnum | Prisma.StudyPlanScalarFieldEnum[]
+}
+
+/**
+ * StudentProfile.dailyTasks
+ */
+export type StudentProfile$dailyTasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DailyTask
+   */
+  select?: Prisma.DailyTaskSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DailyTask
+   */
+  omit?: Prisma.DailyTaskOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DailyTaskInclude<ExtArgs> | null
+  where?: Prisma.DailyTaskWhereInput
+  orderBy?: Prisma.DailyTaskOrderByWithRelationInput | Prisma.DailyTaskOrderByWithRelationInput[]
+  cursor?: Prisma.DailyTaskWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DailyTaskScalarFieldEnum | Prisma.DailyTaskScalarFieldEnum[]
 }
 
 /**
