@@ -58,7 +58,9 @@ export const ModelName = {
   StudentCounselor: 'StudentCounselor',
   StudySubject: 'StudySubject',
   StudyPlan: 'StudyPlan',
-  DailyTask: 'DailyTask'
+  DailyTask: 'DailyTask',
+  StudySession: 'StudySession',
+  StudentGoal: 'StudentGoal'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -189,6 +191,37 @@ export const DailyTaskScalarFieldEnum = {
 } as const
 
 export type DailyTaskScalarFieldEnum = (typeof DailyTaskScalarFieldEnum)[keyof typeof DailyTaskScalarFieldEnum]
+
+
+export const StudySessionScalarFieldEnum = {
+  id: 'id',
+  studentProfileId: 'studentProfileId',
+  subjectId: 'subjectId',
+  dailyTaskId: 'dailyTaskId',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StudySessionScalarFieldEnum = (typeof StudySessionScalarFieldEnum)[keyof typeof StudySessionScalarFieldEnum]
+
+
+export const StudentGoalScalarFieldEnum = {
+  id: 'id',
+  studentProfileId: 'studentProfileId',
+  subjectId: 'subjectId',
+  title: 'title',
+  description: 'description',
+  targetDate: 'targetDate',
+  status: 'status',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StudentGoalScalarFieldEnum = (typeof StudentGoalScalarFieldEnum)[keyof typeof StudentGoalScalarFieldEnum]
 
 
 export const SortOrder = {

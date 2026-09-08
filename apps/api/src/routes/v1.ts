@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify'
 import type { AuthService } from '../auth/auth-service.js'
 import type { DomainService } from '../domain/domain-service.js'
 import type { StudentCoreServices } from '../student-core/services.js'
+import type { StudyTrackingServices } from '../study-tracking/services.js'
 import {
   registerHealthRoutes,
   type HealthDatabase,
@@ -10,11 +11,13 @@ import { registerAuthRoutes } from './auth.js'
 import { registerDomainProfileRoutes } from './domain-profiles.js'
 import { registerDomainRelationshipRoutes } from './domain-relationships.js'
 import { registerStudentCoreRoutes } from './student-core.js'
+import { registerStudyTrackingRoutes } from './study-tracking.js'
 
 type V1RouteOptions = {
   auth?: AuthService
   domain?: DomainService
   studentCore?: StudentCoreServices
+  studyTracking?: StudyTrackingServices
   cookieSecure?: boolean
   environment: string
   prisma: HealthDatabase
@@ -49,6 +52,13 @@ export const registerV1Routes: FastifyPluginAsync<V1RouteOptions> = async (
       registerStudentCoreRoutes(app, {
         auth: options.auth,
         studentCore: options.studentCore,
+      })
+    }
+
+    if (options.studyTracking) {
+      registerStudyTrackingRoutes(app, {
+        auth: options.auth,
+        studyTracking: options.studyTracking,
       })
     }
   }

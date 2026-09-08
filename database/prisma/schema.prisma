@@ -83,6 +83,8 @@ model StudentProfile {
   studySubjects StudySubject[]
   studyPlans    StudyPlan[]
   dailyTasks    DailyTask[]
+  studySessions StudySession[]
+  goals         StudentGoal[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -146,6 +148,8 @@ model StudySubject {
 
   studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   dailyTasks     DailyTask[]
+  studySessions  StudySession[]
+  goals          StudentGoal[]
 
   @@unique([studentProfileId, normalizedName])
   @@index([studentProfileId, archivedAt])
@@ -188,10 +192,59 @@ model DailyTask {
   studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   studyPlan      StudyPlan?     @relation(fields: [studyPlanId], references: [id], onDelete: SetNull)
   subject        StudySubject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  studySessions  StudySession[]
 
   @@index([studentProfileId, scheduledFor])
   @@index([studentProfileId, status, scheduledFor])
   @@index([studyPlanId])
   @@index([subjectId])
   @@map("daily_tasks")
+}
+
+model StudySession {
+  id               String   @id @default(uuid()) @db.Uuid
+  studentProfileId String   @db.Uuid
+  subjectId        String?  @db.Uuid
+  dailyTaskId      String?  @db.Uuid
+  startedAt        DateTime
+  endedAt          DateTime
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  subject        StudySubject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  dailyTask      DailyTask?     @relation(fields: [dailyTaskId], references: [id], onDelete: SetNull)
+
+  @@index([studentProfileId, startedAt])
+  @@index([studentProfileId, subjectId, startedAt])
+  @@index([dailyTaskId])
+  @@map("study_sessions")
+}
+
+enum StudentGoalStatus {
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+model StudentGoal {
+  id               String            @id @default(uuid()) @db.Uuid
+  studentProfileId String            @db.Uuid
+  subjectId        String?           @db.Uuid
+  title            String
+  description      String?
+  targetDate       DateTime?         @db.Date
+  status           StudentGoalStatus @default(ACTIVE)
+  completedAt      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  subject        StudySubject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([studentProfileId, status])
+  @@index([studentProfileId, targetDate])
+  @@index([subjectId])
+  @@map("student_goals")
 }

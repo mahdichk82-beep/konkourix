@@ -3,6 +3,7 @@ import cookie from '@fastify/cookie'
 import type { AuthService } from './auth/auth-service.js'
 import type { DomainService } from './domain/domain-service.js'
 import type { StudentCoreServices } from './student-core/services.js'
+import type { StudyTrackingServices } from './study-tracking/services.js'
 import { generateRequestId, registerRequestContext } from './plugins/request-context.js'
 import { registerSecurityHeaders } from './plugins/security.js'
 import { registerErrorHandling } from './errors/error-handler.js'
@@ -13,6 +14,7 @@ export type BuildAppOptions = {
   auth?: AuthService
   domain?: DomainService
   studentCore?: StudentCoreServices
+  studyTracking?: StudyTrackingServices
   cookieSecure?: boolean
   environment: string
   logger?: boolean
@@ -25,6 +27,7 @@ export const buildApp = ({
   auth,
   domain,
   studentCore,
+  studyTracking,
   cookieSecure = false,
   logger = true,
   prisma,
@@ -45,6 +48,7 @@ export const buildApp = ({
     auth,
     domain,
     studentCore,
+    studyTracking,
     cookieSecure,
     environment,
     prisma,

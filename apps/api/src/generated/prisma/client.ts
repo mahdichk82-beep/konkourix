@@ -81,3 +81,13 @@ export type StudyPlan = Prisma.StudyPlanModel
  * 
  */
 export type DailyTask = Prisma.DailyTaskModel
+/**
+ * Model StudySession
+ * 
+ */
+export type StudySession = Prisma.StudySessionModel
+/**
+ * Model StudentGoal
+ * 
+ */
+export type StudentGoal = Prisma.StudentGoalModel

@@ -52,3 +52,12 @@ export const DailyTaskStatus = {
 } as const
 
 export type DailyTaskStatus = (typeof DailyTaskStatus)[keyof typeof DailyTaskStatus]
+
+
+export const StudentGoalStatus = {
+  ACTIVE: 'ACTIVE',
+  COMPLETED: 'COMPLETED',
+  CANCELLED: 'CANCELLED'
+} as const
+
+export type StudentGoalStatus = (typeof StudentGoalStatus)[keyof typeof StudentGoalStatus]

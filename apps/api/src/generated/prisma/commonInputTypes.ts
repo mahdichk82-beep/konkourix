@@ -301,6 +301,23 @@ export type EnumDailyTaskStatusWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel>
 }
 
+export type EnumStudentGoalStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentGoalStatus | Prisma.EnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.StudentGoalStatus[] | Prisma.ListEnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StudentGoalStatus[] | Prisma.ListEnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStudentGoalStatusFilter<$PrismaModel> | $Enums.StudentGoalStatus
+}
+
+export type EnumStudentGoalStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentGoalStatus | Prisma.EnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.StudentGoalStatus[] | Prisma.ListEnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StudentGoalStatus[] | Prisma.ListEnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStudentGoalStatusWithAggregatesFilter<$PrismaModel> | $Enums.StudentGoalStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumStudentGoalStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumStudentGoalStatusFilter<$PrismaModel>
+}
+
 export type NestedUuidFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel>
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel>
@@ -595,6 +612,23 @@ export type NestedEnumDailyTaskStatusWithAggregatesFilter<$PrismaModel = never> 
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumStudentGoalStatusFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentGoalStatus | Prisma.EnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.StudentGoalStatus[] | Prisma.ListEnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StudentGoalStatus[] | Prisma.ListEnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStudentGoalStatusFilter<$PrismaModel> | $Enums.StudentGoalStatus
+}
+
+export type NestedEnumStudentGoalStatusWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.StudentGoalStatus | Prisma.EnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  in?: $Enums.StudentGoalStatus[] | Prisma.ListEnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  notIn?: $Enums.StudentGoalStatus[] | Prisma.ListEnumStudentGoalStatusFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumStudentGoalStatusWithAggregatesFilter<$PrismaModel> | $Enums.StudentGoalStatus
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumStudentGoalStatusFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumStudentGoalStatusFilter<$PrismaModel>
 }
 
 

@@ -404,7 +404,9 @@ export const ModelName = {
   StudentCounselor: 'StudentCounselor',
   StudySubject: 'StudySubject',
   StudyPlan: 'StudyPlan',
-  DailyTask: 'DailyTask'
+  DailyTask: 'DailyTask',
+  StudySession: 'StudySession',
+  StudentGoal: 'StudentGoal'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -420,7 +422,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor" | "studySubject" | "studyPlan" | "dailyTask"
+    modelProps: "user" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor" | "studySubject" | "studyPlan" | "dailyTask" | "studySession" | "studentGoal"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1016,6 +1018,154 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    StudySession: {
+      payload: Prisma.$StudySessionPayload<ExtArgs>
+      fields: Prisma.StudySessionFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StudySessionFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StudySessionFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload>
+        }
+        findFirst: {
+          args: Prisma.StudySessionFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StudySessionFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload>
+        }
+        findMany: {
+          args: Prisma.StudySessionFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload>[]
+        }
+        create: {
+          args: Prisma.StudySessionCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload>
+        }
+        createMany: {
+          args: Prisma.StudySessionCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StudySessionCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload>[]
+        }
+        delete: {
+          args: Prisma.StudySessionDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload>
+        }
+        update: {
+          args: Prisma.StudySessionUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload>
+        }
+        deleteMany: {
+          args: Prisma.StudySessionDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StudySessionUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StudySessionUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload>[]
+        }
+        upsert: {
+          args: Prisma.StudySessionUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudySessionPayload>
+        }
+        aggregate: {
+          args: Prisma.StudySessionAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStudySession>
+        }
+        groupBy: {
+          args: Prisma.StudySessionGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StudySessionGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StudySessionCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StudySessionCountAggregateOutputType> | number
+        }
+      }
+    }
+    StudentGoal: {
+      payload: Prisma.$StudentGoalPayload<ExtArgs>
+      fields: Prisma.StudentGoalFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.StudentGoalFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.StudentGoalFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload>
+        }
+        findFirst: {
+          args: Prisma.StudentGoalFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.StudentGoalFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload>
+        }
+        findMany: {
+          args: Prisma.StudentGoalFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload>[]
+        }
+        create: {
+          args: Prisma.StudentGoalCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload>
+        }
+        createMany: {
+          args: Prisma.StudentGoalCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.StudentGoalCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload>[]
+        }
+        delete: {
+          args: Prisma.StudentGoalDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload>
+        }
+        update: {
+          args: Prisma.StudentGoalUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload>
+        }
+        deleteMany: {
+          args: Prisma.StudentGoalDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.StudentGoalUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.StudentGoalUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload>[]
+        }
+        upsert: {
+          args: Prisma.StudentGoalUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$StudentGoalPayload>
+        }
+        aggregate: {
+          args: Prisma.StudentGoalAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateStudentGoal>
+        }
+        groupBy: {
+          args: Prisma.StudentGoalGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StudentGoalGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.StudentGoalCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.StudentGoalCountAggregateOutputType> | number
+        }
+      }
+    }
   }
 } & {
   other: {
@@ -1169,6 +1319,37 @@ export const DailyTaskScalarFieldEnum = {
 export type DailyTaskScalarFieldEnum = (typeof DailyTaskScalarFieldEnum)[keyof typeof DailyTaskScalarFieldEnum]
 
 
+export const StudySessionScalarFieldEnum = {
+  id: 'id',
+  studentProfileId: 'studentProfileId',
+  subjectId: 'subjectId',
+  dailyTaskId: 'dailyTaskId',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StudySessionScalarFieldEnum = (typeof StudySessionScalarFieldEnum)[keyof typeof StudySessionScalarFieldEnum]
+
+
+export const StudentGoalScalarFieldEnum = {
+  id: 'id',
+  studentProfileId: 'studentProfileId',
+  subjectId: 'subjectId',
+  title: 'title',
+  description: 'description',
+  targetDate: 'targetDate',
+  status: 'status',
+  completedAt: 'completedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type StudentGoalScalarFieldEnum = (typeof StudentGoalScalarFieldEnum)[keyof typeof StudentGoalScalarFieldEnum]
+
+
 export const SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -1308,6 +1489,20 @@ export type EnumDailyTaskStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
  * Reference to a field of type 'DailyTaskStatus[]'
  */
 export type ListEnumDailyTaskStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DailyTaskStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'StudentGoalStatus'
+ */
+export type EnumStudentGoalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StudentGoalStatus'>
+    
+
+
+/**
+ * Reference to a field of type 'StudentGoalStatus[]'
+ */
+export type ListEnumStudentGoalStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'StudentGoalStatus[]'>
     
 
 
@@ -1483,6 +1678,8 @@ export type GlobalOmitConfig = {
   studySubject?: Prisma.StudySubjectOmit
   studyPlan?: Prisma.StudyPlanOmit
   dailyTask?: Prisma.DailyTaskOmit
+  studySession?: Prisma.StudySessionOmit
+  studentGoal?: Prisma.StudentGoalOmit
 }
 
 /* Types for Logging */

@@ -5,6 +5,8 @@ import { createDomainService } from './domain/domain-service.js'
 import { createPrismaDomainStore } from './domain/prisma-domain-store.js'
 import { createPrismaStudentCoreStore } from './student-core/prisma-store.js'
 import { createStudentCoreServices } from './student-core/services.js'
+import { createPrismaStudyTrackingStore } from './study-tracking/prisma-store.js'
+import { createStudyTrackingServices } from './study-tracking/services.js'
 import { env } from './config/env.js'
 import { closeResources } from './lib/lifecycle.js'
 import { prisma } from './lib/prisma.js'
@@ -24,6 +26,7 @@ const app = buildApp({
   }),
   domain: createDomainService(createPrismaDomainStore(prisma)),
   studentCore: createStudentCoreServices(createPrismaStudentCoreStore(prisma)),
+  studyTracking: createStudyTrackingServices(createPrismaStudyTrackingStore(prisma)),
   cookieSecure: env.NODE_ENV === 'production',
   environment: env.NODE_ENV,
   logger: true,
