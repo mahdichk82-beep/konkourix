@@ -44,6 +44,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
     return prisma.studyPlan.findMany({
       cursor: query?.cursor ? { id: query.cursor } : undefined,
       orderBy: { startsOn: 'desc' },
+      skip: query?.cursor ? 1 : undefined,
       take: query?.limit ? query.limit + 1 : undefined,
       where: { studentProfileId, status: query?.status },
     })
@@ -70,6 +71,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
     return prisma.dailyTask.findMany({
       cursor: query?.cursor ? { id: query.cursor } : undefined,
       orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
+      skip: query?.cursor ? 1 : undefined,
       take: query?.limit ? query.limit + 1 : undefined,
       where: {
         scheduledFor: query?.scheduledFor,

@@ -7,10 +7,22 @@ import {
 } from '../src/seed/domain-seed.js'
 
 test('development domain seed is deterministic and idempotent by key', async () => {
-  const calls: Array<{ model: string; where: unknown }> = []
-  const upsert = (model: string) => async (input: { where: unknown }) => {
-    calls.push({ model, where: input.where })
-    return {}
+  const studentProfileId = '00000000-0000-4000-8000-000000000101'
+  const calls: Array<{
+    model: string
+    input: {
+      create?: Record<string, unknown>
+      update?: Record<string, unknown>
+      where: unknown
+    }
+  }> = []
+  const upsert = (model: string) => async (input: {
+    create?: Record<string, unknown>
+    update?: Record<string, unknown>
+    where: unknown
+  }) => {
+    calls.push({ model, input })
+    return model === 'studentProfile' ? { id: studentProfileId } : {}
   }
   const transaction = {
     user: { upsert: upsert('user') },
@@ -34,7 +46,8 @@ test('development domain seed is deterministic and idempotent by key', async () 
     else process.env.NODE_ENV = previousEnvironment
   }
 
-  assert.deepEqual(calls, [
+  assert.notEqual(studentProfileId, developmentSeedIds.student)
+  assert.deepEqual(calls.map(({ model, input }) => ({ model, where: input.where })), [
     { model: 'user', where: { id: developmentSeedIds.student } },
     { model: 'user', where: { id: developmentSeedIds.counselor } },
     { model: 'user', where: { id: developmentSeedIds.admin } },
@@ -55,6 +68,14 @@ test('development domain seed is deterministic and idempotent by key', async () 
     { model: 'dailyTask', where: { id: '00000000-0000-4000-8000-000000000031' } },
     { model: 'dailyTask', where: { id: '00000000-0000-4000-8000-000000000032' } },
   ])
+
+  const profileOwnedModels = new Set(['studySubject', 'studyPlan', 'dailyTask'])
+  const profileOwnedCalls = calls.filter(({ model }) => profileOwnedModels.has(model))
+  assert.equal(profileOwnedCalls.length, 5)
+  for (const { input } of profileOwnedCalls) {
+    assert.equal(input.create?.studentProfileId, studentProfileId)
+    assert.equal(input.update?.studentProfileId, studentProfileId)
+  }
 })
 
 test('development domain seed refuses production', async () => {

@@ -4,6 +4,7 @@ import { buildApp } from '../src/app.js'
 import type { AuthService } from '../src/auth/auth-service.js'
 import type { PublicUser } from '../src/auth/types.js'
 import { createStudentCoreServices, type StudentCoreStore } from '../src/student-core/services.js'
+import type { DailyTaskRecord } from '../src/student-core/types.js'
 
 const user: PublicUser = {
   id: 'student-user-1',
@@ -40,12 +41,12 @@ const store: StudentCoreStore = {
   updateTask: async () => null,
 }
 
-const createApp = () => buildApp({
+const createApp = (studentCoreStore: StudentCoreStore = store) => buildApp({
   auth,
   environment: 'test',
   logger: false,
   prisma: { $queryRaw: async () => [{ '?column?': 1 }] },
-  studentCore: createStudentCoreServices(store),
+  studentCore: createStudentCoreServices(studentCoreStore),
 })
 
 test('student subject route returns the standard v1 response contract', async () => {
@@ -69,5 +70,77 @@ test('student core routes reject unauthenticated requests', async () => {
   const response = await app.inject({ method: 'GET', url: '/v1/student/subjects' })
   assert.equal(response.statusCode, 401)
   assert.equal(response.json().error.code, 'TOKEN_MISSING')
+  await app.close()
+})
+
+test('daily task date query is mapped to the scheduled date filter', async () => {
+  const timestamp = new Date('2026-09-03T00:00:00.000Z')
+  const tasks: DailyTaskRecord[] = [
+    {
+      id: '00000000-0000-4000-8000-000000000101',
+      studentProfileId: 'student-profile-1',
+      studyPlanId: null,
+      subjectId: null,
+      title: 'September third task',
+      description: null,
+      scheduledFor: timestamp,
+      estimatedMinutes: 30,
+      status: 'PENDING',
+      completedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000102',
+      studentProfileId: 'student-profile-1',
+      studyPlanId: null,
+      subjectId: null,
+      title: 'September fourth task',
+      description: null,
+      scheduledFor: new Date('2026-09-04T00:00:00.000Z'),
+      estimatedMinutes: 30,
+      status: 'PENDING',
+      completedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+  ]
+  const receivedQueries: Array<Parameters<StudentCoreStore['listTasks']>[1]> = []
+  const filteringStore: StudentCoreStore = {
+    ...store,
+    async listTasks(_profileId, query) {
+      receivedQueries.push(query)
+      return query?.scheduledFor
+        ? tasks.filter((task) => task.scheduledFor.getTime() === query.scheduledFor?.getTime())
+        : tasks
+    },
+  }
+  const app = createApp(filteringStore)
+
+  const unfiltered = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'GET',
+    url: '/v1/student/daily-tasks',
+  })
+  const matching = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'GET',
+    url: '/v1/student/daily-tasks?date=2026-09-03',
+  })
+  const unrelated = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'GET',
+    url: '/v1/student/daily-tasks?date=2026-09-05',
+  })
+
+  assert.equal(unfiltered.statusCode, 200)
+  assert.equal(unfiltered.json().data.items.length, 2)
+  assert.equal(receivedQueries[0]?.scheduledFor, undefined)
+  assert.equal(matching.json().data.items.length, 1)
+  assert.equal(matching.json().data.items[0].id, tasks[0]?.id)
+  assert.equal(receivedQueries[1]?.scheduledFor?.toISOString(), '2026-09-03T00:00:00.000Z')
+  assert.equal('date' in (receivedQueries[1] ?? {}), false)
+  assert.equal(unrelated.json().data.items.length, 0)
+
   await app.close()
 })

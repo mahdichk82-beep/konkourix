@@ -41,7 +41,10 @@ export const createPrismaDomainStore = (prisma: PrismaClient): DomainStore => ({
   async upsertStudentProfile(userId: string, input: StudentProfileInput) {
     const profile = await prisma.studentProfile.upsert({
       create: { userId, educationLevel: input.educationLevel ?? null, schoolName: input.schoolName ?? null },
-      update: { educationLevel: input.educationLevel ?? null, schoolName: input.schoolName ?? null },
+      update: {
+        ...(input.educationLevel === undefined ? {} : { educationLevel: input.educationLevel }),
+        ...(input.schoolName === undefined ? {} : { schoolName: input.schoolName }),
+      },
       where: { userId },
     })
     return toStudentProfile(profile)
@@ -55,7 +58,10 @@ export const createPrismaDomainStore = (prisma: PrismaClient): DomainStore => ({
   async upsertCounselorProfile(userId: string, input: CounselorProfileInput) {
     const profile = await prisma.counselorProfile.upsert({
       create: { userId, bio: input.bio ?? null, specialization: input.specialization ?? null },
-      update: { bio: input.bio ?? null, specialization: input.specialization ?? null },
+      update: {
+        ...(input.bio === undefined ? {} : { bio: input.bio }),
+        ...(input.specialization === undefined ? {} : { specialization: input.specialization }),
+      },
       where: { userId },
     })
     return toCounselorProfile(profile)

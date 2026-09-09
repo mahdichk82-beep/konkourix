@@ -58,7 +58,7 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
       where: { id: developmentSeedIds.admin },
     })
 
-    await transaction.studentProfile.upsert({
+    const studentProfile = await transaction.studentProfile.upsert({
       create: {
         userId: developmentSeedIds.student,
         educationLevel: 'secondary',
@@ -100,11 +100,12 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
     await transaction.studySubject.upsert({
       create: {
         id: developmentSeedIds.mathSubject,
-        studentProfileId: developmentSeedIds.student,
+        studentProfileId: studentProfile.id,
         name: 'Mathematics',
         normalizedName: 'mathematics',
       },
       update: {
+        studentProfileId: studentProfile.id,
         name: 'Mathematics',
         normalizedName: 'mathematics',
         archivedAt: null,
@@ -114,11 +115,12 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
     await transaction.studySubject.upsert({
       create: {
         id: developmentSeedIds.scienceSubject,
-        studentProfileId: developmentSeedIds.student,
+        studentProfileId: studentProfile.id,
         name: 'Physics',
         normalizedName: 'physics',
       },
       update: {
+        studentProfileId: studentProfile.id,
         name: 'Physics',
         normalizedName: 'physics',
         archivedAt: null,
@@ -128,7 +130,7 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
     await transaction.studyPlan.upsert({
       create: {
         id: developmentSeedIds.studyPlan,
-        studentProfileId: developmentSeedIds.student,
+        studentProfileId: studentProfile.id,
         title: 'Development exam preparation',
         description: 'Deterministic development study plan',
         status: 'ACTIVE',
@@ -136,6 +138,7 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
         endsOn: new Date('2026-09-30T00:00:00.000Z'),
       },
       update: {
+        studentProfileId: studentProfile.id,
         title: 'Development exam preparation',
         description: 'Deterministic development study plan',
         status: 'ACTIVE',
@@ -147,7 +150,7 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
     await transaction.dailyTask.upsert({
       create: {
         id: developmentSeedIds.mathTask,
-        studentProfileId: developmentSeedIds.student,
+        studentProfileId: studentProfile.id,
         studyPlanId: developmentSeedIds.studyPlan,
         subjectId: developmentSeedIds.mathSubject,
         title: 'Review algebra fundamentals',
@@ -157,6 +160,7 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
         status: 'PENDING',
       },
       update: {
+        studentProfileId: studentProfile.id,
         studyPlanId: developmentSeedIds.studyPlan,
         subjectId: developmentSeedIds.mathSubject,
         title: 'Review algebra fundamentals',
@@ -171,7 +175,7 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
     await transaction.dailyTask.upsert({
       create: {
         id: developmentSeedIds.scienceTask,
-        studentProfileId: developmentSeedIds.student,
+        studentProfileId: studentProfile.id,
         studyPlanId: developmentSeedIds.studyPlan,
         subjectId: developmentSeedIds.scienceSubject,
         title: 'Read motion chapter',
@@ -181,6 +185,7 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
         status: 'PENDING',
       },
       update: {
+        studentProfileId: studentProfile.id,
         studyPlanId: developmentSeedIds.studyPlan,
         subjectId: developmentSeedIds.scienceSubject,
         title: 'Read motion chapter',

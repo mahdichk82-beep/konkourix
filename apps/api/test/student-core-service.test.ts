@@ -75,6 +75,16 @@ const createStore = (): StudentCoreStore & {
   return store
 }
 
+const prismaPage = <T extends { id: string }>(
+  items: T[],
+  query?: { cursor?: string; limit?: number },
+): T[] => {
+  const start = query?.cursor
+    ? Math.max(items.findIndex((item) => item.id === query.cursor) + 1, 0)
+    : 0
+  return items.slice(start, start + (query?.limit ?? 50) + 1)
+}
+
 test('student core creates normalized subjects and rejects duplicate ownership', async () => {
   const store = createStore()
   const services = createStudentCoreServices(store, () => timestamp)
@@ -128,4 +138,54 @@ test('student core completes tasks with a completion timestamp and protects owne
     services.tasks.get({ id: 'other-student', role: 'STUDENT', status: 'ACTIVE' }, task.id),
     (error: unknown) => error instanceof ApiError && error.code === 'STUDENT_PROFILE_REQUIRED',
   )
+})
+
+test('student core plan and task pages use lookahead rows without repeating the cursor', async () => {
+  const store = createStore()
+  store.plans.push(
+    ...['plan-1', 'plan-2', 'plan-3'].map((id, index): StudyPlanRecord => ({
+      id,
+      studentProfileId: profile.id,
+      title: id,
+      description: null,
+      status: 'ACTIVE',
+      startsOn: new Date(`2026-09-0${3 - index}T00:00:00.000Z`),
+      endsOn: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    })),
+  )
+  store.tasks.push(
+    ...['task-1', 'task-2', 'task-3'].map((id, index): DailyTaskRecord => ({
+      id,
+      studentProfileId: profile.id,
+      studyPlanId: null,
+      subjectId: null,
+      title: id,
+      description: null,
+      scheduledFor: new Date(`2026-09-0${3 - index}T00:00:00.000Z`),
+      estimatedMinutes: null,
+      status: 'PENDING',
+      completedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    })),
+  )
+  store.listPlans = async (_profileId, query) => prismaPage(store.plans, query)
+  store.listTasks = async (_profileId, query) => prismaPage(store.tasks, query)
+  const services = createStudentCoreServices(store)
+
+  const planPage1 = await services.plans.list(student, { limit: 2 })
+  const planPage2 = await services.plans.list(student, { cursor: 'plan-2', limit: 2 })
+  assert.deepEqual(planPage1.items.map(({ id }) => id), ['plan-1', 'plan-2'])
+  assert.equal(planPage1.nextCursor, 'plan-2')
+  assert.deepEqual(planPage2.items.map(({ id }) => id), ['plan-3'])
+  assert.equal(planPage2.nextCursor, null)
+
+  const taskPage1 = await services.tasks.list(student, { limit: 2 })
+  const taskPage2 = await services.tasks.list(student, { cursor: 'task-2', limit: 2 })
+  assert.deepEqual(taskPage1.items.map(({ id }) => id), ['task-1', 'task-2'])
+  assert.equal(taskPage1.nextCursor, 'task-2')
+  assert.deepEqual(taskPage2.items.map(({ id }) => id), ['task-3'])
+  assert.equal(taskPage2.nextCursor, null)
 })
