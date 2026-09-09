@@ -20,10 +20,10 @@ Phase 0 is not complete. Some Phase 1 and later backend foundations already exis
 - Confidence: **HIGH**
 - Audit and baseline re-verification date: **2026-09-09**
 
-## Milestone 1 Baseline Git Checkpoint
+## Milestone 2 Baseline Git Checkpoint
 
-- HEAD: `44ab755c4cdf30f4dd9eb5e4ec8be23535c4aef9`
-- Message: `docs: record phase 0 completion audit`
+- HEAD: `630130a2f90f6f6b1b1f38467411f814bbc4dffa`
+- Message: `feat: establish runtime browser environment contract`
 
 Foundation repair checkpoint:
 
@@ -60,9 +60,9 @@ Re-verified on 2026-09-09 after successful local dependency-state recovery:
 | Counselor Web | SCAFFOLDED ONLY |
 | Shared packages | SCAFFOLDED ONLY |
 | Development workflow | PARTIAL |
-| Docker | NOT STARTED |
+| Container image definitions | COMPLETE; RUNTIME UNVERIFIED |
 | Docker Compose | NOT STARTED |
-| Nginx | NOT STARTED |
+| Edge Nginx | NOT STARTED |
 | Deployment | NOT STARTED |
 | Backup/Restore | NOT STARTED |
 | CI/CD | NOT STARTED |
@@ -97,6 +97,35 @@ Milestone verification:
 - Prisma schema validation: **PASS**
 
 The official Phase 0 completion estimate remains **50%** because the existing project state has no milestone weighting rubric from which to calculate a defensible new percentage. Confidence remains **HIGH** based on the completed validation above.
+
+### Milestone 2 — Production Container Build Foundation
+
+**Status: COMPLETE (STATICALLY VERIFIED; DOCKER EXECUTION PENDING)**
+
+Completed and locally verified on 2026-09-10:
+
+- API, Student Web, and Counselor Web have separate production-oriented multi-stage Dockerfiles using the repository-root build context.
+- Image builds use Node 24, pnpm 11.24.0, workspace filters, and `pnpm-lock.yaml` with `--frozen-lockfile`.
+- The API final image contains production dependencies and compiled `dist`, starts with `node dist/server.js`, runs as the non-root `node` user, and exposes port 4000.
+- The committed Prisma client source is compiled with the API. Image construction neither connects to a database nor generates or executes migrations.
+- The API image has a dependency-free Node healthcheck for the existing `/health/live` endpoint.
+- Both frontend images require public build-time `VITE_API_URL`, run the existing Vite production build, and serve only static `dist` output through a shared container-local Nginx configuration.
+- The frontend static server runs as non-root on port 8080 and provides SPA history fallback. It has no public-domain routing, TLS, API proxy, or cross-service ingress behavior.
+- Real environment files, local dependency/output directories, logs, caches, and repository metadata are excluded from Docker build context without excluding workspace manifests, source, or Prisma files.
+- Runtime secrets are not build arguments or image defaults. Local development remains Docker-independent.
+
+Milestone verification:
+
+- API tests: **61/61 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Container files and referenced paths: **STATIC REVIEW PASS**
+- Docker image build/runtime execution: **NOT RUN; Docker is intentionally unavailable locally**
+
+The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** for the source and static container contract; actual image execution remains pending in a Docker-capable environment.
 
 ## Implemented Architecture
 
@@ -181,10 +210,11 @@ Neither starter application should be described as an implemented product merely
 
 ### Implemented configuration
 
-- `infrastructure/` exists but is currently an empty placeholder.
-- No Dockerfiles are implemented.
+- Production image definitions exist for the API, Student Web, and Counselor Web.
+- `infrastructure/docker/` contains the API liveness script and a shared container-local SPA static-server configuration.
+- The root `.dockerignore` excludes real environment files and irrelevant local artifacts while preserving required monorepo inputs.
 - No Docker Compose configuration is implemented.
-- No Nginx configuration is implemented.
+- No public/edge Nginx configuration is implemented; the frontend image's internal Nginx serves static files only.
 - No deployment scripts are implemented.
 - No backup or restore scripts are implemented.
 - No CI workflow is implemented.
@@ -208,7 +238,6 @@ Infrastructure configuration may later be implemented and statically checked loc
 - Logging and error-handling completeness review
 - Shared package strategy and implementation
 - Independent student and counselor routing/authentication shells
-- Production Dockerfiles
 - Docker Compose topology
 - Nginx routing and TLS-origin strategy
 - Production environment configuration and secret handling
@@ -252,4 +281,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 0 Milestone 1 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin frontend product work, Docker, Nginx, deployment, or another Phase 0 milestone.
+Phase 0 Milestones 1 and 2 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin Docker Compose, edge Nginx, deployment, or another Phase 0 milestone.

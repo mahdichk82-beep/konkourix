@@ -79,3 +79,17 @@ This lightweight decision log records architectural constraints established by t
 **Development contract:** The API runs on port 4000, Student Web on 5173, and Counselor Web on 5174. Their explicit example environments keep local development Docker-independent.
 
 **Status:** Accepted
+
+## ADR-010 — Production Container Build Foundation
+
+**Decision:** The API, Student Web, and Counselor Web use production-oriented multi-stage image definitions built from the monorepo root context. Dependency installation uses pnpm 11.24.0 from the root `packageManager` contract, workspace filters, and the frozen lockfile.
+
+**Base runtime policy:** Node 24 on Debian Bookworm Slim is the API build/runtime base because it matches the verified local Node 24 runtime and avoids unnecessary Prisma/OpenSSL/native-module risk. Frontend build stages use the same Node base. Their final static runtimes use the official Nginx 1.28 Alpine image; this Nginx is an unprivileged, container-local file server only and is not the deferred public edge proxy.
+
+**API policy:** TypeScript is compiled during image construction and production starts with `node dist/server.js` as the non-root `node` user. The committed Prisma client source is compiled into `dist`, while production dependencies are installed separately. Image construction never connects to the database or executes migrations. The existing `/health/live` endpoint is checked with Node's built-in `fetch`, avoiding an extra healthcheck package.
+
+**Frontend policy:** Each web image requires the public `VITE_API_URL` build argument and uses the existing Vite production validation/build. Final images contain static `dist` output, run Nginx as the non-root `nginx` user on port 8080, and provide SPA history fallback. They do not run the Vite development server, terminate TLS, route public domains, or proxy API traffic.
+
+**Secrets and operations:** Runtime secrets such as `DATABASE_URL` and `ACCESS_TOKEN_SECRET` are runtime environment inputs only and are not Docker build arguments or image defaults. Real environment files are excluded from the build context. Docker Compose, database orchestration, edge Nginx, TLS, deployment, and migration execution orchestration remain deferred. Local development remains Docker-independent, and actual image build/runtime execution is unverified until a Docker-capable environment is available.
+
+**Status:** Accepted
