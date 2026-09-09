@@ -6,20 +6,25 @@ import type { StudentCoreServices } from './student-core/services.js'
 import type { StudyTrackingServices } from './study-tracking/services.js'
 import { generateRequestId, registerRequestContext } from './plugins/request-context.js'
 import { registerSecurityHeaders } from './plugins/security.js'
+import { registerCors } from './plugins/cors.js'
 import { registerErrorHandling } from './errors/error-handler.js'
 import { registerHealthRoutes, type HealthDatabase } from './routes/health.js'
 import { registerV1Routes } from './routes/v1.js'
+import type { TrustProxyConfig } from './config/runtime.js'
 
 export type BuildAppOptions = {
   auth?: AuthService
   domain?: DomainService
   studentCore?: StudentCoreServices
   studyTracking?: StudyTrackingServices
+  cookieDomain?: string
   cookieSecure?: boolean
+  corsOrigins?: readonly string[]
   environment: string
   logger?: boolean
   prisma: HealthDatabase
   refreshTokenTtlSeconds?: number
+  trustProxy?: TrustProxyConfig
 }
 
 export const buildApp = ({
@@ -28,20 +33,25 @@ export const buildApp = ({
   domain,
   studentCore,
   studyTracking,
+  cookieDomain,
   cookieSecure = false,
+  corsOrigins = [],
   logger = true,
   prisma,
   refreshTokenTtlSeconds = 2_592_000,
+  trustProxy = false,
 }: BuildAppOptions): FastifyInstance => {
   const app = Fastify({
     genReqId: generateRequestId,
     logger,
     requestIdHeader: false,
+    trustProxy,
   })
 
   registerErrorHandling(app)
   registerRequestContext(app)
   registerSecurityHeaders(app)
+  registerCors(app, corsOrigins)
   app.register(cookie)
 
   const routeOptions = {
@@ -49,6 +59,7 @@ export const buildApp = ({
     domain,
     studentCore,
     studyTracking,
+    cookieDomain,
     cookieSecure,
     environment,
     prisma,

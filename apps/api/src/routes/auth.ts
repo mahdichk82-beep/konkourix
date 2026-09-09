@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify'
+import type { FastifyInstance, FastifyReply } from 'fastify'
 import { successResponse } from '../contracts/api-response.js'
 import { ApiError } from '../errors/api-error.js'
 import type { AuthService } from '../auth/auth-service.js'
@@ -10,9 +10,20 @@ export const refreshCookieName = 'refresh_token'
 
 type AuthRouteOptions = {
   auth: AuthService
+  cookieDomain?: string
   cookieSecure: boolean
   refreshTokenTtlSeconds: number
 }
+
+const refreshCookiePath = '/v1/auth'
+
+const refreshCookieAttributes = (options: AuthRouteOptions) => ({
+  ...(options.cookieDomain ? { domain: options.cookieDomain } : {}),
+  httpOnly: true,
+  path: refreshCookiePath,
+  sameSite: 'lax' as const,
+  secure: options.cookieSecure,
+})
 
 const requestMeta = (request: {
   headers: { 'user-agent'?: string | string[] | undefined }
@@ -26,16 +37,13 @@ const requestMeta = (request: {
 })
 
 const setRefreshCookie = (
-  reply: { setCookie: (name: string, value: string, options: object) => unknown },
+  reply: FastifyReply,
   token: string,
   options: AuthRouteOptions,
 ) => {
   reply.setCookie(refreshCookieName, token, {
-    httpOnly: true,
+    ...refreshCookieAttributes(options),
     maxAge: options.refreshTokenTtlSeconds,
-    path: '/',
-    sameSite: 'lax',
-    secure: options.cookieSecure,
   })
 }
 
@@ -118,7 +126,7 @@ export const registerAuthRoutes = (
 
   app.post('/auth/logout', async (request, reply) => {
     await options.auth.logout(request.cookies[refreshCookieName])
-    reply.clearCookie(refreshCookieName, { path: '/' })
+    reply.clearCookie(refreshCookieName, refreshCookieAttributes(options))
 
     return successResponse(
       { loggedOut: true },

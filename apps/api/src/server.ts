@@ -27,11 +27,14 @@ const app = buildApp({
   domain: createDomainService(createPrismaDomainStore(prisma)),
   studentCore: createStudentCoreServices(createPrismaStudentCoreStore(prisma)),
   studyTracking: createStudyTrackingServices(createPrismaStudyTrackingStore(prisma)),
+  cookieDomain: env.COOKIE_DOMAIN,
   cookieSecure: env.NODE_ENV === 'production',
+  corsOrigins: env.CORS_ORIGINS,
   environment: env.NODE_ENV,
   logger: true,
   prisma,
   refreshTokenTtlSeconds: env.REFRESH_TOKEN_TTL_SECONDS,
+  trustProxy: env.TRUST_PROXY,
 })
 
 let shutdownPromise: Promise<void> | undefined

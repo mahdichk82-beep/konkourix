@@ -30,9 +30,11 @@ const createAuthService = (): AuthService => ({
   register: async () => authResult,
 })
 
-const createApp = () =>
+const createApp = (options: { cookieDomain?: string; cookieSecure?: boolean } = {}) =>
   buildApp({
     auth: createAuthService(),
+    cookieDomain: options.cookieDomain,
+    cookieSecure: options.cookieSecure,
     environment: 'test',
     logger: false,
     prisma: { $queryRaw: async () => [{ '?column?': 1 }] },
@@ -60,6 +62,10 @@ test('registration returns an access token and HttpOnly refresh cookie', async (
   })
   assert.match(response.headers['set-cookie'], /refresh_token=refresh-token/)
   assert.match(response.headers['set-cookie'], /HttpOnly/)
+  assert.match(response.headers['set-cookie'], /Path=\/v1\/auth/)
+  assert.match(response.headers['set-cookie'], /SameSite=Lax/)
+  assert.doesNotMatch(response.headers['set-cookie'], /Domain=/)
+  assert.doesNotMatch(response.headers['set-cookie'], /Secure/)
 
   await app.close()
 })
@@ -109,6 +115,53 @@ test('logout clears the refresh cookie', async () => {
 
   assert.equal(response.statusCode, 200)
   assert.match(response.headers['set-cookie'], /refresh_token=;/)
+  assert.match(response.headers['set-cookie'], /Path=\/v1\/auth/)
+  assert.match(response.headers['set-cookie'], /SameSite=Lax/)
+
+  await app.close()
+})
+
+test('production refresh cookie is Secure, HttpOnly, and host-only by default', async () => {
+  const app = createApp({ cookieSecure: true })
+  const response = await app.inject({
+    method: 'POST',
+    payload: {
+      identifier: 'student@example.com',
+      password: 'strong password',
+    },
+    url: '/v1/auth/login',
+  })
+
+  assert.match(response.headers['set-cookie'], /HttpOnly/)
+  assert.match(response.headers['set-cookie'], /Secure/)
+  assert.doesNotMatch(response.headers['set-cookie'], /Domain=/)
+
+  await app.close()
+})
+
+test('configured cookie domain is applied consistently when setting and clearing', async () => {
+  const app = createApp({ cookieDomain: 'api.konkourix.ir', cookieSecure: true })
+  const login = await app.inject({
+    method: 'POST',
+    payload: {
+      identifier: 'student@example.com',
+      password: 'strong password',
+    },
+    url: '/v1/auth/login',
+  })
+  const logout = await app.inject({
+    headers: { cookie: 'refresh_token=refresh-token' },
+    method: 'POST',
+    url: '/v1/auth/logout',
+  })
+
+  for (const header of [login.headers['set-cookie'], logout.headers['set-cookie']]) {
+    assert.match(header, /Domain=api\.konkourix\.ir/)
+    assert.match(header, /Path=\/v1\/auth/)
+    assert.match(header, /HttpOnly/)
+    assert.match(header, /Secure/)
+    assert.match(header, /SameSite=Lax/)
+  }
 
   await app.close()
 })

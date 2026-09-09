@@ -18,6 +18,7 @@ type V1RouteOptions = {
   domain?: DomainService
   studentCore?: StudentCoreServices
   studyTracking?: StudyTrackingServices
+  cookieDomain?: string
   cookieSecure?: boolean
   environment: string
   prisma: HealthDatabase
@@ -33,6 +34,7 @@ export const registerV1Routes: FastifyPluginAsync<V1RouteOptions> = async (
   if (options.auth) {
     registerAuthRoutes(app, {
       auth: options.auth,
+      cookieDomain: options.cookieDomain,
       cookieSecure: options.cookieSecure ?? false,
       refreshTokenTtlSeconds: options.refreshTokenTtlSeconds ?? 2_592_000,
     })

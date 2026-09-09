@@ -105,3 +105,51 @@ test('shutdown closes the HTTP app before disconnecting Prisma', async () => {
 
   assert.deepEqual(events, ['app.close', 'prisma.disconnect'])
 })
+
+test('forwarded request metadata is trusted only for an explicit proxy address', async () => {
+  const prisma = createFakePrisma()
+  const untrusted = buildApp({ environment: 'test', logger: false, prisma })
+  untrusted.get('/request-metadata', async (request) => ({
+    ip: request.ip,
+    protocol: request.protocol,
+  }))
+
+  const headers = {
+    'x-forwarded-for': '203.0.113.10',
+    'x-forwarded-proto': 'https',
+  }
+  const untrustedResponse = await untrusted.inject({
+    headers,
+    method: 'GET',
+    url: '/request-metadata',
+  })
+
+  assert.deepEqual(untrustedResponse.json(), {
+    ip: '127.0.0.1',
+    protocol: 'http',
+  })
+  await untrusted.close()
+
+  const trusted = buildApp({
+    environment: 'test',
+    logger: false,
+    prisma,
+    trustProxy: ['127.0.0.1'],
+  })
+  trusted.get('/request-metadata', async (request) => ({
+    ip: request.ip,
+    protocol: request.protocol,
+  }))
+
+  const trustedResponse = await trusted.inject({
+    headers,
+    method: 'GET',
+    url: '/request-metadata',
+  })
+
+  assert.deepEqual(trustedResponse.json(), {
+    ip: '203.0.113.10',
+    protocol: 'https',
+  })
+  await trusted.close()
+})

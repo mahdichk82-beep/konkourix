@@ -20,10 +20,10 @@ Phase 0 is not complete. Some Phase 1 and later backend foundations already exis
 - Confidence: **HIGH**
 - Audit and baseline re-verification date: **2026-09-09**
 
-## Current Stable Git Checkpoint
+## Milestone 1 Baseline Git Checkpoint
 
-- HEAD: `d6205d164d4bd4962f7ab21f478b0e294d21e6e9`
-- Message: `docs: establish project recovery state`
+- HEAD: `44ab755c4cdf30f4dd9eb5e4ec8be23535c4aef9`
+- Message: `docs: record phase 0 completion audit`
 
 Foundation repair checkpoint:
 
@@ -67,6 +67,36 @@ Re-verified on 2026-09-09 after successful local dependency-state recovery:
 | Backup/Restore | NOT STARTED |
 | CI/CD | NOT STARTED |
 | Documentation | PARTIAL |
+
+## Completed Phase 0 Milestones
+
+### Milestone 1 — Runtime & Browser Environment Contract
+
+**Status: COMPLETE**
+
+Completed and locally verified on 2026-09-09:
+
+- Central API runtime validation covers public origins, the explicit CORS allowlist, optional cookie domain, and explicit trusted-proxy addresses.
+- Production public origins require HTTPS, and both browser application origins must be included in production CORS configuration.
+- Student Web and Counselor Web each require their own build-time `VITE_API_URL`; production builds reject non-HTTPS API origins.
+- Local ports are explicit: API 4000, Student Web 5173, and Counselor Web 5174.
+- Browser CORS is exact-origin and credentialed. Unknown origins are rejected, while requests without an `Origin` header preserve non-browser behavior.
+- Refresh cookies are `HttpOnly`, `SameSite=Lax`, limited to `/v1/auth`, `Secure` in production, and host-only by default. Logout clears them with matching attributes.
+- Proxy headers are ignored by default. Proxy trust accepts only configured IP/CIDR entries and rejects trust-all and hop-count-only values.
+- Local development remains Docker-independent. No Docker, Nginx, deployment, database schema, or migration work is part of this milestone.
+
+Intended production browser/runtime values are `API_URL=https://api.konkourix.ir`, `STUDENT_APP_URL=https://app.konkourix.ir`, `COUNSELOR_APP_URL=https://counselor.konkourix.ir`, and a `CORS_ORIGINS` list containing both application origins. Each frontend uses `VITE_API_URL=https://api.konkourix.ir`. `COOKIE_DOMAIN` should remain empty for the preferred host-only API cookie. `TRUST_PROXY` remains disabled until a controlled ingress exists, then must name that proxy by IP/CIDR.
+
+Milestone verification:
+
+- API tests: **61/61 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+
+The official Phase 0 completion estimate remains **50%** because the existing project state has no milestone weighting rubric from which to calculate a defensible new percentage. Confidence remains **HIGH** based on the completed validation above.
 
 ## Implemented Architecture
 
@@ -126,12 +156,14 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 ### Student application
 
 - The project exists as an independent React/Vite application.
+- Its API origin is supplied by the validated build-time `VITE_API_URL` contract.
 - It remains a framework starter rather than a real Konkourix product UI.
 - It has no complete browser authentication, protected routing, dashboard, or API workflow.
 
 ### Counselor application
 
 - The project exists as an independent React/Vite application.
+- Its API origin is supplied by the validated build-time `VITE_API_URL` contract.
 - It remains a framework starter rather than a real Konkourix product UI.
 - It has no complete browser authentication, protected routing, dashboard, or API workflow.
 
@@ -141,6 +173,7 @@ Neither starter application should be described as an implemented product merely
 
 - Root scripts currently emphasize the API and do not yet provide a complete all-workspace verification gate.
 - Both frontend applications have independent lint and build scripts; their build commands include TypeScript project builds.
+- Local development uses API port 4000, Student Web port 5173, and Counselor Web port 5174 with explicit environment examples.
 - No Node.js version pin is currently committed.
 - Ordinary local development must remain Docker-independent and use Node.js processes with a locally available PostgreSQL instance.
 
@@ -172,11 +205,8 @@ Infrastructure configuration may later be implemented and statically checked loc
 
 ## Known Remaining Foundation Work
 
-- Environment configuration review and standardization
 - Logging and error-handling completeness review
 - Shared package strategy and implementation
-- Browser/API connectivity strategy
-- Restricted CORS configuration
 - Independent student and counselor routing/authentication shells
 - Production Dockerfiles
 - Docker Compose topology
@@ -220,16 +250,6 @@ These items are not authorization to implement all remaining Phase 0 work in one
 - End every meaningful milestone with proportionate verification and a focused Git checkpoint.
 - Do not continue automatically into another milestone without explicit authorization.
 
-## Next Recommended Milestone
+## Next Work
 
-**Phase 0 Milestone 1 — Runtime & Browser Environment Contract**
-
-Scope:
-
-- environment contract
-- frontend API URL configuration
-- restricted CORS
-- cookie and origin policy
-- trusted proxy expectations
-
-This milestone does **not** implement frontend login or dashboard UI, and it does **not** implement Docker.
+Phase 0 Milestone 1 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin frontend product work, Docker, Nginx, deployment, or another Phase 0 milestone.
