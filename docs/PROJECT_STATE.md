@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality at the Project Memory Checkpoint (Milestone 3), not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through the Phase 0 completion audit and baseline re-verification on 2026-09-09, not a claim of overall product completion.
 
 ## Project
 
@@ -16,26 +16,57 @@ The project is currently completing **Phase 0 — Architecture & Infrastructure 
 
 Phase 0 is not complete. Some Phase 1 and later backend foundations already exist ahead of the intended phase order, including authentication, student planning, study sessions, and goals. Their presence does not imply the corresponding product phases or browser experiences are complete.
 
+- Phase 0 completion estimate: **50%**
+- Confidence: **HIGH**
+- Audit and baseline re-verification date: **2026-09-09**
+
 ## Current Stable Git Checkpoint
 
-- HEAD: `5fffa805d99e1fc870410c3b5115b2924059399f`
+- HEAD: `d6205d164d4bd4962f7ab21f478b0e294d21e6e9`
+- Message: `docs: establish project recovery state`
+
+Foundation repair checkpoint:
+
+- Commit: `5fffa805d99e1fc870410c3b5115b2924059399f`
 - Message: `fix: repair core foundation data semantics`
 
-Previous recovery checkpoint:
+Study Tracking recovery checkpoint:
 
 - Commit: `8905e381fdcf820bc058a7acd81fc794c7cbfc08`
 - Message: `feat: complete student study tracking recovery`
 
 ## Verified Baseline
 
-At the start of this documentation milestone:
+Re-verified on 2026-09-09 after successful local dependency-state recovery:
 
-- Working tree: clean
-- API tests: 49/49 passed
-- API type-check: passed
-- API production build: passed
-- Prisma schema validation: passed
-- PostgreSQL migrations: 5 found, applied, and up to date
+- Working tree before this documentation update: clean
+- API tests: **49/49 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- PostgreSQL migration status: **PASS**; 5 migrations found and the database is up to date
+- Package manifests and `pnpm-lock.yaml`: unchanged by dependency recovery
+
+## Phase 0 Audit Status
+
+| Area | Status |
+| --- | --- |
+| Backend foundation | MOSTLY COMPLETE |
+| Database foundation | MOSTLY COMPLETE |
+| Environment and security | PARTIAL |
+| Student Web | SCAFFOLDED ONLY |
+| Counselor Web | SCAFFOLDED ONLY |
+| Shared packages | SCAFFOLDED ONLY |
+| Development workflow | PARTIAL |
+| Docker | NOT STARTED |
+| Docker Compose | NOT STARTED |
+| Nginx | NOT STARTED |
+| Deployment | NOT STARTED |
+| Backup/Restore | NOT STARTED |
+| CI/CD | NOT STARTED |
+| Documentation | PARTIAL |
 
 ## Implemented Architecture
 
@@ -106,12 +137,24 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 
 Neither starter application should be described as an implemented product merely because it builds.
 
+## Development Workflow State
+
+- Root scripts currently emphasize the API and do not yet provide a complete all-workspace verification gate.
+- Both frontend applications have independent lint and build scripts; their build commands include TypeScript project builds.
+- No Node.js version pin is currently committed.
+- Ordinary local development must remain Docker-independent and use Node.js processes with a locally available PostgreSQL instance.
+
 ## Infrastructure State
 
 ### Implemented configuration
 
 - `infrastructure/` exists but is currently an empty placeholder.
-- No repository Docker, Compose, Nginx, deployment, backup, restore, or CI/CD implementation is established yet.
+- No Dockerfiles are implemented.
+- No Docker Compose configuration is implemented.
+- No Nginx configuration is implemented.
+- No deployment scripts are implemented.
+- No backup or restore scripts are implemented.
+- No CI workflow is implemented.
 
 ### Locally runnable
 
@@ -179,6 +222,14 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Recommended Milestone
 
-**Phase 0 Completion Audit & Infrastructure Planning**
+**Phase 0 Milestone 1 — Runtime & Browser Environment Contract**
 
-This milestone should inspect the remaining Phase 0 foundation against repository reality and divide it into safe, focused implementation checkpoints. It does not mean implementing every Phase 0 item in one task.
+Scope:
+
+- environment contract
+- frontend API URL configuration
+- restricted CORS
+- cookie and origin policy
+- trusted proxy expectations
+
+This milestone does **not** implement frontend login or dashboard UI, and it does **not** implement Docker.
