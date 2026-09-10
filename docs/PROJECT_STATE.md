@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 3, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 4, not a claim of overall product completion.
 
 ## Project
 
@@ -12,13 +12,13 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 3 — Task Topic Integration**.
+The project has completed **Phase 2 Milestone 4 — Counselor Student Access Foundation**.
 
-Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today planning, student-owned subject/topic management, and optional task-topic assignment are verified; later student and counselor product capabilities are not implied complete.
+Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today planning, student-owned subject/topic management, optional task-topic assignment, and read-only counselor access to assigned student profiles are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
-- Audit and baseline re-verification date: **2026-09-10**
+- Audit and baseline re-verification date: **2026-09-11**
 
 ## Phase 1 Milestone 3 Starting Checkpoint
 
@@ -49,6 +49,11 @@ Study Tracking recovery checkpoint:
 
 - HEAD: `1173b57823d4416714ee2736f8a9ca858767b367`
 - Message: `feat: add student topic foundation`
+
+## Phase 2 Milestone 4 Starting Checkpoint
+
+- HEAD: `8f9092a18d1a43f70096061b0aa2780dfc31209d`
+- Message: `feat: connect tasks to topics`
 
 ## Verified Baseline
 
@@ -441,6 +446,34 @@ Milestone verification:
 
 Deferred Phase 2 capabilities include weekly planning, drag-and-drop/manual ordering, free-text search, topic analytics/mastery, counselor-authored tasks/plans, and counselor planning. They require separately authorized milestones.
 
+### Phase 2 Milestone 4 — Counselor Student Access Foundation
+
+**Status: COMPLETE**
+
+- The existing `StudentCounselor` relationship remains the sole assignment authority. No parallel relationship model, Prisma schema change, or migration was added.
+- Read-only `GET /api/v1/counselor/students` and `GET /api/v1/counselor/students/:id` routes require an authenticated `COUNSELOR` and derive `counselorId` exclusively from the access-token identity.
+- List and detail Prisma predicates require an `ACTIVE` relationship to the authenticated counselor. Missing, inactive, unassigned, and cross-counselor student detail requests share the same not-found response.
+- List results use the established bounded cursor-pagination pattern. Responses select only the StudentProfile identifier, nullable display name, education level, school name, and safe account status; authentication identifiers, password hashes, sessions, tokens, and unrelated user data are never selected.
+- The current schema has no student display-name field. The API therefore returns `displayName: null`, and Counselor Web presents an explicit localized fallback rather than repurposing or exposing email/phone authentication identifiers.
+- Counselor Web `/students` is now a real Persian/RTL responsive list with loading, empty, error, status, and pagination states. `/students/:id` provides a read-only basic profile view and preserves the existing custom History router, shell, session flow, and light/dark themes.
+- Student Web is unchanged. Counselor planning, task creation, reports, analytics, messages, and notes remain absent and unauthorized in this milestone.
+- Focused tests cover authenticated counselor list isolation, cursor behavior, student/admin/anonymous denial, assigned detail access, unassigned and cross-counselor denial, sensitive-field exclusion, identity-derived service scope, and active-assignment predicates in the Prisma store.
+
+Milestone verification:
+
+- API tests: **99/99 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 7 migrations found and the database is up to date
+- Schema changed: **NO**
+- Migration added or run: **NO**
+
+Deferred counselor capabilities include planning, task creation, reports, analytics, messaging, and private notes. They require separately authorized milestones.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -470,6 +503,7 @@ The following capabilities are present and covered by the current API baseline:
 - Current-session logout, all-session revocation, authenticated password change, and versioned `/auth/me` functionality under `/api/v1`
 - Student and counselor profile APIs
 - Student-counselor relationship foundation
+- Counselor-only read access to actively assigned student lists and basic profiles
 - Student subjects, topics, study plans, and daily tasks with optional validated topic assignment
 - Study Sessions and Student Goals
 - Backend role and ownership enforcement foundations; student resources are resolved from the authenticated user's StudentProfile
@@ -522,6 +556,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - It verifies authenticated access against the backend-protected counselor boundary before rendering protected content.
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing counselor profile fields, theme selection, password change, current logout, and logout-all.
+- Its student area provides a persistent assigned-student list and read-only basic profile detail through counselor-scoped backend contracts, with localized loading, empty, error, and pagination states.
 - It remains an application foundation rather than a complete counselor product UI.
 
 Neither application shell should be described as a complete product merely because it builds.
@@ -615,4 +650,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 3 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin weekly planning, drag-and-drop/manual ordering, search, topic analytics/mastery, counselor planning, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 4 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin counselor planning/task creation, reports, analytics, messaging, notes, weekly planning, drag-and-drop/manual ordering, search, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.

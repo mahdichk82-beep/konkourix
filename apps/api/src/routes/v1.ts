@@ -13,6 +13,7 @@ import { registerDomainRelationshipRoutes } from './domain-relationships.js'
 import { registerStudentCoreRoutes } from './student-core.js'
 import { registerStudyTrackingRoutes } from './study-tracking.js'
 import { registerRoleBoundaryRoutes } from './role-boundaries.js'
+import { registerCounselorStudentRoutes } from './counselor-students.js'
 
 type V1RouteOptions = {
   auth?: AuthService
@@ -47,6 +48,10 @@ export const registerV1Routes: FastifyPluginAsync<V1RouteOptions> = async (
         domain: options.domain,
       })
       registerDomainRelationshipRoutes(app, {
+        auth: options.auth,
+        domain: options.domain,
+      })
+      registerCounselorStudentRoutes(app, {
         auth: options.auth,
         domain: options.domain,
       })

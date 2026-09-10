@@ -46,3 +46,21 @@ export type CounselorProfileInput = {
   bio?: string | null
   specialization?: string | null
 }
+
+export type CounselorStudentRecord = {
+  id: string
+  displayName: string | null
+  educationLevel: string | null
+  schoolName: string | null
+  status: DomainStatus
+}
+
+export type CounselorStudentPageQuery = {
+  cursor?: string
+  limit?: number
+}
+
+export type CounselorStudentPage = {
+  items: CounselorStudentRecord[]
+  nextCursor: string | null
+}

@@ -72,6 +72,34 @@
 .status-page { min-height: 100svh; padding: 1.25rem; display: grid; place-items: center; background: var(--background); }
 .status-page .content-state { width: min(520px, 100%); }
 
+.students-page { gap: 1.25rem; }
+.students-page .section-heading { align-items: center; margin-bottom: 0; }
+.students-count { flex: 0 0 auto; padding: 0.5rem 0.8rem; border-radius: 99px; color: var(--accent-strong); background: var(--accent-soft); font-size: 0.8rem; font-weight: 800; }
+.students-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.student-card { display: grid; gap: 1.25rem; box-shadow: none; }
+.student-card__heading { min-width: 0; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.8rem; }
+.student-card__heading h3 { margin: 0; font-size: 1rem; }
+.student-card__heading p { margin: 0.3rem 0 0; color: var(--text-muted); direction: ltr; font-size: 0.72rem; text-align: right; }
+.student-avatar { width: 44px; height: 44px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 14px; color: var(--accent-strong); background: var(--accent-soft); font-weight: 900; }
+.student-avatar--large { width: 68px; height: 68px; border-radius: 20px; font-size: 1.35rem; }
+.student-status { padding: 0.35rem 0.55rem; border-radius: 99px; color: var(--accent-strong); background: var(--accent-soft); font-size: 0.7rem; font-weight: 800; }
+.student-status--suspended { color: var(--text); background: color-mix(in srgb, #d89b19 22%, var(--surface)); }
+.student-status--disabled { color: var(--danger); background: var(--danger-soft); }
+.student-card__facts, .student-profile-facts { margin: 0; display: grid; gap: 0.75rem; }
+.student-card__facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.student-card__facts > div, .student-profile-facts > div { min-width: 0; padding: 0.8rem; border-radius: 12px; background: var(--surface-muted); }
+.student-card__facts dt, .student-profile-facts dt { color: var(--text-muted); font-size: 0.72rem; }
+.student-card__facts dd, .student-profile-facts dd { margin: 0.35rem 0 0; overflow-wrap: anywhere; font-weight: 750; }
+.students-load-more { display: flex; justify-content: center; }
+.students-inline-error { padding: 0.8rem 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-radius: 12px; color: var(--danger); background: var(--danger-soft); }
+.student-detail { gap: 1rem; }
+.student-detail__toolbar, .student-detail__actions { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+.student-profile-card { display: grid; gap: 1.5rem; }
+.student-profile-card__heading { display: flex; align-items: center; gap: 1rem; }
+.student-profile-card__heading h2 { margin: 0.15rem 0 0.6rem; }
+.student-profile-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.student-profile-card__note { margin: 0; padding: 1rem; border-inline-start: 3px solid var(--accent); color: var(--text-muted); background: var(--surface-muted); line-height: 1.8; }
+
 .auth-layout { min-height: 100svh; display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr); }
 .brand-panel { padding: clamp(3rem, 7vw, 7rem); display: flex; flex-direction: column; justify-content: center; color: #fff; background: radial-gradient(circle at 20% 10%, #6178c9 0, transparent 32%), linear-gradient(145deg, #2a396f, #151c3c); }
 .brand-panel h1 { max-width: 650px; margin: 1rem 0; font-size: clamp(2.2rem, 5vw, 4.8rem); line-height: 1.18; }
@@ -109,4 +137,10 @@
   .dashboard-grid, .settings-grid, .settings-stack { grid-template-columns: 1fr; }
   .account-summary { grid-template-columns: 1fr; }
   .theme-label { display: none; }
+  .students-page .section-heading { align-items: flex-start; flex-direction: column; }
+  .students-grid, .student-profile-facts { grid-template-columns: 1fr; }
+  .student-card__heading { grid-template-columns: auto minmax(0, 1fr); }
+  .student-card__heading .student-status { grid-column: 1 / -1; justify-self: start; }
+  .student-card__facts { grid-template-columns: 1fr; }
+  .students-inline-error { align-items: stretch; flex-direction: column; }
 }

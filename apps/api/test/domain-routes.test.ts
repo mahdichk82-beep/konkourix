@@ -50,6 +50,8 @@ const store: DomainStore = {
   listCounselorRelationships: async () => [],
   createRelationship: async () => { throw new Error('not used') },
   updateRelationship: async () => null,
+  listAssignedStudents: async () => ({ items: [], nextCursor: null }),
+  findAssignedStudent: async () => null,
 }
 
 test('student profile route uses the v1 contract and request id', async () => {

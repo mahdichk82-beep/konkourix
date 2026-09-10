@@ -97,3 +97,79 @@ test('profile PATCH upserts preserve omitted fields and apply supplied nulls', a
     { bio: null },
   ])
 })
+
+test('counselor student store scopes list and detail queries to active assignments', async () => {
+  const counselorId = '10000000-0000-4000-8000-000000000001'
+  const studentProfileId = '30000000-0000-4000-8000-000000000001'
+  const listQueries: unknown[] = []
+  const detailQueries: unknown[] = []
+  const profile = {
+    id: studentProfileId,
+    educationLevel: 'دوازدهم',
+    schoolName: 'دبیرستان نمونه',
+    user: { status: 'ACTIVE' },
+  }
+  const prisma = {
+    studentProfile: {
+      async findMany(input: unknown) {
+        listQueries.push(input)
+        return [profile]
+      },
+      async findFirst(input: unknown) {
+        detailQueries.push(input)
+        return profile
+      },
+    },
+  } as unknown as PrismaClient
+  const store = createPrismaDomainStore(prisma)
+
+  const list = await store.listAssignedStudents(counselorId, { limit: 25 })
+  const detail = await store.findAssignedStudent(counselorId, studentProfileId)
+
+  assert.deepEqual(list, {
+    items: [{
+      id: studentProfileId,
+      displayName: null,
+      educationLevel: 'دوازدهم',
+      schoolName: 'دبیرستان نمونه',
+      status: 'ACTIVE',
+    }],
+    nextCursor: null,
+  })
+  assert.deepEqual(detail, list.items[0])
+  assert.deepEqual(listQueries, [{
+    cursor: undefined,
+    orderBy: { id: 'asc' },
+    select: {
+      id: true,
+      educationLevel: true,
+      schoolName: true,
+      user: { select: { status: true } },
+    },
+    skip: undefined,
+    take: 26,
+    where: {
+      user: {
+        studentRelationships: {
+          some: { counselorId, status: 'ACTIVE' },
+        },
+      },
+    },
+  }])
+  assert.deepEqual(detailQueries, [{
+    select: {
+      id: true,
+      educationLevel: true,
+      schoolName: true,
+      user: { select: { status: true } },
+    },
+    where: {
+      id: studentProfileId,
+      user: {
+        studentRelationships: {
+          some: { counselorId, status: 'ACTIVE' },
+        },
+      },
+    },
+  }])
+})

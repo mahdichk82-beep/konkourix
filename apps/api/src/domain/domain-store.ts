@@ -1,6 +1,9 @@
 import type {
   CounselorProfileInput,
   CounselorProfileRecord,
+  CounselorStudentPage,
+  CounselorStudentPageQuery,
+  CounselorStudentRecord,
   DomainUser,
   StudentCounselorRecord,
   StudentProfileInput,
@@ -30,4 +33,12 @@ export interface DomainStore {
     id: string,
     status: StudentCounselorStatus,
   ): Promise<StudentCounselorRecord | null>
+  listAssignedStudents(
+    counselorId: string,
+    query: CounselorStudentPageQuery,
+  ): Promise<CounselorStudentPage>
+  findAssignedStudent(
+    counselorId: string,
+    studentProfileId: string,
+  ): Promise<CounselorStudentRecord | null>
 }

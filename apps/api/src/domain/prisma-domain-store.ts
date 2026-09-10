@@ -2,6 +2,7 @@ import type { PrismaClient } from '../generated/prisma/client.js'
 import type {
   CounselorProfileInput,
   CounselorProfileRecord,
+  CounselorStudentRecord,
   DomainUser,
   StudentCounselorRecord,
   StudentProfileInput,
@@ -23,6 +24,18 @@ const toDomainUser = (user: {
 const toStudentProfile = (profile: StudentProfileRecord): StudentProfileRecord => profile
 const toCounselorProfile = (profile: CounselorProfileRecord): CounselorProfileRecord => profile
 const toRelationship = (relationship: StudentCounselorRecord): StudentCounselorRecord => relationship
+const toCounselorStudent = (profile: {
+  id: string
+  educationLevel: string | null
+  schoolName: string | null
+  user: { status: string }
+}): CounselorStudentRecord => ({
+  id: profile.id,
+  displayName: null,
+  educationLevel: profile.educationLevel,
+  schoolName: profile.schoolName,
+  status: profile.user.status as CounselorStudentRecord['status'],
+})
 
 export const createPrismaDomainStore = (prisma: PrismaClient): DomainStore => ({
   async findUserById(id) {
@@ -104,5 +117,56 @@ export const createPrismaDomainStore = (prisma: PrismaClient): DomainStore => ({
       }
       throw error
     }
+  },
+
+  async listAssignedStudents(counselorId, query) {
+    const limit = query.limit ?? 50
+    const profiles = await prisma.studentProfile.findMany({
+      cursor: query.cursor ? { id: query.cursor } : undefined,
+      orderBy: { id: 'asc' },
+      select: {
+        id: true,
+        educationLevel: true,
+        schoolName: true,
+        user: { select: { status: true } },
+      },
+      skip: query.cursor ? 1 : undefined,
+      take: limit + 1,
+      where: {
+        user: {
+          studentRelationships: {
+            some: { counselorId, status: 'ACTIVE' },
+          },
+        },
+      },
+    })
+    const hasMore = profiles.length > limit
+    const items = profiles.slice(0, limit)
+
+    return {
+      items: items.map(toCounselorStudent),
+      nextCursor: hasMore ? items.at(-1)?.id ?? null : null,
+    }
+  },
+
+  async findAssignedStudent(counselorId, studentProfileId) {
+    const profile = await prisma.studentProfile.findFirst({
+      select: {
+        id: true,
+        educationLevel: true,
+        schoolName: true,
+        user: { select: { status: true } },
+      },
+      where: {
+        id: studentProfileId,
+        user: {
+          studentRelationships: {
+            some: { counselorId, status: 'ACTIVE' },
+          },
+        },
+      },
+    })
+
+    return profile ? toCounselorStudent(profile) : null
   },
 })

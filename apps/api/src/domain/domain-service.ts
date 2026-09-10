@@ -3,6 +3,9 @@ import type { DomainStore } from './domain-store.js'
 import type {
   CounselorProfileInput,
   CounselorProfileRecord,
+  CounselorStudentPage,
+  CounselorStudentPageQuery,
+  CounselorStudentRecord,
   DomainUser,
   StudentCounselorRecord,
   StudentProfileInput,
@@ -26,6 +29,12 @@ const ensureRole = (user: DomainUser, role: DomainUser['role']): void => {
 
 const ensureAdmin = (user: DomainUser): void => {
   if (user.role !== 'ADMIN') {
+    throw new ApiError(403, 'ROLE_FORBIDDEN', 'Insufficient role permissions')
+  }
+}
+
+const ensureCounselor = (user: DomainUser): void => {
+  if (user.role !== 'COUNSELOR') {
     throw new ApiError(403, 'ROLE_FORBIDDEN', 'Insufficient role permissions')
   }
 }
@@ -132,5 +141,29 @@ export const createDomainService = (store: DomainStore) => ({
     }
 
     return relationship
+  },
+
+  async listAssignedStudents(
+    actor: DomainUser,
+    query: CounselorStudentPageQuery,
+  ): Promise<CounselorStudentPage> {
+    ensureActive(actor)
+    ensureCounselor(actor)
+    return store.listAssignedStudents(actor.id, query)
+  },
+
+  async getAssignedStudent(
+    actor: DomainUser,
+    studentProfileId: string,
+  ): Promise<CounselorStudentRecord> {
+    ensureActive(actor)
+    ensureCounselor(actor)
+    const student = await store.findAssignedStudent(actor.id, studentProfileId)
+
+    if (!student) {
+      throw new ApiError(404, 'STUDENT_NOT_FOUND', 'Student not found')
+    }
+
+    return student
   },
 })

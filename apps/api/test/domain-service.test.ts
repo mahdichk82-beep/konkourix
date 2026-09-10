@@ -96,6 +96,16 @@ const createStore = (): DomainStore & {
       relationship.endedAt = status === 'INACTIVE' ? new Date('2026-09-03T00:00:00.000Z') : null
       return relationship
     },
+    async listAssignedStudents(counselorId: string, query: { cursor?: string; limit?: number }) {
+      void counselorId
+      void query
+      return { items: [], nextCursor: null }
+    },
+    async findAssignedStudent(counselorId: string, studentProfileId: string) {
+      void counselorId
+      void studentProfileId
+      return null
+    },
   }
 
   return store
