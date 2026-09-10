@@ -1,0 +1,61 @@
+import type { ReactNode } from 'react'
+import type { AuthUser } from '../../auth/auth-client'
+import type { NavIconName } from '../navigation/NavIcon'
+import { NavIcon } from '../navigation/NavIcon'
+import { Button } from '../ui/Button'
+import type { Theme } from '../../theme/useTheme'
+
+export type NavigationItem = { icon: NavIconName; label: string; mobileLabel: string; path: string }
+
+type AppShellProps = {
+  children: ReactNode
+  currentPath: string
+  navigation: NavigationItem[]
+  navigate(path: string): void
+  onLogout(): Promise<void>
+  onThemeChange(theme: Theme): void
+  pageDescription: string
+  pageTitle: string
+  theme: Theme
+  user: AuthUser
+}
+
+export function AppShell({ children, currentPath, navigation, navigate, onLogout, onThemeChange, pageDescription, pageTitle, theme, user }: AppShellProps) {
+  const identity = user.email ?? user.phone ?? 'مشاور'
+  return (
+    <div className="app-shell" dir="rtl">
+      <aside className="sidebar">
+        <div className="app-brand"><span className="brand-mark brand-mark--small">ک</span><div><strong>کنکوریکس</strong><small>فضای مشاور</small></div></div>
+        <nav className="sidebar-nav" aria-label="ناوبری اصلی مشاور">
+          {navigation.map((item) => (
+            <a className={currentPath === item.path ? 'nav-link nav-link--active' : 'nav-link'} href={item.path} key={item.path} onClick={(event) => { event.preventDefault(); navigate(item.path) }} aria-current={currentPath === item.path ? 'page' : undefined}>
+              <NavIcon name={item.icon} /><span>{item.label}</span>
+            </a>
+          ))}
+        </nav>
+        <div className="sidebar-footer">
+          <div className="user-summary"><span className="user-avatar" aria-hidden="true">م</span><div><strong>مشاور</strong><small title={identity}>{identity}</small></div></div>
+          <Button variant="ghost" onClick={() => void onLogout()}>خروج امن</Button>
+        </div>
+      </aside>
+      <div className="app-workspace">
+        <header className="app-header">
+          <div><p className="page-kicker">پنل مشاور</p><h1>{pageTitle}</h1><p>{pageDescription}</p></div>
+          <div className="header-actions">
+            <Button aria-label={theme === 'light' ? 'فعال‌کردن حالت تاریک' : 'فعال‌کردن حالت روشن'} onClick={() => onThemeChange(theme === 'light' ? 'dark' : 'light')} variant="secondary">
+              <span aria-hidden="true">{theme === 'light' ? '◐' : '☀'}</span><span className="theme-label">{theme === 'light' ? 'تاریک' : 'روشن'}</span>
+            </Button>
+          </div>
+        </header>
+        <main className="app-content" id="main-content">{children}</main>
+      </div>
+      <nav className="mobile-nav" aria-label="ناوبری موبایل مشاور">
+        {navigation.map((item) => (
+          <a className={currentPath === item.path ? 'mobile-nav__link mobile-nav__link--active' : 'mobile-nav__link'} href={item.path} key={item.path} onClick={(event) => { event.preventDefault(); navigate(item.path) }} aria-current={currentPath === item.path ? 'page' : undefined}>
+            <NavIcon name={item.icon} /><span>{item.mobileLabel}</span>
+          </a>
+        ))}
+      </nav>
+    </div>
+  )
+}

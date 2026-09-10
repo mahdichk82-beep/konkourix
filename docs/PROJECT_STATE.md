@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 1 Milestone 1, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 1 Milestone 2, not a claim of overall product completion.
 
 ## Project
 
@@ -12,18 +12,18 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 1 Milestone 1 — Authentication Foundation**.
+The project has completed **Phase 1 Milestone 2 — Base Application Shells & Dashboard Foundation**.
 
-Phase 0 remains partially complete while explicitly authorized Phase 1 work proceeds. Authentication now has verified backend and independent browser foundations; later student and counselor product capabilities are not implied complete.
+Phase 0 remains partially complete while explicitly authorized Phase 1 work proceeds. Authentication and independent browser application shells are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
 - Audit and baseline re-verification date: **2026-09-10**
 
-## Phase 1 Milestone 1 Starting Checkpoint
+## Phase 1 Milestone 2 Starting Checkpoint
 
-- HEAD: `9afbeabe4a93847bd8f896700d68a27419183445`
-- Message: `feat: prepare production deployment workflow`
+- HEAD: `51391d38c9ef55895c2b5e0197b4dc1abade76ff`
+- Message: `feat: establish authentication foundation`
 
 Foundation repair checkpoint:
 
@@ -292,6 +292,32 @@ Milestone verification:
 
 The official Phase 0 completion estimate remains **50%**. Phase 1 Milestone 1 is **COMPLETE**, and confidence remains **HIGH**.
 
+### Phase 1 Milestone 2 — Base Application Shells & Dashboard Foundation
+
+**Status: COMPLETE**
+
+Completed and locally verified on 2026-09-10:
+
+- Student Web now has an authenticated RTL application shell with a desktop sidebar, mobile bottom navigation, page header, responsive content area, and independent routes for dashboard, planning, study, reports, and settings.
+- Counselor Web has its own authenticated RTL application shell with the same structural guarantees and independent routes for dashboard, students, planning, reports, and settings.
+- Both dashboards provide role-specific greeting areas, summary-card skeletons, overview empty states, and disabled quick-action placeholders. No product data, analytics, or feature operations are implemented.
+- Navigation destinations outside the dashboards and basic theme setting are explicit placeholder states. Unknown routes render a user-friendly error state with a safe dashboard return action.
+- Small application-local `Button`, `Card`, and loading/empty/error primitives establish reusable UI structure without activating an immature shared package or adding dependencies.
+- Both shells support light and dark CSS-variable themes. Theme preferences use separate, non-sensitive browser-storage keys and do not interact with authentication state.
+- Existing authentication clients, providers, refresh behavior, in-memory access-token strategy, role boundaries, and backend permissions are unchanged. Protected-route initialization now renders the reusable loading-state primitive.
+
+Milestone verification:
+
+- API tests: **69/69 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Diff, secret, dependency, schema, migration, infrastructure, auth-regression, and scope review: **PASS**
+
+The official Phase 0 completion estimate remains **50%**. Phase 1 Milestone 2 is **COMPLETE**, and confidence remains **HIGH**.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -355,7 +381,8 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - Its API origin is supplied by the validated build-time `VITE_API_URL` contract.
 - It has an independent student login screen, credentialed auth API client, in-memory access-token state, refresh bootstrap, protected-route shell, and logout.
 - It verifies authenticated access against the backend-protected student boundary before rendering protected content.
-- It remains an authentication shell rather than a complete student product UI.
+- Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
+- It remains an application foundation rather than a complete student product UI.
 
 ### Counselor application
 
@@ -363,9 +390,10 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - Its API origin is supplied by the validated build-time `VITE_API_URL` contract.
 - It has an independent counselor login screen, credentialed auth API client, in-memory access-token state, refresh bootstrap, protected-route shell, and logout.
 - It verifies authenticated access against the backend-protected counselor boundary before rendering protected content.
-- It remains an authentication shell rather than a complete counselor product UI.
+- Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
+- It remains an application foundation rather than a complete counselor product UI.
 
-Neither authentication shell should be described as a complete product merely because it builds.
+Neither application shell should be described as a complete product merely because it builds.
 
 ## Development Workflow State
 
@@ -429,7 +457,7 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 - Full student product UI
 - Full counselor product UI
-- Settings and light/dark theme workflows
+- Advanced settings and finalized theme workflows
 - Topics and complete task/planning UX
 - Test sessions
 - Focus sessions and timer
@@ -456,4 +484,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 1 Milestone 1 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 1 Milestone 2 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin Milestone 3, later product work, TLS, deployment execution, monitoring, or backup execution.

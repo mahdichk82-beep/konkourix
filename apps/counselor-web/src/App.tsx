@@ -1,111 +1,64 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react'
+import { useCallback } from 'react'
 import { ProtectedRoute } from './auth/ProtectedRoute'
 import { useAuth } from './auth/useAuth'
+import { AppShell, type NavigationItem } from './components/layout/AppShell'
+import { Button } from './components/ui/Button'
+import { ContentState } from './components/ui/ContentState'
+import { DashboardPage } from './pages/DashboardPage'
+import { LoginPage } from './pages/LoginPage'
+import { PlaceholderPage } from './pages/PlaceholderPage'
+import { SettingsPage } from './pages/SettingsPage'
+import { useBrowserRouter } from './routing/useBrowserRouter'
+import { useTheme } from './theme/useTheme'
 import './App.css'
 
-function LoginPage({ onSuccess }: { onSuccess(): void }) {
-  const { error, login, status } = useAuth()
-  const [submitting, setSubmitting] = useState(false)
+const navigation: NavigationItem[] = [
+  { icon: 'dashboard', label: 'داشبورد', mobileLabel: 'خانه', path: '/' },
+  { icon: 'students', label: 'دانش‌آموزان', mobileLabel: 'دانش‌آموز', path: '/students' },
+  { icon: 'planning', label: 'برنامه‌ریزی', mobileLabel: 'برنامه', path: '/planning' },
+  { icon: 'reports', label: 'گزارش‌ها', mobileLabel: 'گزارش', path: '/reports' },
+  { icon: 'settings', label: 'تنظیمات', mobileLabel: 'تنظیمات', path: '/settings' },
+]
 
-  useEffect(() => {
-    if (status === 'authenticated') onSuccess()
-  }, [onSuccess, status])
-
-  const submit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const form = new FormData(event.currentTarget)
-    setSubmitting(true)
-    try {
-      await login(String(form.get('identifier') ?? ''), String(form.get('password') ?? ''))
-      onSuccess()
-    } catch {
-      // The provider exposes a safe, localized error.
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  return (
-    <main className="auth-layout" dir="rtl">
-      <section className="brand-panel" aria-label="کنکوریکس مشاور">
-        <span className="brand-mark">ک</span>
-        <p className="eyebrow">Konkourix Counselor</p>
-        <h1>راهنمایی دقیق، برای مسیرهای متفاوت.</h1>
-        <p>فضای حرفه‌ای و مستقل مشاور برای همراهی دانش‌آموزان.</p>
-      </section>
-      <section className="login-panel">
-        <form className="login-card" onSubmit={submit}>
-          <div>
-            <p className="eyebrow">ورود مشاور</p>
-            <h2>به پنل مشاور وارد شوید</h2>
-            <p className="muted">ایمیل یا شماره موبایل و رمز عبور حساب مشاور را وارد کنید.</p>
-          </div>
-          <label>
-            ایمیل یا شماره موبایل
-            <input name="identifier" autoComplete="username" required />
-          </label>
-          <label>
-            رمز عبور
-            <input name="password" type="password" autoComplete="current-password" required />
-          </label>
-          {error && <p className="form-error" role="alert">{error}</p>}
-          <button type="submit" disabled={submitting || status === 'initializing'}>
-            {submitting ? 'در حال ورود…' : 'ورود به پنل مشاور'}
-          </button>
-          <p className="security-note">دسترسی مشاور در سرور بررسی می‌شود.</p>
-        </form>
-      </section>
-    </main>
-  )
+const routeMeta: Record<string, { description: string; title: string }> = {
+  '/': { title: 'داشبورد', description: 'نمای کلی فضای کاری و دانش‌آموزان' },
+  '/students': { title: 'دانش‌آموزان', description: 'ساختار آینده برای فهرست و پرونده دانش‌آموزان' },
+  '/planning': { title: 'برنامه‌ریزی', description: 'ساختار آینده برای بررسی برنامه‌های دانش‌آموزان' },
+  '/reports': { title: 'گزارش‌ها', description: 'ساختار آینده برای مرور گزارش‌های مشاوره' },
+  '/settings': { title: 'تنظیمات', description: 'ترجیحات پایه محیط مشاور' },
 }
 
-function Dashboard({ onLogout }: { onLogout(): Promise<void> }) {
-  const { user } = useAuth()
-  const identity = user?.email ?? user?.phone ?? 'مشاور'
+function AuthenticatedCounselorApp({ navigate, path }: { navigate(path: string, replace?: boolean): void; path: string }) {
+  const { logout, user } = useAuth()
+  const { setTheme, theme } = useTheme()
+  const meta = routeMeta[path] ?? { title: 'صفحه پیدا نشد', description: 'این مسیر در پنل مشاور تعریف نشده است.' }
+  const signOut = async () => {
+    try {
+      await logout()
+    } finally {
+      navigate('/login', true)
+    }
+  }
+  if (!user) return null
+
+  let content
+  if (path === '/') content = <DashboardPage user={user} />
+  else if (path === '/settings') content = <SettingsPage onThemeChange={setTheme} theme={theme} />
+  else if (routeMeta[path]) content = <PlaceholderPage title={meta.title} description="این بخش فقط به‌عنوان مسیر و جایگاه قابلیت آینده ایجاد شده و هنوز داده یا عملیات واقعی ندارد." />
+  else content = <ContentState kind="error" title="صفحه پیدا نشد" description="نشانی واردشده در پنل مشاور وجود ندارد." action={<Button onClick={() => navigate('/')}>بازگشت به داشبورد</Button>} />
 
   return (
-    <main className="dashboard" dir="rtl">
-      <header>
-        <div className="brand-inline"><span className="brand-mark small">ک</span><strong>کنکوریکس مشاور</strong></div>
-        <button className="secondary" type="button" onClick={() => void onLogout()}>خروج امن</button>
-      </header>
-      <section className="welcome-card">
-        <p className="eyebrow">پنل مشاور</p>
-        <h1>خوش آمدید، {identity}</h1>
-        <p>احراز هویت و مرز محافظت‌شده مشاور آماده است. ابزارهای مشاوره در milestoneهای بعدی روی همین پایه افزوده می‌شوند.</p>
-        <span className="role-badge">COUNSELOR</span>
-      </section>
-    </main>
+    <AppShell currentPath={path} navigation={navigation} navigate={navigate} onLogout={signOut} onThemeChange={setTheme} pageDescription={meta.description} pageTitle={meta.title} theme={theme} user={user}>
+      {content}
+    </AppShell>
   )
 }
 
 function App() {
-  const { logout } = useAuth()
-  const [path, setPath] = useState(window.location.pathname)
-
-  useEffect(() => {
-    const updatePath = () => setPath(window.location.pathname)
-    window.addEventListener('popstate', updatePath)
-    return () => window.removeEventListener('popstate', updatePath)
-  }, [])
-
-  const navigate = useCallback((nextPath: string, replace = false) => {
-    window.history[replace ? 'replaceState' : 'pushState']({}, '', nextPath)
-    setPath(nextPath)
-  }, [])
-
-  const signOut = async () => {
-    await logout()
-    navigate('/login', true)
-  }
-
-  if (path === '/login') return <LoginPage onSuccess={() => navigate('/', true)} />
-
-  return (
-    <ProtectedRoute navigate={navigate}>
-      <Dashboard onLogout={signOut} />
-    </ProtectedRoute>
-  )
+  const { navigate, path } = useBrowserRouter()
+  const completeLogin = useCallback(() => navigate('/', true), [navigate])
+  if (path === '/login') return <LoginPage onSuccess={completeLogin} />
+  return <ProtectedRoute navigate={navigate}><AuthenticatedCounselorApp navigate={navigate} path={path} /></ProtectedRoute>
 }
 
 export default App

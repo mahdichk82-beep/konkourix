@@ -173,3 +173,15 @@ This lightweight decision log records architectural constraints established by t
 **Frontend policy:** Student Web and Counselor Web have independent login screens, auth providers, API clients, protected-route shells, and logout flows. Neither provides role selection or switching. Both send credentialed requests, bootstrap from refresh cookies, keep access tokens out of Web Storage, and verify the session against their role-specific backend boundary before rendering protected content.
 
 **Status:** Accepted
+
+## ADR-017 — Independent Application Shells and UI Foundation
+
+**Decision:** Student Web and Counselor Web each own an independent authenticated application shell. Each shell provides its own route map, desktop sidebar, mobile bottom navigation, page header, constrained content area, dashboard foundation, and placeholder destinations. The applications are not merged, and navigation visibility does not grant backend permission.
+
+**Routing policy:** The current shells use the browser History API and the established SPA fallback instead of adding a routing dependency. Student routes are dashboard, planning, study, reports, and settings. Counselor routes are dashboard, students, planning, reports, and settings. Non-dashboard feature routes remain explicit empty placeholders until their own milestones are authorized.
+
+**UI policy:** Small `Button`, `Card`, and loading/empty/error-state primitives live inside each application while their visual language may still diverge. The currently empty shared packages are not activated solely for these few primitives; shared extraction requires a stable cross-application contract rather than superficial duplication.
+
+**Responsive and theme policy:** Both applications declare Persian/RTL document defaults, use desktop side navigation above the mobile breakpoint, and use a touch-friendly fixed bottom navigation on smaller screens. Light and dark themes are CSS-variable foundations. Only the non-sensitive per-application theme preference is stored in browser storage; authentication tokens and permission state remain governed by ADR-016.
+
+**Status:** Accepted
