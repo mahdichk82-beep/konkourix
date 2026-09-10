@@ -4,7 +4,7 @@ import { buildApp } from '../src/app.js'
 import type { AuthService } from '../src/auth/auth-service.js'
 import type { PublicUser } from '../src/auth/types.js'
 import { createStudentCoreServices, type StudentCoreStore } from '../src/student-core/services.js'
-import type { DailyTaskRecord } from '../src/student-core/types.js'
+import type { DailyTaskRecord, StudySubjectRecord } from '../src/student-core/types.js'
 
 const user: PublicUser = {
   id: 'student-user-1',
@@ -40,6 +40,10 @@ const store: StudentCoreStore = {
   findSubjectById: async () => null,
   createSubject: async (input) => ({ id: 'subject-1', ...input, archivedAt: null, createdAt: new Date('2026-09-03T00:00:00.000Z'), updatedAt: new Date('2026-09-03T00:00:00.000Z') }),
   updateSubject: async () => null,
+  listTopics: async () => [],
+  findTopicById: async () => null,
+  createTopic: async (input) => ({ id: 'topic-1', ...input, archivedAt: null, createdAt: new Date('2026-09-03T00:00:00.000Z'), updatedAt: new Date('2026-09-03T00:00:00.000Z') }),
+  updateTopic: async () => null,
   listPlans: async () => [],
   findPlanById: async () => null,
   createPlan: async (input) => ({ id: 'plan-1', ...input, createdAt: new Date('2026-09-03T00:00:00.000Z'), updatedAt: new Date('2026-09-03T00:00:00.000Z') }),
@@ -103,6 +107,63 @@ test('student task routes reject counselor users', async () => {
   assert.equal(response.statusCode, 403)
   assert.equal(response.json().error.code, 'ROLE_FORBIDDEN')
   await app.close()
+})
+
+test('student topic route creates a topic under an owned subject', async () => {
+  const subjectId = '00000000-0000-4000-8000-000000000301'
+  const subject: StudySubjectRecord = {
+    id: subjectId,
+    studentProfileId: 'student-profile-1',
+    name: 'Mathematics',
+    normalizedName: 'mathematics',
+    archivedAt: null,
+    createdAt: new Date('2026-09-03T00:00:00.000Z'),
+    updatedAt: new Date('2026-09-03T00:00:00.000Z'),
+  }
+  const topicStore: StudentCoreStore = {
+    ...store,
+    findSubjectById: async (profileId, id) =>
+      profileId === subject.studentProfileId && id === subject.id ? subject : null,
+  }
+  const app = createApp(topicStore)
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'POST',
+    payload: { title: 'Functions' },
+    url: `/api/v1/student/subjects/${subjectId}/topics`,
+  })
+
+  assert.equal(response.statusCode, 201)
+  assert.equal(response.json().data.title, 'Functions')
+  assert.equal(response.json().data.subjectId, subjectId)
+  await app.close()
+})
+
+test('student topic routes reject empty titles and counselor users', async () => {
+  const subjectId = '00000000-0000-4000-8000-000000000301'
+  const app = createApp()
+  const emptyTitle = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'POST',
+    payload: { title: '   ' },
+    url: `/api/v1/student/subjects/${subjectId}/topics`,
+  })
+  assert.equal(emptyTitle.statusCode, 400)
+  assert.equal(emptyTitle.json().error.code, 'VALIDATION_ERROR')
+  await app.close()
+
+  const counselorApp = createApp(store, {
+    ...auth,
+    authenticateAccessToken: async () => counselor,
+  })
+  const counselorResponse = await counselorApp.inject({
+    headers: { authorization: 'Bearer counselor-access-token' },
+    method: 'GET',
+    url: `/api/v1/student/subjects/${subjectId}/topics`,
+  })
+  assert.equal(counselorResponse.statusCode, 403)
+  assert.equal(counselorResponse.json().error.code, 'ROLE_FORBIDDEN')
+  await counselorApp.close()
 })
 
 test('daily task date query is mapped to the scheduled date filter', async () => {

@@ -8,6 +8,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { LoginPage } from './pages/LoginPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { SubjectTopicsPage } from './pages/SubjectTopicsPage'
 import { TodayPlanningPage } from './pages/TodayPlanningPage'
 import { useBrowserRouter } from './routing/useBrowserRouter'
 import { useTheme } from './theme/useTheme'
@@ -16,7 +17,7 @@ import './App.css'
 const navigation: NavigationItem[] = [
   { icon: 'dashboard', label: 'داشبورد', mobileLabel: 'خانه', path: '/' },
   { icon: 'planning', label: 'برنامه‌ریزی', mobileLabel: 'برنامه', path: '/planning' },
-  { icon: 'study', label: 'مطالعه', mobileLabel: 'مطالعه', path: '/study' },
+  { icon: 'study', label: 'درس‌ها و مباحث', mobileLabel: 'درس‌ها', path: '/study' },
   { icon: 'reports', label: 'گزارش‌ها', mobileLabel: 'گزارش', path: '/reports' },
   { icon: 'settings', label: 'تنظیمات', mobileLabel: 'تنظیمات', path: '/settings' },
 ]
@@ -24,7 +25,7 @@ const navigation: NavigationItem[] = [
 const routeMeta: Record<string, { description: string; title: string }> = {
   '/': { title: 'داشبورد', description: 'نمای کلی مسیر مطالعه و برنامه روزانه' },
   '/planning': { title: 'برنامه امروز', description: 'ساخت و پیگیری کارهای شخصی امروز' },
-  '/study': { title: 'مطالعه', description: 'ساختار آینده برای ثبت و مدیریت مطالعه' },
+  '/study': { title: 'درس‌ها و مباحث', description: 'ساخت و مدیریت ساختار شخصی مطالعه' },
   '/reports': { title: 'گزارش‌ها', description: 'ساختار آینده برای مرور روند و پیشرفت' },
   '/settings': { title: 'تنظیمات', description: 'ترجیحات پایه محیط دانش‌آموزی' },
 }
@@ -47,6 +48,7 @@ function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, re
   let content
   if (path === '/') content = <DashboardPage user={user} />
   else if (path === '/planning') content = <TodayPlanningPage />
+  else if (path === '/study') content = <SubjectTopicsPage />
   else if (path === '/settings') content = <SettingsPage onThemeChange={setTheme} theme={theme} />
   else if (routeMeta[path]) content = <PlaceholderPage title={meta.title} description="این بخش فقط به‌عنوان مسیر و جایگاه قابلیت آینده ایجاد شده و هنوز داده یا عملیات واقعی ندارد." />
   else content = <ContentState kind="error" title="صفحه پیدا نشد" description="نشانی واردشده در پنل دانش‌آموز وجود ندارد." action={<Button onClick={() => navigate('/')}>بازگشت به داشبورد</Button>} />

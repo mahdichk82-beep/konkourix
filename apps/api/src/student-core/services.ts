@@ -9,6 +9,7 @@ import type {
   StudyPlanRecord,
   StudyPlanStatus,
   StudySubjectRecord,
+  TopicRecord,
 } from './types.js'
 
 const requireProfile = async (store: StudentCoreStore, actor: DomainStudent) => {
@@ -69,6 +70,65 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         return result
       } catch (error) {
         return conflict(error, 'SUBJECT_CONFLICT', 'Study subject already exists')
+      }
+    },
+  }
+
+  const topics = {
+    async list(actor: DomainStudent, subjectId: string, query?: PageQuery): Promise<Page<TopicRecord>> {
+      const profile = await requireProfile(store, actor)
+      if (!await store.findSubjectById(profile.id, subjectId)) {
+        throw new ApiError(404, 'SUBJECT_NOT_FOUND', 'Study subject not found')
+      }
+      return page(await store.listTopics(profile.id, subjectId, query), query)
+    },
+    async get(actor: DomainStudent, id: string) {
+      const profile = await requireProfile(store, actor)
+      const result = await store.findTopicById(profile.id, id)
+      if (!result) throw new ApiError(404, 'TOPIC_NOT_FOUND', 'Topic not found')
+      return result
+    },
+    async create(actor: DomainStudent, subjectId: string, input: { title: string }) {
+      const profile = await requireProfile(store, actor)
+      const subject = await store.findSubjectById(profile.id, subjectId)
+      if (!subject) throw new ApiError(404, 'SUBJECT_NOT_FOUND', 'Study subject not found')
+      if (subject.archivedAt) {
+        throw new ApiError(409, 'SUBJECT_ARCHIVED', 'Archived subjects cannot receive new topics')
+      }
+      const title = input.title.trim()
+      if (!title) throw new ApiError(400, 'VALIDATION_ERROR', 'Topic title is required')
+      try {
+        return await store.createTopic({
+          normalizedTitle: title.toLocaleLowerCase(),
+          subjectId,
+          title,
+        })
+      } catch (error) {
+        return conflict(error, 'TOPIC_CONFLICT', 'Topic already exists in this subject')
+      }
+    },
+    async update(actor: DomainStudent, id: string, input: { title?: string; archived?: boolean }) {
+      const profile = await requireProfile(store, actor)
+      if (!await store.findTopicById(profile.id, id)) {
+        throw new ApiError(404, 'TOPIC_NOT_FOUND', 'Topic not found')
+      }
+      const titleData = input.title === undefined
+        ? {}
+        : {
+            normalizedTitle: input.title.trim().toLocaleLowerCase(),
+            title: input.title.trim(),
+          }
+      try {
+        const result = await store.updateTopic(profile.id, id, {
+          ...titleData,
+          ...(input.archived === undefined
+            ? {}
+            : { archivedAt: input.archived ? now() : null }),
+        })
+        if (!result) throw new ApiError(404, 'TOPIC_NOT_FOUND', 'Topic not found')
+        return result
+      } catch (error) {
+        return conflict(error, 'TOPIC_CONFLICT', 'Topic already exists in this subject')
       }
     },
   }
@@ -161,7 +221,7 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
     },
   }
 
-  return { subjects, plans, tasks }
+  return { subjects, topics, plans, tasks }
 }
 
 export type StudentCoreServices = ReturnType<typeof createStudentCoreServices>

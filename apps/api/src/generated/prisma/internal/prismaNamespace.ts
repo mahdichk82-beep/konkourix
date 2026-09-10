@@ -403,6 +403,7 @@ export const ModelName = {
   CounselorProfile: 'CounselorProfile',
   StudentCounselor: 'StudentCounselor',
   StudySubject: 'StudySubject',
+  Topic: 'Topic',
   StudyPlan: 'StudyPlan',
   DailyTask: 'DailyTask',
   StudySession: 'StudySession',
@@ -422,7 +423,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor" | "studySubject" | "studyPlan" | "dailyTask" | "studySession" | "studentGoal"
+    modelProps: "user" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor" | "studySubject" | "topic" | "studyPlan" | "dailyTask" | "studySession" | "studentGoal"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -870,6 +871,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    Topic: {
+      payload: Prisma.$TopicPayload<ExtArgs>
+      fields: Prisma.TopicFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.TopicFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.TopicFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        findFirst: {
+          args: Prisma.TopicFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.TopicFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        findMany: {
+          args: Prisma.TopicFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>[]
+        }
+        create: {
+          args: Prisma.TopicCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        createMany: {
+          args: Prisma.TopicCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.TopicCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>[]
+        }
+        delete: {
+          args: Prisma.TopicDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        update: {
+          args: Prisma.TopicUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        deleteMany: {
+          args: Prisma.TopicDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.TopicUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.TopicUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>[]
+        }
+        upsert: {
+          args: Prisma.TopicUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$TopicPayload>
+        }
+        aggregate: {
+          args: Prisma.TopicAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateTopic>
+        }
+        groupBy: {
+          args: Prisma.TopicGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TopicGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.TopicCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.TopicCountAggregateOutputType> | number
+        }
+      }
+    }
     StudyPlan: {
       payload: Prisma.$StudyPlanPayload<ExtArgs>
       fields: Prisma.StudyPlanFieldRefs
@@ -1286,6 +1361,19 @@ export const StudySubjectScalarFieldEnum = {
 export type StudySubjectScalarFieldEnum = (typeof StudySubjectScalarFieldEnum)[keyof typeof StudySubjectScalarFieldEnum]
 
 
+export const TopicScalarFieldEnum = {
+  id: 'id',
+  subjectId: 'subjectId',
+  title: 'title',
+  normalizedTitle: 'normalizedTitle',
+  archivedAt: 'archivedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TopicScalarFieldEnum = (typeof TopicScalarFieldEnum)[keyof typeof TopicScalarFieldEnum]
+
+
 export const StudyPlanScalarFieldEnum = {
   id: 'id',
   studentProfileId: 'studentProfileId',
@@ -1676,6 +1764,7 @@ export type GlobalOmitConfig = {
   counselorProfile?: Prisma.CounselorProfileOmit
   studentCounselor?: Prisma.StudentCounselorOmit
   studySubject?: Prisma.StudySubjectOmit
+  topic?: Prisma.TopicOmit
   studyPlan?: Prisma.StudyPlanOmit
   dailyTask?: Prisma.DailyTaskOmit
   studySession?: Prisma.StudySessionOmit

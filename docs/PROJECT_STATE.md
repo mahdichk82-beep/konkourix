@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 1, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 2, not a claim of overall product completion.
 
 ## Project
 
@@ -12,9 +12,9 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 1 — Student Today Planning**.
+The project has completed **Phase 2 Milestone 2 — Student Subject & Topic Foundation**.
 
-Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, and the first persistent student planning experience are verified; later student and counselor product capabilities are not implied complete.
+Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today planning, and student-owned subject/topic management are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
@@ -39,6 +39,11 @@ Study Tracking recovery checkpoint:
 
 - HEAD: `11c523d05418a6e3d57039b29f45d5b08e23012c`
 - Message: `feat: complete account settings and session management`
+
+## Phase 2 Milestone 2 Starting Checkpoint
+
+- HEAD: `634e99083d24d4e62d941390108d0f17f476a82c`
+- Message: `feat: add student today planning`
 
 ## Verified Baseline
 
@@ -375,6 +380,34 @@ Milestone verification:
 
 Deferred Phase 2 capabilities include topics, weekly planning, drag-and-drop/manual ordering, free-text search, counselor-authored tasks/plans, and richer task lifecycle/progress data. These require separately designed milestones and are not implied complete by the daily-planning slice.
 
+### Phase 2 Milestone 2 — Student Subject & Topic Foundation
+
+**Status: COMPLETE**
+
+- The existing student-owned `StudySubject` model, authenticated subject APIs, and Student Web auth client remain canonical and are reused without a parallel subject architecture.
+- A minimal `Topic` model adds a required `StudySubject` relation, normalized per-subject title uniqueness, timestamps, archive metadata, an indexed subject foreign key, and cascade cleanup with its parent subject.
+- The additive `20260910184152_add_student_topic_foundation` migration was applied successfully to the local development database; all 6 migrations are up to date.
+- Student-only topic routes support listing and creating topics below an owned subject and getting, renaming, archiving, or restoring an owned topic. No delete route, client-selected owner, counselor mutation path, or task-topic coupling was introduced.
+- Topic list/read/update Prisma predicates traverse the subject relation to the authenticated student's `StudentProfile`; parent validation also hides missing and foreign subjects behind the same not-found response.
+- Student Web `/study` is now a real Persian/RTL responsive subject/topic workspace with subject list/create, subject selection, topic list/create/rename/archive/restore, and localized loading, empty, error, and success states. Student `/planning` remains intact, and Counselor Web remains unchanged.
+- Focused tests cover successful topic creation and normalization, duplicate rejection, foreign-subject list/create denial, foreign-topic update denial, invalid parent subjects, empty titles, counselor denial, archive/rename behavior, and relational ownership predicates in the Prisma store.
+- No dependency, lockfile, authentication, infrastructure, Counselor Web, weekly-planning, ordering, search, reporting, or richer progress feature was changed.
+
+Milestone verification:
+
+- API tests: **89/89 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 6 migrations found and the database is up to date
+- Schema changed: **YES; additive Topic model only**
+- Migration added and run: **YES; local development database only**
+
+Deferred Phase 2 capabilities include weekly planning, drag-and-drop/manual ordering, free-text search, counselor-authored tasks/plans or topics, task-topic linkage, and richer task lifecycle/progress data. They require separately authorized milestones.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -404,7 +437,7 @@ The following capabilities are present and covered by the current API baseline:
 - Current-session logout, all-session revocation, authenticated password change, and versioned `/auth/me` functionality under `/api/v1`
 - Student and counselor profile APIs
 - Student-counselor relationship foundation
-- Student subjects, study plans, and daily tasks
+- Student subjects, topics, study plans, and daily tasks
 - Study Sessions and Student Goals
 - Backend role and ownership enforcement foundations; student resources are resolved from the authenticated user's StudentProfile
 
@@ -423,8 +456,10 @@ Commit `5fffa805d99e1fc870410c3b5115b2924059399f` records four verified repairs:
 
 - Persistent storage: PostgreSQL
 - ORM and migration system: Prisma
-- Known migrations: 5
+- Known migrations: 6
 - Migration status at this checkpoint: applied and up to date
+- Student Topic migration: `20260910184152_add_student_topic_foundation`
+- Student Topic migration state: committed and applied locally
 - Study Tracking migration: `20260903002126_add_study_tracking`
 - Study Tracking migration state: committed and applied
 
@@ -441,6 +476,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing student profile fields, theme selection, password change, current logout, and logout-all.
 - Its planning page provides persistent today-task listing and creation, completion/skipping, status and subject filters, cursor pagination, and inline subject creation through the existing authenticated backend contracts.
+- Its study page provides persistent student-owned subject listing/creation and topic listing/creation/rename/archive/restore through the authenticated backend contracts.
 - It remains an application foundation rather than a complete student product UI.
 
 ### Counselor application
@@ -518,7 +554,7 @@ These items are not authorization to implement all remaining Phase 0 work in one
 - Full student product UI
 - Full counselor product UI
 - Advanced profile and account-recovery workflows
-- Topics and complete task/planning UX
+- Complete task/planning UX beyond the current today-planning and subject/topic slices
 - Test sessions
 - Focus sessions and timer
 - Habits and streaks
@@ -544,4 +580,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 1 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin topics, weekly planning, drag-and-drop/manual ordering, search, counselor planning, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 2 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin weekly planning, drag-and-drop/manual ordering, search, counselor planning/topics, task-topic linkage, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.

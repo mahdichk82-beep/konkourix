@@ -6,6 +6,7 @@ import type {
   StudyPlanStatus,
   StudySubjectRecord,
   StudentProfileRef,
+  TopicRecord,
 } from './types.js'
 
 export interface StudentCoreStore {
@@ -14,6 +15,10 @@ export interface StudentCoreStore {
   findSubjectById(profileId: string, id: string): Promise<StudySubjectRecord | null>
   createSubject(input: { studentProfileId: string; name: string; normalizedName: string }): Promise<StudySubjectRecord>
   updateSubject(profileId: string, id: string, input: { name?: string; normalizedName?: string; archivedAt?: Date | null }): Promise<StudySubjectRecord | null>
+  listTopics(profileId: string, subjectId: string, query?: PageQuery): Promise<TopicRecord[]>
+  findTopicById(profileId: string, id: string): Promise<TopicRecord | null>
+  createTopic(input: { subjectId: string; title: string; normalizedTitle: string }): Promise<TopicRecord>
+  updateTopic(profileId: string, id: string, input: { title?: string; normalizedTitle?: string; archivedAt?: Date | null }): Promise<TopicRecord | null>
   listPlans(profileId: string, query?: PageQuery & { status?: StudyPlanStatus }): Promise<StudyPlanRecord[]>
   findPlanById(profileId: string, id: string): Promise<StudyPlanRecord | null>
   createPlan(input: Omit<StudyPlanRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<StudyPlanRecord>

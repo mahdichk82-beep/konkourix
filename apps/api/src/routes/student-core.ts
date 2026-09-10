@@ -9,12 +9,16 @@ import {
   createPlanSchema,
   createSubjectSchema,
   createTaskSchema,
+  createTopicSchema,
   listPlansSchema,
   listSubjectsSchema,
   listTasksSchema,
+  listTopicsSchema,
+  subjectIdParamSchema,
   updatePlanSchema,
   updateSubjectSchema,
   updateTaskSchema,
+  updateTopicSchema,
   uuidParamSchema,
 } from '../schemas/student-core.js'
 
@@ -71,6 +75,44 @@ export const registerStudentCoreRoutes = (
         request.user!,
         parseId(request.params),
         parseBody(updateSubjectSchema.safeParse(request.body)),
+      ),
+      request.context.requestId,
+    ),
+  )
+
+  app.get('/student/subjects/:subjectId/topics', studentOnly, async (request) => {
+    const { subjectId } = parseBody(subjectIdParamSchema.safeParse(request.params))
+    const query = parseBody(listTopicsSchema.safeParse(request.query))
+    return successResponse(
+      await options.studentCore.topics.list(request.user!, subjectId, query),
+      request.context.requestId,
+    )
+  })
+
+  app.post('/student/subjects/:subjectId/topics', studentOnly, async (request, reply) => {
+    const { subjectId } = parseBody(subjectIdParamSchema.safeParse(request.params))
+    const input = parseBody(createTopicSchema.safeParse(request.body))
+    return reply.status(201).send(
+      successResponse(
+        await options.studentCore.topics.create(request.user!, subjectId, input),
+        request.context.requestId,
+      ),
+    )
+  })
+
+  app.get('/student/topics/:id', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.topics.get(request.user!, parseId(request.params)),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/topics/:id', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.topics.update(
+        request.user!,
+        parseId(request.params),
+        parseBody(updateTopicSchema.safeParse(request.body)),
       ),
       request.context.requestId,
     ),

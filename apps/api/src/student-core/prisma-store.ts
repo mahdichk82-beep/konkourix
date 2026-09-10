@@ -40,6 +40,37 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
     return prisma.studySubject.findFirst({ where: { id, studentProfileId } })
   },
 
+  async listTopics(studentProfileId, subjectId, query) {
+    return prisma.topic.findMany({
+      cursor: query?.cursor ? { id: query.cursor } : undefined,
+      orderBy: { createdAt: 'desc' },
+      skip: query?.cursor ? 1 : undefined,
+      take: query?.limit ? query.limit + 1 : undefined,
+      where: { subjectId, subject: { studentProfileId } },
+    })
+  },
+
+  async findTopicById(studentProfileId, id) {
+    return prisma.topic.findFirst({
+      where: { id, subject: { studentProfileId } },
+    })
+  },
+
+  async createTopic(input) {
+    return prisma.topic.create({ data: input })
+  },
+
+  async updateTopic(studentProfileId, id, input) {
+    const result = await prisma.topic.updateMany({
+      data: input,
+      where: { id, subject: { studentProfileId } },
+    })
+    if (result.count !== 1) return null
+    return prisma.topic.findFirst({
+      where: { id, subject: { studentProfileId } },
+    })
+  },
+
   async listPlans(studentProfileId, query) {
     return prisma.studyPlan.findMany({
       cursor: query?.cursor ? { id: query.cursor } : undefined,

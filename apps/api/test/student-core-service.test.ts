@@ -7,6 +7,7 @@ import type {
   DomainStudent,
   StudyPlanRecord,
   StudySubjectRecord,
+  TopicRecord,
 } from '../src/student-core/types.js'
 
 const student: DomainStudent = {
@@ -20,11 +21,13 @@ const timestamp = new Date('2026-09-03T00:00:00.000Z')
 
 const createStore = (): StudentCoreStore & {
   subjects: StudySubjectRecord[]
+  topics: TopicRecord[]
   plans: StudyPlanRecord[]
   tasks: DailyTaskRecord[]
 } => {
   const store = {
     subjects: [] as StudySubjectRecord[],
+    topics: [] as TopicRecord[],
     plans: [] as StudyPlanRecord[],
     tasks: [] as DailyTaskRecord[],
     async findStudentProfileByUserId(userId: string) {
@@ -44,6 +47,32 @@ const createStore = (): StudentCoreStore & {
       if (!subject) return null
       Object.assign(subject, input, { updatedAt: timestamp })
       return subject
+    },
+    async listTopics(profileId: string, subjectId: string) {
+      const ownedSubjectIds = new Set(
+        store.subjects
+          .filter((subject) => subject.studentProfileId === profileId)
+          .map((subject) => subject.id),
+      )
+      return store.topics.filter((topic) => topic.subjectId === subjectId && ownedSubjectIds.has(topic.subjectId))
+    },
+    async findTopicById(profileId: string, id: string) {
+      const topic = store.topics.find((item) => item.id === id)
+      if (!topic) return null
+      return store.subjects.some((subject) =>
+        subject.id === topic.subjectId && subject.studentProfileId === profileId,
+      ) ? topic : null
+    },
+    async createTopic(input: { subjectId: string; title: string; normalizedTitle: string }) {
+      const record = { id: `topic-${store.topics.length + 1}`, ...input, archivedAt: null, createdAt: timestamp, updatedAt: timestamp }
+      store.topics.push(record)
+      return record
+    },
+    async updateTopic(profileId: string, id: string, input: { title?: string; normalizedTitle?: string; archivedAt?: Date | null }) {
+      const topic = await store.findTopicById(profileId, id)
+      if (!topic) return null
+      Object.assign(topic, input, { updatedAt: timestamp })
+      return topic
     },
     async listPlans() { return store.plans },
     async findPlanById(profileId: string, id: string) { return store.plans.find((plan) => plan.id === id && plan.studentProfileId === profileId) ?? null },
@@ -100,6 +129,109 @@ test('student core creates normalized subjects and rejects duplicate ownership',
     services.subjects.create(student, { name: 'mathematics' }),
     (error: unknown) => error instanceof ApiError && error.code === 'SUBJECT_CONFLICT',
   )
+})
+
+test('student core creates normalized topics and rejects duplicate names in a subject', async () => {
+  const store = createStore()
+  store.subjects.push({
+    id: 'subject-1',
+    studentProfileId: profile.id,
+    name: 'Mathematics',
+    normalizedName: 'mathematics',
+    archivedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  const services = createStudentCoreServices(store, () => timestamp)
+
+  const topic = await services.topics.create(student, 'subject-1', { title: '  Functions  ' })
+  assert.equal(topic.title, 'Functions')
+  assert.equal(topic.normalizedTitle, 'functions')
+  assert.equal(topic.subjectId, 'subject-1')
+
+  store.createTopic = async () => {
+    throw { code: 'P2002' }
+  }
+  await assert.rejects(
+    services.topics.create(student, 'subject-1', { title: 'functions' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TOPIC_CONFLICT',
+  )
+})
+
+test('student core hides foreign subjects and topics from topic operations', async () => {
+  const store = createStore()
+  store.subjects.push({
+    id: 'foreign-subject',
+    studentProfileId: 'student-profile-2',
+    name: 'Private subject',
+    normalizedName: 'private subject',
+    archivedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  store.topics.push({
+    id: 'foreign-topic',
+    subjectId: 'foreign-subject',
+    title: 'Private topic',
+    normalizedTitle: 'private topic',
+    archivedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  const services = createStudentCoreServices(store, () => timestamp)
+
+  await assert.rejects(
+    services.topics.list(student, 'foreign-subject'),
+    (error: unknown) => error instanceof ApiError && error.code === 'SUBJECT_NOT_FOUND',
+  )
+  await assert.rejects(
+    services.topics.create(student, 'foreign-subject', { title: 'Escalated topic' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SUBJECT_NOT_FOUND',
+  )
+  await assert.rejects(
+    services.topics.update(student, 'foreign-topic', { title: 'Changed' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TOPIC_NOT_FOUND',
+  )
+  assert.equal(store.topics[0]?.title, 'Private topic')
+})
+
+test('student core rejects an invalid subject for topic creation', async () => {
+  const services = createStudentCoreServices(createStore(), () => timestamp)
+
+  await assert.rejects(
+    services.topics.create(student, 'missing-subject', { title: 'Functions' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SUBJECT_NOT_FOUND',
+  )
+})
+
+test('student core renames and archives only an owned topic', async () => {
+  const store = createStore()
+  store.subjects.push({
+    id: 'subject-1',
+    studentProfileId: profile.id,
+    name: 'Physics',
+    normalizedName: 'physics',
+    archivedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  store.topics.push({
+    id: 'topic-1',
+    subjectId: 'subject-1',
+    title: 'Motion',
+    normalizedTitle: 'motion',
+    archivedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  const services = createStudentCoreServices(store, () => timestamp)
+
+  const renamed = await services.topics.update(student, 'topic-1', { title: '  Dynamics  ' })
+  assert.equal(renamed.title, 'Dynamics')
+  assert.equal(renamed.normalizedTitle, 'dynamics')
+
+  const archived = await services.topics.update(student, 'topic-1', { archived: true })
+  assert.deepEqual(archived.archivedAt, timestamp)
 })
 
 test('student core rejects plans whose end date precedes the start date', async () => {

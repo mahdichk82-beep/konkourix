@@ -57,6 +57,7 @@ export const ModelName = {
   CounselorProfile: 'CounselorProfile',
   StudentCounselor: 'StudentCounselor',
   StudySubject: 'StudySubject',
+  Topic: 'Topic',
   StudyPlan: 'StudyPlan',
   DailyTask: 'DailyTask',
   StudySession: 'StudySession',
@@ -158,6 +159,19 @@ export const StudySubjectScalarFieldEnum = {
 } as const
 
 export type StudySubjectScalarFieldEnum = (typeof StudySubjectScalarFieldEnum)[keyof typeof StudySubjectScalarFieldEnum]
+
+
+export const TopicScalarFieldEnum = {
+  id: 'id',
+  subjectId: 'subjectId',
+  title: 'title',
+  normalizedTitle: 'normalizedTitle',
+  archivedAt: 'archivedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type TopicScalarFieldEnum = (typeof TopicScalarFieldEnum)[keyof typeof TopicScalarFieldEnum]
 
 
 export const StudyPlanScalarFieldEnum = {

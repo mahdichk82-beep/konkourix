@@ -14,6 +14,13 @@ export const updateSubjectSchema = z.object({
   archived: z.boolean().optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, 'At least one field is required')
 
+export const listTopicsSchema = z.object(pagination).strict()
+export const createTopicSchema = z.object({ title: z.string().trim().min(1).max(200) }).strict()
+export const updateTopicSchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  archived: z.boolean().optional(),
+}).strict().refine((value) => Object.keys(value).length > 0, 'At least one field is required')
+
 export const listPlansSchema = z.object({ ...pagination, status: z.enum(['DRAFT', 'ACTIVE', 'COMPLETED', 'ARCHIVED']).optional() }).strict()
 export const createPlanSchema = z.object({
   title: z.string().trim().min(1).max(200),
@@ -56,3 +63,4 @@ export const updateTaskSchema = z.object({
 }).strict().refine((value) => Object.keys(value).length > 0, 'At least one field is required')
 
 export const uuidParamSchema = z.object({ id: z.string().uuid() }).strict()
+export const subjectIdParamSchema = z.object({ subjectId: z.string().uuid() }).strict()

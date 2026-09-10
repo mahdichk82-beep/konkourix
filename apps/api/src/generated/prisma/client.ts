@@ -72,6 +72,11 @@ export type StudentCounselor = Prisma.StudentCounselorModel
  */
 export type StudySubject = Prisma.StudySubjectModel
 /**
+ * Model Topic
+ *
+ */
+export type Topic = Prisma.TopicModel
+/**
  * Model StudyPlan
  * 
  */

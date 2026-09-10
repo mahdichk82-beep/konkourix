@@ -18,6 +18,16 @@ export type StudySubjectRecord = {
   updatedAt: Date
 }
 
+export type TopicRecord = {
+  id: string
+  subjectId: string
+  title: string
+  normalizedTitle: string
+  archivedAt: Date | null
+  createdAt: Date
+  updatedAt: Date
+}
+
 export type StudyPlanRecord = {
   id: string
   studentProfileId: string

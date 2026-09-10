@@ -89,3 +89,45 @@ test('Prisma task reads and updates always include student ownership', async () 
     },
   ])
 })
+
+test('Prisma topic lists, reads, and updates always include subject ownership', async () => {
+  const listQueries: unknown[] = []
+  const findQueries: unknown[] = []
+  const updateQueries: unknown[] = []
+  const prisma = {
+    topic: {
+      async findMany(query: unknown) {
+        listQueries.push(query)
+        return []
+      },
+      async findFirst(query: unknown) {
+        findQueries.push(query)
+        return null
+      },
+      async updateMany(query: unknown) {
+        updateQueries.push(query)
+        return { count: 0 }
+      },
+    },
+  } as unknown as PrismaClient
+  const store = createPrismaStudentCoreStore(prisma)
+
+  await store.listTopics('student-profile-1', 'subject-1', { cursor: 'topic-2', limit: 2 })
+  await store.findTopicById('student-profile-1', 'topic-1')
+  await store.updateTopic('student-profile-1', 'topic-1', { title: 'Updated' })
+
+  assert.deepEqual(listQueries, [{
+    cursor: { id: 'topic-2' },
+    orderBy: { createdAt: 'desc' },
+    skip: 1,
+    take: 3,
+    where: { subjectId: 'subject-1', subject: { studentProfileId: 'student-profile-1' } },
+  }])
+  assert.deepEqual(findQueries, [
+    { where: { id: 'topic-1', subject: { studentProfileId: 'student-profile-1' } } },
+  ])
+  assert.deepEqual(updateQueries, [{
+    data: { title: 'Updated' },
+    where: { id: 'topic-1', subject: { studentProfileId: 'student-profile-1' } },
+  }])
+})
