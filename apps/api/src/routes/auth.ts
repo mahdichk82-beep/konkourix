@@ -4,7 +4,11 @@ import { ApiError } from '../errors/api-error.js'
 import type { AuthService } from '../auth/auth-service.js'
 import type { AuthRequestMeta } from '../auth/types.js'
 import { authenticateRequest } from '../plugins/authentication.js'
-import { loginSchema, registerSchema } from '../schemas/auth.js'
+import {
+  changePasswordSchema,
+  loginSchema,
+  registerSchema,
+} from '../schemas/auth.js'
 
 export const refreshCookieName = 'refresh_token'
 
@@ -133,6 +137,39 @@ export const registerAuthRoutes = (
       request.context.requestId,
     )
   })
+
+  app.post(
+    '/auth/logout-all',
+    { preHandler: authenticateRequest(options.auth) },
+    async (request, reply) => {
+      await options.auth.logoutAll(request.user!.id)
+      reply.clearCookie(refreshCookieName, refreshCookieAttributes(options))
+
+      return successResponse(
+        { loggedOut: true },
+        request.context.requestId,
+      )
+    },
+  )
+
+  app.post(
+    '/auth/change-password',
+    { preHandler: authenticateRequest(options.auth) },
+    async (request, reply) => {
+      const input = parseBody(changePasswordSchema.safeParse(request.body))
+      await options.auth.changePassword(
+        request.user!.id,
+        input.currentPassword,
+        input.newPassword,
+      )
+      reply.clearCookie(refreshCookieName, refreshCookieAttributes(options))
+
+      return successResponse(
+        { passwordChanged: true, reauthenticationRequired: true },
+        request.context.requestId,
+      )
+    },
+  )
 
   app.get(
     '/auth/me',

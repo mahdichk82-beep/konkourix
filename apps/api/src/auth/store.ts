@@ -51,4 +51,10 @@ export interface AuthStore {
   }): Promise<AuthSessionRecord | null>
   revokeSession(sessionId: string, now: Date): Promise<void>
   revokeSessionFamily(familyId: string, now: Date): Promise<void>
+  revokeAllUserSessions(userId: string, now: Date): Promise<void>
+  changePasswordAndRevokeSessions(input: {
+    userId: string
+    passwordHash: string
+    now: Date
+  }): Promise<void>
 }

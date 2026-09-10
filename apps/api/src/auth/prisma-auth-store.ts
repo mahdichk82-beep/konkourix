@@ -138,4 +138,24 @@ export const createPrismaAuthStore = (prisma: PrismaClient): AuthStore => ({
       where: { familyId, revokedAt: null },
     })
   },
+
+  async revokeAllUserSessions(userId, now) {
+    await prisma.authSession.updateMany({
+      data: { revokedAt: now },
+      where: { userId, revokedAt: null },
+    })
+  },
+
+  async changePasswordAndRevokeSessions({ now, passwordHash, userId }) {
+    await prisma.$transaction([
+      prisma.user.update({
+        data: { passwordHash },
+        where: { id: userId },
+      }),
+      prisma.authSession.updateMany({
+        data: { revokedAt: now },
+        where: { userId, revokedAt: null },
+      }),
+    ])
+  },
 })

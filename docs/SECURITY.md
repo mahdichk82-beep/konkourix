@@ -14,7 +14,9 @@ This document records the Phase 0 Milestone 6 security and operational baseline.
 
 - Route inputs use strict Zod schemas and backend role/ownership checks remain authoritative.
 - Passwords use salted, parameterized scrypt hashes and timing-safe comparison. Login does equivalent password-hash work for unknown accounts to reduce account-enumeration timing differences.
+- Authenticated password change requires the current password and the existing 12-character minimum for the replacement. The existing scrypt implementation is reused; password replacement and revocation of all refresh sessions owned by that user are committed together. The client then discards its in-memory access token and requires a fresh login.
 - Refresh tokens are random, only SHA-256 hashes are stored, and rotation/reuse handling remains active. Access-token and cookie architecture is unchanged by this milestone.
+- Authenticated logout-all derives the target user from the verified access token, accepts no arbitrary user ID, revokes only that user's active refresh sessions, and clears the current refresh cookie. Stateless access JWTs remain usable only for their existing short lifetime and cannot obtain another refresh token after revocation.
 - Runtime secrets are provided through ignored runtime environment files or an equivalent secret source. They are not Docker build arguments, Compose literals, documentation values, or frontend variables.
 - `VITE_API_URL` is public build configuration and must never carry credentials. Database URLs, token secrets, passwords, cookies, and private tokens must never be placed in frontend variables or image layers.
 

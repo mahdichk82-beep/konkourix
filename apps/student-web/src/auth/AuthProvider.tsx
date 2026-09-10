@@ -48,9 +48,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const clearAuthenticatedState = useCallback(() => {
+    setUser(null)
+    setStatus('anonymous')
+    setError(null)
+  }, [])
+
+  const logoutAll = useCallback(async () => {
+    await authClient.logoutAll()
+    clearAuthenticatedState()
+  }, [clearAuthenticatedState])
+
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    await authClient.changePassword(currentPassword, newPassword)
+    clearAuthenticatedState()
+  }, [clearAuthenticatedState])
+
   const value = useMemo(
-    () => ({ error, login, logout, status, user }),
-    [error, login, logout, status, user],
+    () => ({ changePassword, error, login, logout, logoutAll, status, user }),
+    [changePassword, error, login, logout, logoutAll, status, user],
   )
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

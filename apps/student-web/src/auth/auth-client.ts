@@ -12,6 +12,20 @@ export type AuthUser = {
   updatedAt: string
 }
 
+export type StudentProfile = {
+  id: string
+  userId: string
+  educationLevel: string | null
+  schoolName: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type StudentProfileInput = {
+  educationLevel?: string | null
+  schoolName?: string | null
+}
+
 type AuthPayload = {
   accessToken: string
   expiresIn: number
@@ -140,6 +154,36 @@ class StudentAuthClient {
     } finally {
       this.accessToken = null
     }
+  }
+
+  async logoutAll(): Promise<void> {
+    await this.authorizedRequest<{ loggedOut: boolean }>(
+      '/auth/logout-all',
+      { method: 'POST' },
+    )
+    this.accessToken = null
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await this.authorizedRequest<{ passwordChanged: boolean; reauthenticationRequired: boolean }>(
+      '/auth/change-password',
+      {
+        body: JSON.stringify({ currentPassword, newPassword }),
+        method: 'POST',
+      },
+    )
+    this.accessToken = null
+  }
+
+  getStudentProfile(): Promise<StudentProfile | null> {
+    return this.authorizedRequest<StudentProfile | null>('/me/student-profile')
+  }
+
+  updateStudentProfile(input: StudentProfileInput): Promise<StudentProfile> {
+    return this.authorizedRequest<StudentProfile>('/me/student-profile', {
+      body: JSON.stringify(input),
+      method: 'PATCH',
+    })
   }
 
   async authorizedRequest<T>(path: string, init: RequestInit = {}): Promise<T> {

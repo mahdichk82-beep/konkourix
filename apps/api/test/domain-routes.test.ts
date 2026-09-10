@@ -17,9 +17,11 @@ const user: PublicUser = {
 
 const createAuth = (): AuthService => ({
   authenticateAccessToken: async () => user,
+  changePassword: async () => undefined,
   getCurrentUser: async () => user,
   login: async () => { throw new Error('not used') },
   logout: async () => undefined,
+  logoutAll: async () => undefined,
   refresh: async () => { throw new Error('not used') },
   register: async () => { throw new Error('not used') },
 })
@@ -92,6 +94,33 @@ test('domain routes reject unauthenticated requests', async () => {
   const response = await app.inject({ method: 'GET', url: '/api/v1/me/student-profile' })
   assert.equal(response.statusCode, 401)
   assert.equal(response.json().error.code, 'TOKEN_MISSING')
+
+  await app.close()
+})
+
+test('profile updates reject role, privilege, and arbitrary ownership fields', async () => {
+  const app = buildApp({
+    auth: createAuth(),
+    domain: createDomainService(store),
+    environment: 'test',
+    logger: false,
+    prisma: { $queryRaw: async () => [{ '?column?': 1 }] },
+  })
+
+  for (const payload of [
+    { educationLevel: 'secondary', role: 'ADMIN' },
+    { schoolName: 'School', status: 'ACTIVE' },
+    { educationLevel: 'secondary', userId: 'another-user' },
+  ]) {
+    const response = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'PATCH',
+      payload,
+      url: '/api/v1/me/student-profile',
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(response.json().error.code, 'VALIDATION_ERROR')
+  }
 
   await app.close()
 })

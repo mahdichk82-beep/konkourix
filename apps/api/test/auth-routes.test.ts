@@ -23,9 +23,11 @@ const authResult = {
 
 const createAuthService = (): AuthService => ({
   authenticateAccessToken: async () => user,
+  changePassword: async () => undefined,
   getCurrentUser: async () => user,
   login: async () => authResult,
   logout: async () => undefined,
+  logoutAll: async () => undefined,
   refresh: async () => authResult,
   register: async () => authResult,
 })
@@ -184,6 +186,45 @@ test('current-user endpoint requires a bearer token and returns a sanitized user
     createdAt: user.createdAt.toISOString(),
     updatedAt: user.updatedAt.toISOString(),
   })
+
+  await app.close()
+})
+
+test('password change is authenticated and clears the current refresh cookie', async () => {
+  const app = createApp()
+  const unauthorized = await app.inject({
+    method: 'POST',
+    payload: { currentPassword: 'strong password', newPassword: 'new strong password' },
+    url: '/api/v1/auth/change-password',
+  })
+  assert.equal(unauthorized.statusCode, 401)
+
+  const authorized = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'POST',
+    payload: { currentPassword: 'strong password', newPassword: 'new strong password' },
+    url: '/api/v1/auth/change-password',
+  })
+  assert.equal(authorized.statusCode, 200)
+  assert.equal(authorized.json().data.reauthenticationRequired, true)
+  assert.match(authorized.headers['set-cookie'], /refresh_token=;/)
+
+  await app.close()
+})
+
+test('logout-all is authenticated and clears the current refresh cookie', async () => {
+  const app = createApp()
+  const unauthorized = await app.inject({ method: 'POST', url: '/api/v1/auth/logout-all' })
+  assert.equal(unauthorized.statusCode, 401)
+
+  const authorized = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'POST',
+    url: '/api/v1/auth/logout-all',
+  })
+  assert.equal(authorized.statusCode, 200)
+  assert.equal(authorized.json().data.loggedOut, true)
+  assert.match(authorized.headers['set-cookie'], /refresh_token=;/)
 
   await app.close()
 })

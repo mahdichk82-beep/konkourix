@@ -24,9 +24,11 @@ const createApp = () => {
         statusCode: 401,
       })
     },
+    changePassword: async () => undefined,
     getCurrentUser: async () => createUser('STUDENT'),
     login: async () => { throw new Error('unused') },
     logout: async () => undefined,
+    logoutAll: async () => undefined,
     refresh: async () => { throw new Error('unused') },
     register: async () => { throw new Error('unused') },
   }

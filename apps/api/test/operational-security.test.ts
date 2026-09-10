@@ -17,6 +17,7 @@ const user: PublicUser = {
 
 const createAuthService = (): AuthService => ({
   authenticateAccessToken: async () => user,
+  changePassword: async () => undefined,
   getCurrentUser: async () => user,
   login: async () => ({
     accessToken: 'access-token',
@@ -25,6 +26,7 @@ const createAuthService = (): AuthService => ({
     user,
   }),
   logout: async () => undefined,
+  logoutAll: async () => undefined,
   refresh: async () => ({
     accessToken: 'access-token',
     expiresIn: 900,

@@ -20,11 +20,13 @@ const createApp = (role: PublicUser['role']) => {
   const user = createUser(role)
   const auth: AuthService = {
     authenticateAccessToken: async () => user,
+    changePassword: async () => undefined,
     getCurrentUser: async () => user,
     login: async () => {
       throw new Error('unused')
     },
     logout: async () => undefined,
+    logoutAll: async () => undefined,
     refresh: async () => {
       throw new Error('unused')
     },

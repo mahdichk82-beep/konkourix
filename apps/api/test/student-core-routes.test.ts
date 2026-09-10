@@ -18,9 +18,11 @@ const user: PublicUser = {
 
 const auth: AuthService = {
   authenticateAccessToken: async () => user,
+  changePassword: async () => undefined,
   getCurrentUser: async () => user,
   login: async () => { throw new Error('not used') },
   logout: async () => undefined,
+  logoutAll: async () => undefined,
   refresh: async () => { throw new Error('not used') },
   register: async () => { throw new Error('not used') },
 }

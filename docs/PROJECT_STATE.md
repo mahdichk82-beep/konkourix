@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 1 Milestone 2, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 1 Milestone 3, not a claim of overall product completion.
 
 ## Project
 
@@ -12,18 +12,18 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 1 Milestone 2 — Base Application Shells & Dashboard Foundation**.
+The project has completed **Phase 1 Milestone 3 — Account Settings & Session Management Foundation**.
 
-Phase 0 remains partially complete while explicitly authorized Phase 1 work proceeds. Authentication and independent browser application shells are verified; later student and counselor product capabilities are not implied complete.
+Phase 0 remains partially complete while explicitly authorized Phase 1 work proceeds. Authentication, independent browser application shells, and base account settings are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
 - Audit and baseline re-verification date: **2026-09-10**
 
-## Phase 1 Milestone 2 Starting Checkpoint
+## Phase 1 Milestone 3 Starting Checkpoint
 
-- HEAD: `51391d38c9ef55895c2b5e0197b4dc1abade76ff`
-- Message: `feat: establish authentication foundation`
+- HEAD: `b076541e2157ad98af9dea0bf71602cd2d40a6e1`
+- Message: `feat: establish application shells and dashboard foundations`
 
 Foundation repair checkpoint:
 
@@ -318,6 +318,30 @@ Milestone verification:
 
 The official Phase 0 completion estimate remains **50%**. Phase 1 Milestone 2 is **COMPLETE**, and confidence remains **HIGH**.
 
+### Phase 1 Milestone 3 — Account Settings & Session Management Foundation
+
+**Status: COMPLETE**
+
+- The existing sanitized current-user responses and role-specific profile GET/PATCH endpoints remain canonical; no duplicate account endpoint was introduced.
+- Student settings edit only the existing `educationLevel` and `schoolName` profile fields. Counselor settings independently edit only the existing `bio` and `specialization` fields.
+- Strict backend schemas reject user IDs, roles, status, privileges, and other unapproved fields. Profile ownership is derived from the authenticated server identity, never request input.
+- Authenticated password change verifies the current password and uses the established salted scrypt hashing implementation. Password update and revocation of every refresh session for that user are atomic and require reauthentication.
+- Authenticated logout-all revokes only the current user's refresh sessions and clears the current refresh cookie. Existing current-session logout, refresh rotation, token-reuse handling, and role boundaries remain active.
+- Both independent Persian/RTL settings experiences provide account summaries, role-appropriate profile forms, the existing per-application light/dark theme preference, safe form states, password change, current logout, and confirmed logout-all.
+- Access tokens remain memory-only. No database schema, migration, dependency, lockfile, infrastructure, or unrelated product-feature change was required.
+
+Milestone verification:
+
+- API tests: **75/75 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Static scope, secret, authorization, and diff review: **PASS**
+
+The official Phase 0 completion estimate remains **50%**. Phase 1 Milestone 3 is **COMPLETE**, and confidence remains **HIGH**.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -344,7 +368,7 @@ The following capabilities are present and covered by the current API baseline:
 - Student registration and login
 - Access-token authentication
 - Refresh-token sessions with rotation and reuse handling
-- Logout and versioned `/auth/me` functionality under `/api/v1`
+- Current-session logout, all-session revocation, authenticated password change, and versioned `/auth/me` functionality under `/api/v1`
 - Student and counselor profile APIs
 - Student-counselor relationship foundation
 - Student subjects, study plans, and daily tasks
@@ -382,6 +406,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - It has an independent student login screen, credentialed auth API client, in-memory access-token state, refresh bootstrap, protected-route shell, and logout.
 - It verifies authenticated access against the backend-protected student boundary before rendering protected content.
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
+- Its settings page provides current account information, the existing student profile fields, theme selection, password change, current logout, and logout-all.
 - It remains an application foundation rather than a complete student product UI.
 
 ### Counselor application
@@ -391,6 +416,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - It has an independent counselor login screen, credentialed auth API client, in-memory access-token state, refresh bootstrap, protected-route shell, and logout.
 - It verifies authenticated access against the backend-protected counselor boundary before rendering protected content.
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
+- Its settings page provides current account information, the existing counselor profile fields, theme selection, password change, current logout, and logout-all.
 - It remains an application foundation rather than a complete counselor product UI.
 
 Neither application shell should be described as a complete product merely because it builds.
@@ -457,7 +483,7 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 - Full student product UI
 - Full counselor product UI
-- Advanced settings and finalized theme workflows
+- Advanced profile and account-recovery workflows
 - Topics and complete task/planning UX
 - Test sessions
 - Focus sessions and timer
@@ -484,4 +510,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 1 Milestone 2 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin Milestone 3, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 1 Milestone 3 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin Milestone 4, later product work, TLS, deployment execution, monitoring, or backup execution.

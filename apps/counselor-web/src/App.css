@@ -2,6 +2,7 @@
 .button--primary { color: #fff; background: var(--accent); }
 .button--secondary { color: var(--accent-strong); background: var(--surface); border-color: var(--border); }
 .button--ghost { color: var(--text-muted); background: transparent; border-color: var(--border); }
+.button--danger { color: #fff; background: var(--danger); }
 .button:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .card { padding: clamp(1.1rem, 3vw, 1.5rem); border: 1px solid var(--border); border-radius: 20px; background: var(--surface); box-shadow: var(--shadow); }
@@ -54,9 +55,20 @@
 .summary-card > span { color: var(--text-muted); font-size: 0.85rem; }
 .summary-card strong { color: var(--accent); font-size: 2rem; }
 .summary-card small { color: var(--text-muted); }
-.dashboard-grid, .settings-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.dashboard-grid, .settings-grid, .settings-stack { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .quick-actions, .theme-options { display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .quick-actions + .helper-text, .theme-options { margin-top: 1rem; }
+.account-summary { margin: 0 0 1.25rem; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.account-summary > div { min-width: 0; padding: 0.85rem; border-radius: 12px; background: var(--surface-muted); }
+.account-summary dt { color: var(--text-muted); font-size: 0.75rem; }
+.account-summary dd { margin: 0.35rem 0 0; overflow-wrap: anywhere; font-weight: 750; }
+.settings-form { display: grid; gap: 1rem; }
+.settings-form label { display: grid; gap: 0.5rem; font-size: 0.88rem; font-weight: 700; }
+.settings-form input, .settings-form textarea { width: 100%; padding: 0.85rem 0.95rem; border: 1px solid var(--border); border-radius: 12px; color: var(--text); background: var(--surface-muted); outline: none; resize: vertical; }
+.settings-form input[type='password'] { direction: ltr; text-align: left; }
+.settings-form input:focus, .settings-form textarea:focus { border-color: var(--accent); }
+.form-success { margin: 0; padding: 0.8rem; border-radius: 10px; color: var(--accent-strong); background: var(--accent-soft); font-size: 0.85rem; }
+.security-actions { margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.75rem; }
 .status-page { min-height: 100svh; padding: 1.25rem; display: grid; place-items: center; background: var(--background); }
 .status-page .content-state { width: min(520px, 100%); }
 
@@ -94,6 +106,7 @@
   .login-panel { padding: 1.25rem; align-items: start; }
   .login-card { border-radius: 22px; }
   .greeting-card { align-items: flex-start; flex-direction: column; }
-  .dashboard-grid, .settings-grid { grid-template-columns: 1fr; }
+  .dashboard-grid, .settings-grid, .settings-stack { grid-template-columns: 1fr; }
+  .account-summary { grid-template-columns: 1fr; }
   .theme-label { display: none; }
 }

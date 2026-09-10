@@ -12,6 +12,20 @@ export type AuthUser = {
   updatedAt: string
 }
 
+export type CounselorProfile = {
+  id: string
+  userId: string
+  bio: string | null
+  specialization: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export type CounselorProfileInput = {
+  bio?: string | null
+  specialization?: string | null
+}
+
 type AuthPayload = {
   accessToken: string
   expiresIn: number
@@ -140,6 +154,36 @@ class CounselorAuthClient {
     } finally {
       this.accessToken = null
     }
+  }
+
+  async logoutAll(): Promise<void> {
+    await this.authorizedRequest<{ loggedOut: boolean }>(
+      '/auth/logout-all',
+      { method: 'POST' },
+    )
+    this.accessToken = null
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
+    await this.authorizedRequest<{ passwordChanged: boolean; reauthenticationRequired: boolean }>(
+      '/auth/change-password',
+      {
+        body: JSON.stringify({ currentPassword, newPassword }),
+        method: 'POST',
+      },
+    )
+    this.accessToken = null
+  }
+
+  getCounselorProfile(): Promise<CounselorProfile | null> {
+    return this.authorizedRequest<CounselorProfile | null>('/me/counselor-profile')
+  }
+
+  updateCounselorProfile(input: CounselorProfileInput): Promise<CounselorProfile> {
+    return this.authorizedRequest<CounselorProfile>('/me/counselor-profile', {
+      body: JSON.stringify(input),
+      method: 'PATCH',
+    })
   }
 
   async authorizedRequest<T>(path: string, init: RequestInit = {}): Promise<T> {

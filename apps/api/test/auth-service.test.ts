@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { randomUUID } from 'node:crypto'
 import { createAuthService } from '../src/auth/auth-service.js'
-import { hashPassword } from '../src/auth/password.js'
+import { hashPassword, verifyPassword } from '../src/auth/password.js'
 import type {
   AuthSessionRecord,
   AuthStore,
@@ -111,6 +111,26 @@ class InMemoryAuthStore implements AuthStore {
         session.revokedAt = now
       }
     }
+  }
+
+  async revokeAllUserSessions(userId: string, now: Date) {
+    for (const session of this.sessions) {
+      if (session.userId === userId && !session.revokedAt) {
+        session.revokedAt = now
+      }
+    }
+  }
+
+  async changePasswordAndRevokeSessions(input: {
+    userId: string
+    passwordHash: string
+    now: Date
+  }) {
+    const user = this.users.find((item) => item.id === input.userId)
+    assert.ok(user)
+    user.passwordHash = input.passwordHash
+    user.updatedAt = input.now
+    await this.revokeAllUserSessions(input.userId, input.now)
   }
 }
 
@@ -268,4 +288,83 @@ test('refresh fails closed when session rotation loses an update race', async ()
     service.refresh(initial.refreshToken, {}),
     { code: 'SESSION_REUSED', statusCode: 401 },
   )
+})
+
+test('password change verifies the current password, replaces the hash, and revokes every session', async () => {
+  const store = new InMemoryAuthStore()
+  const service = serviceFor(store)
+  const initial = await service.register(
+    { email: 'student@example.com', phone: null, password: 'strong password' },
+    {},
+  )
+  await service.login('student@example.com', 'strong password', {})
+
+  await service.changePassword(
+    initial.user.id,
+    'strong password',
+    'new strong password',
+  )
+
+  assert.equal(store.sessions.every((session) => session.revokedAt !== null), true)
+  assert.equal(await verifyPassword('strong password', store.users[0]!.passwordHash), false)
+  assert.equal(await verifyPassword('new strong password', store.users[0]!.passwordHash), true)
+  await assert.rejects(
+    service.login('student@example.com', 'strong password', {}),
+    { code: 'INVALID_CREDENTIALS', statusCode: 401 },
+  )
+  const login = await service.login(
+    'student@example.com',
+    'new strong password',
+    {},
+  )
+  assert.equal(login.user.id, initial.user.id)
+})
+
+test('password change rejects a wrong current password without changing credentials or sessions', async () => {
+  const store = new InMemoryAuthStore()
+  const service = serviceFor(store)
+  const initial = await service.register(
+    { email: 'student@example.com', phone: null, password: 'strong password' },
+    {},
+  )
+  const originalHash = store.users[0]!.passwordHash
+
+  await assert.rejects(
+    service.changePassword(initial.user.id, 'wrong password', 'new strong password'),
+    { code: 'CURRENT_PASSWORD_INVALID', statusCode: 400 },
+  )
+
+  assert.equal(store.users[0]!.passwordHash, originalHash)
+  assert.equal(store.sessions[0]!.revokedAt, null)
+})
+
+test('logout-all revokes only sessions owned by the authenticated user', async () => {
+  const store = new InMemoryAuthStore()
+  const service = serviceFor(store)
+  const first = await service.register(
+    { email: 'first@example.com', phone: null, password: 'strong password' },
+    {},
+  )
+  const second = await service.register(
+    { email: 'second@example.com', phone: null, password: 'strong password' },
+    {},
+  )
+  await service.login('first@example.com', 'strong password', {})
+
+  await service.logoutAll(first.user.id)
+
+  assert.equal(
+    store.sessions.filter((session) => session.userId === first.user.id)
+      .every((session) => session.revokedAt !== null),
+    true,
+  )
+  assert.equal(
+    store.sessions.find((session) => session.userId === second.user.id)?.revokedAt,
+    null,
+  )
+  await assert.rejects(
+    service.refresh(first.refreshToken, {}),
+    { code: 'SESSION_REUSED', statusCode: 401 },
+  )
+  assert.equal((await service.refresh(second.refreshToken, {})).user.id, second.user.id)
 })

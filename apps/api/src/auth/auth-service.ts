@@ -23,6 +23,12 @@ export type AuthService = {
   login(identifier: string, password: string, meta: AuthRequestMeta): Promise<AuthResult>
   refresh(refreshToken: string, meta: AuthRequestMeta): Promise<AuthResult>
   logout(refreshToken: string | undefined): Promise<void>
+  logoutAll(userId: string): Promise<void>
+  changePassword(
+    userId: string,
+    currentPassword: string,
+    newPassword: string,
+  ): Promise<void>
   getCurrentUser(userId: string): Promise<PublicUser>
   authenticateAccessToken(token: string): Promise<PublicUser>
 }
@@ -227,6 +233,33 @@ export const createAuthService = ({
       if (session && !session.revokedAt) {
         await store.revokeSession(session.id, now())
       }
+    },
+
+    async logoutAll(userId) {
+      await getCurrentUser(userId)
+      await store.revokeAllUserSessions(userId, now())
+    },
+
+    async changePassword(userId, currentPassword, newPassword) {
+      const user = await store.findUserById(userId)
+
+      if (!user || user.status !== 'ACTIVE') {
+        throw new ApiError(401, 'TOKEN_INVALID', 'Access token is invalid')
+      }
+
+      if (!(await verifyPassword(currentPassword, user.passwordHash))) {
+        throw new ApiError(
+          400,
+          'CURRENT_PASSWORD_INVALID',
+          'Current password is incorrect',
+        )
+      }
+
+      await store.changePasswordAndRevokeSessions({
+        now: now(),
+        passwordHash: await hashPassword(newPassword),
+        userId,
+      })
     },
 
     getCurrentUser,

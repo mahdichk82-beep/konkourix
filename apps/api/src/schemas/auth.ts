@@ -17,3 +17,10 @@ export const loginSchema = z
     password: z.string().min(1),
   })
   .strict()
+
+export const changePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1),
+    newPassword: z.string().min(12),
+  })
+  .strict()

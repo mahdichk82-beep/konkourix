@@ -185,3 +185,15 @@ This lightweight decision log records architectural constraints established by t
 **Responsive and theme policy:** Both applications declare Persian/RTL document defaults, use desktop side navigation above the mobile breakpoint, and use a touch-friendly fixed bottom navigation on smaller screens. Light and dark themes are CSS-variable foundations. Only the non-sensitive per-application theme preference is stored in browser storage; authentication tokens and permission state remain governed by ADR-016.
 
 **Status:** Accepted
+
+## ADR-018 — Account Settings and Session Revocation Policy
+
+**Decision:** Account settings reuse the established sanitized current-user representation supplied by `/api/v1/auth/me` and the protected role-session boundaries, plus the existing role-specific `/api/v1/me/student-profile` and `/api/v1/me/counselor-profile` contracts. Student settings may edit only `educationLevel` and `schoolName`; counselor settings may edit only `bio` and `specialization`. Strict server schemas and authenticated ownership remain authoritative. User IDs, roles, account status, privileges, and counselor assignments are never editable through these contracts.
+
+**Password policy:** Authenticated password changes require the current password and a new password satisfying the existing 12-character minimum. Current-password verification and replacement hashing use the approved salted scrypt implementation. Password replacement and revocation of all active refresh sessions for that user occur in one database transaction. This includes the current session, so both browser applications discard their in-memory access token and require a new login after success.
+
+**Session policy:** `POST /api/v1/auth/logout-all` derives its target solely from the authenticated server-resolved user and revokes every active refresh session belonging to that user. It accepts no user ID and returns no token or session secrets. Both password change and logout-all clear the current refresh cookie with the established cookie attributes. Existing single-session logout, refresh rotation, reuse handling, short-lived access JWTs, and memory-only access-token storage remain unchanged. Already-issued access JWTs are stateless and remain valid only until their short expiry; refresh is unavailable after revocation.
+
+**Frontend policy:** Student Web and Counselor Web retain independent settings pages, auth providers, API clients, role boundaries, and profile fields. Each page provides its existing theme preference, safe localized states, current-session logout, and confirmed logout-all. No device list is exposed because the current session model only stores raw IP and user-agent metadata; no schema expansion is justified for this milestone.
+
+**Status:** Accepted
