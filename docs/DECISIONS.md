@@ -147,3 +147,17 @@ This lightweight decision log records architectural constraints established by t
 **Verification boundary:** TLS, DNS, Cloudflare, monitoring services, backup scripts/schedules, restore execution, and deployment remain unimplemented. The production checklist in `docs/SECURITY.md` records required evidence and does not mark those controls complete.
 
 **Status:** Accepted
+
+## ADR-015 — Production Deployment Preparation Contract
+
+**Decision:** The intended production host is a supported Ubuntu LTS VPS with Docker Engine and the Docker Compose plugin installed on the server only. Releases use exact reviewed Git commits under a protected `/opt/konkourix` layout. Runtime configuration lives in a mode-`0600`, server-only environment file outside the checkout and is passed to Compose with an explicit `--env-file`; secrets never enter Git, frontend variables, image build arguments, or operator command lines.
+
+**Release and migration policy:** First installs and updates validate resolved Compose configuration, build from the reviewed source, establish PostgreSQL health, apply reviewed Prisma migrations as an explicit pre-traffic operation, and verify health before public routing. Dockerfiles, Compose startup, and application entrypoints do not run migrations. The current API runtime image deliberately lacks the Prisma CLI and migration files, so a separate reviewed migration runner is a mandatory pre-deployment gate rather than an implicit application responsibility.
+
+**Persistence and rollback policy:** PostgreSQL remains in the Compose-managed named volume; encrypted off-host backups and isolated restore evidence are required before production changes. Releases record the active commit, migration state, and backup identifier. Application rollback selects the prior exact release. Database restore is a deliberate incident operation when an incompatible data change requires it, never an automatic rollback; applied Prisma history is not edited or reversed ad hoc.
+
+**Domain and ingress policy:** The intended HTTPS mappings remain `app.konkourix.ir` to Student Web, `counselor.konkourix.ir` to Counselor Web, and `api.konkourix.ir` to the API. `COOKIE_DOMAIN` remains empty by preference, and `TRUST_PROXY` remains false until a controlled edge address/CIDR is known. Edge packaging/Compose attachment, public ports, DNS, TLS/certificates, firewall implementation, VPS provisioning, deployment execution, and automation remain separate authorized work.
+
+**Verification boundary:** This milestone creates documentation and a production environment template only. It does not access a VPS, install Docker locally, execute Compose, run migrations, change DNS, issue certificates, configure monitoring/backups, or claim production availability. Local development remains Docker-independent.
+
+**Status:** Accepted

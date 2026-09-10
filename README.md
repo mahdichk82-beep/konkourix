@@ -80,3 +80,4 @@ The validation command runs API tests/type-check/build, frontend lint/build, and
 - [Production container, Compose, and edge contract](docs/CONTAINERS.md)
 - [Production security and operations contract](docs/SECURITY.md)
 - [Backup and restore design](docs/backup-restore.md)
+- [Production deployment preparation](docs/deployment.md)

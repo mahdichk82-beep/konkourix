@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 0 Milestone 6 and baseline re-verification, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 0 Milestone 7 and baseline re-verification, not a claim of overall product completion.
 
 ## Project
 
@@ -18,12 +18,12 @@ Phase 0 is not complete. Some Phase 1 and later backend foundations already exis
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
-- Audit and baseline re-verification date: **2026-09-09**
+- Audit and baseline re-verification date: **2026-09-10**
 
-## Milestone 6 Baseline Git Checkpoint
+## Milestone 7 Baseline Git Checkpoint
 
-- HEAD: `2d116da800bd9b6eaa6c437b597590c35c9b901c`
-- Message: `feat: establish nginx edge routing foundation`
+- HEAD: `41d516d8b24db6dff3bccdb41f0434871909f4b5`
+- Message: `feat: harden production security and operational contracts`
 
 Foundation repair checkpoint:
 
@@ -63,7 +63,7 @@ Re-verified on 2026-09-09 after successful local dependency-state recovery:
 | Container image definitions | COMPLETE; RUNTIME UNVERIFIED |
 | Docker Compose | FOUNDATION COMPLETE; RUNTIME UNVERIFIED |
 | Edge Nginx | FOUNDATION COMPLETE; SYNTAX/RUNTIME UNVERIFIED |
-| Deployment | NOT STARTED |
+| Deployment | PREPARATION COMPLETE; EXECUTION NOT STARTED |
 | Backup/Restore | DESIGN COMPLETE; EXECUTION UNVERIFIED |
 | CI/CD | NOT STARTED |
 | Documentation | PARTIAL |
@@ -238,6 +238,34 @@ Milestone verification:
 
 The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** for the reviewed and locally verified security/operational contract; production controls and recovery execution still require environment-specific evidence.
 
+### Milestone 7 — Production Deployment Preparation
+
+**Status: COMPLETE (DOCUMENTED; DEPLOYMENT NOT EXECUTED)**
+
+Completed and locally verified on 2026-09-10:
+
+- `docs/deployment.md` defines the future Ubuntu LTS VPS assumptions, protected `/opt/konkourix` layout, exact-release workflow, server-only environment handling, first-install/update sequence, health gates, and rollback decisions.
+- `.env.production.example` now carries the intended Konkourix HTTPS origins and Compose inputs with secret placeholders only. The populated production file belongs at `/opt/konkourix/config/production.env` with mode `0600`, outside the checkout.
+- Public mapping remains `app.konkourix.ir` to Student Web, `counselor.konkourix.ir` to Counselor Web, and `api.konkourix.ir` to the API. These are intended identities, not claims that DNS or TLS is active.
+- Production migrations are manual, reviewed, backup-gated, and applied before dependent traffic. They never run from a Dockerfile, Compose startup, or application entrypoint.
+- The current API runtime image does not include the Prisma CLI or migration files. A separate reviewed migration runner remains a mandatory pre-deployment gate; this milestone documents that limitation instead of adding unapproved automation.
+- Application rollback selects the prior exact release. Database restore is an explicit incident decision for incompatible data changes, not an automatic down migration.
+- The server checklist leaves Docker/Compose runtime validation, edge integration, firewall, DNS, TLS, monitoring, backup execution, restore evidence, and actual deployment incomplete until verified in the target environment.
+- No VPS was accessed; no Docker installation, Compose execution, migration, deployment, DNS, TLS, Cloudflare, monitoring, or backup operation occurred.
+
+Milestone verification:
+
+- API tests: **63/63 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Environment placeholder, secret, schema, migration, dependency, and scope review: **PASS**
+- VPS, Docker/Compose, Nginx, migration, deployment, DNS, and TLS execution: **NOT RUN; explicitly outside milestone scope**
+
+The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** for the reviewed documentation and locally validated repository; deployment/runtime claims still require target-environment evidence.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -328,7 +356,7 @@ Neither starter application should be described as an implemented product merely
 - `infrastructure/docker/` contains the API liveness script and a shared container-local SPA static-server configuration.
 - The root `.dockerignore` excludes real environment files and irrelevant local artifacts while preserving required monorepo inputs.
 - The root `docker-compose.yml` defines a statically verified API/web/PostgreSQL topology on a private network with named PostgreSQL persistence and no published host ports.
-- `.env.production.example` documents placeholder-only Compose inputs; real runtime values remain external and ignored.
+- `.env.production.example` documents the intended public origins and placeholder-only Compose inputs; real runtime values remain server-only, external, and ignored.
 - Compose waits for PostgreSQL health before starting the API and configures the API image's existing probe to use database-aware `/health`.
 - Compose does not execute Prisma migrations; migration orchestration remains deferred.
 - `infrastructure/nginx/` defines statically verified exact-host HTTP edge routing to the three application services, forwarded headers, frontend asset expiry, and baseline response headers.
@@ -336,6 +364,7 @@ Neither starter application should be described as an implemented product merely
 - The frontend image's internal Nginx remains a static file server and supplies SPA history fallback; it does not proxy API traffic.
 - `docs/SECURITY.md` records the reviewed production security, logging, error, health, rate-limit, upload, and launch-checklist contracts.
 - `docs/backup-restore.md` defines backup/restore design and required evidence; no backup or restore automation exists.
+- `docs/deployment.md` defines the future Ubuntu LTS server layout, exact-release and environment workflow, manual migration gate, update sequence, rollback decisions, and incomplete production checklist.
 - No deployment scripts are implemented.
 - No backup or restore scripts are implemented.
 - No CI workflow is implemented.
@@ -358,10 +387,10 @@ The implemented container-image and Compose configuration is statically checked 
 
 - Shared package strategy and implementation
 - Independent student and counselor routing/authentication shells
-- Docker Compose runtime verification and migration execution policy
+- Docker Compose runtime verification and a reviewed migration execution mechanism
 - Nginx syntax/runtime verification, Compose integration, and TLS termination strategy
-- Production environment configuration and secret handling
-- Deployment and rollback scripts
+- Production secret provisioning and target-environment validation
+- Deployment execution and any separately authorized automation
 - Backup automation and isolated restore execution; upload backup design only if uploads are introduced
 - CI/CD validation foundation
 - Broader product and operational documentation
@@ -400,4 +429,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 0 Milestones 1, 2, 3, 4, 5, and 6 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin TLS, deployment, monitoring, backup execution, or another Phase 0 milestone.
+Phase 0 Milestones 1, 2, 3, 4, 5, 6, and 7 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin TLS, deployment execution, monitoring, backup execution, or another Phase 0 milestone.
