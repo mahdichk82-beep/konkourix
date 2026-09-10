@@ -105,3 +105,17 @@ This lightweight decision log records architectural constraints established by t
 **Environment and safety policy:** Local runtime values are copied from committed example files into ignored local environment files. Real secrets and environment files remain untracked. Local development uses a locally reachable PostgreSQL service and remains Docker-independent. Workspace-specific TypeScript versions and existing test/lint tools are preserved; this decision does not upgrade dependencies.
 
 **Status:** Accepted
+
+## ADR-012 — Docker Compose Infrastructure Foundation
+
+**Decision:** The production-oriented Compose foundation consists of `api`, `student-web`, `counselor-web`, and `postgres` services built or run from the existing image contracts. All four services join one Compose-managed internal bridge network. No host ports are published; a future explicitly authorized edge ingress can join the private network and publish only the intended public entry points.
+
+**Database and persistence policy:** PostgreSQL uses the official Debian Bookworm image on major version 17 and stores its data in the `postgres-data` named volume. The database exposes port 5432 only as internal service metadata and is reachable by the API through the `postgres` service name. PostgreSQL initialization credentials and the API `DATABASE_URL` are separate external environment inputs so Compose does not manufacture or embed credentials. Migration execution remains an explicit operational step and does not run during image construction or Compose service startup.
+
+**Environment and secret policy:** `.env.production.example` documents the Compose variable contract with non-production placeholders. Actual values are supplied from an ignored runtime `.env` or equivalent environment; `POSTGRES_PASSWORD`, `DATABASE_URL`, and `ACCESS_TOKEN_SECRET` remain runtime-only inputs. `VITE_API_URL` is the sole public frontend build argument. Compose preserves the accepted CORS, cookie, and proxy defaults and does not encode deployed domains or secrets.
+
+**Health and exposure policy:** PostgreSQL readiness uses `pg_isready`, and the API waits for the database health condition before starting. Under Compose, the API image's existing dependency-free health probe targets database-aware `/health`; outside Compose its default remains `/health/live`. The frontend containers need no API startup dependency because their browser bundles call the configured public API origin. No service is publicly reachable until the deferred ingress layer is designed.
+
+**Verification boundary:** Local development remains Docker-independent. Docker Compose execution, public edge Nginx, TLS, deployment, backups, and runtime infrastructure verification remain deferred. The Compose contract is statically verified only because Docker is intentionally unavailable on the development laptop.
+
+**Status:** Accepted

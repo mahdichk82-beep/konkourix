@@ -32,7 +32,7 @@ cp apps/student-web/.env.example apps/student-web/.env.local
 cp apps/counselor-web/.env.example apps/counselor-web/.env.local
 ```
 
-PowerShell users can perform the same setup with `Copy-Item`. The documented local origins are API `http://localhost:4000`, Student Web `http://localhost:5173`, and Counselor Web `http://localhost:5174`. The API requires PostgreSQL through `DATABASE_URL`; no database container is provided by this workflow.
+PowerShell users can perform the same setup with `Copy-Item`. The documented local origins are API `http://localhost:4000`, Student Web `http://localhost:5173`, and Counselor Web `http://localhost:5174`. The API requires PostgreSQL through `DATABASE_URL`; no database container is required by this local workflow. A separate production-oriented Compose foundation is statically verified but has not been run locally.
 
 ## Development commands
 
@@ -77,4 +77,4 @@ The validation command runs API tests/type-check/build, frontend lint/build, and
 
 - [Project state](docs/PROJECT_STATE.md)
 - [Architectural decisions](docs/DECISIONS.md)
-- [Production container build contract](docs/CONTAINERS.md)
+- [Production container and Compose contract](docs/CONTAINERS.md)

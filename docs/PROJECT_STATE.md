@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through the Phase 0 completion audit and baseline re-verification on 2026-09-09, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 0 Milestone 4 and baseline re-verification, not a claim of overall product completion.
 
 ## Project
 
@@ -20,10 +20,10 @@ Phase 0 is not complete. Some Phase 1 and later backend foundations already exis
 - Confidence: **HIGH**
 - Audit and baseline re-verification date: **2026-09-09**
 
-## Milestone 3 Baseline Git Checkpoint
+## Milestone 4 Baseline Git Checkpoint
 
-- HEAD: `442f907847ba5bf81932cdfce3c163d9f03c7334`
-- Message: `feat: establish production container build foundation`
+- HEAD: `45d6903324760748e2df9d701fe8f4d48239e9b4`
+- Message: `feat: harden development workflow and repository consistency`
 
 Foundation repair checkpoint:
 
@@ -61,7 +61,7 @@ Re-verified on 2026-09-09 after successful local dependency-state recovery:
 | Shared packages | SCAFFOLDED ONLY |
 | Development workflow | HARDENED; LOCAL VALIDATION COMPLETE |
 | Container image definitions | COMPLETE; RUNTIME UNVERIFIED |
-| Docker Compose | NOT STARTED |
+| Docker Compose | FOUNDATION COMPLETE; RUNTIME UNVERIFIED |
 | Edge Nginx | NOT STARTED |
 | Deployment | NOT STARTED |
 | Backup/Restore | NOT STARTED |
@@ -154,6 +154,34 @@ Milestone verification:
 
 The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** based on the complete local validation gate.
 
+### Milestone 4 — Docker Compose Infrastructure Foundation
+
+**Status: COMPLETE (STATICALLY VERIFIED; DOCKER EXECUTION PENDING)**
+
+Completed and locally verified on 2026-09-10:
+
+- The root `docker-compose.yml` defines API, Student Web, Counselor Web, and PostgreSQL services using the existing application Dockerfiles and the official PostgreSQL 17 Bookworm image.
+- PostgreSQL data persists in the Compose-managed `postgres-data` named volume. No host path or backup behavior is imposed, and the current API has no upload-storage requirement needing a volume.
+- All services join a dedicated internal bridge network. No host ports are published, including PostgreSQL 5432; a later edge-ingress milestone must deliberately provide public reachability.
+- PostgreSQL credentials, `DATABASE_URL`, `ACCESS_TOKEN_SECRET`, public origins, and the public `VITE_API_URL` build input are external environment values. The committed `.env.production.example` contains placeholders only, and deployed `.env` values remain ignored.
+- PostgreSQL readiness uses `pg_isready`. The API starts only after PostgreSQL reports healthy and uses its existing Node health probe against database-aware `/health` under Compose.
+- Frontend services build with explicit `VITE_API_URL` and continue to serve static output only. They do not proxy the API and have no artificial startup dependency on it.
+- Compose neither runs migrations nor embeds database/authentication secrets. Migration execution policy, public Nginx ingress, TLS, deployment, backups, monitoring, and CI/CD remain deferred.
+- Local development remains Docker-independent. Compose and container runtime execution were not attempted because Docker is intentionally unavailable locally.
+
+Milestone verification:
+
+- API tests: **61/61 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Compose YAML, interpolation contract, build paths, ports, network, volume, health, and secret handling: **STATIC REVIEW PASS**
+- Docker Compose runtime execution: **NOT RUN; Docker is intentionally unavailable locally**
+
+The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** for the validated source and static infrastructure contract; actual Compose execution remains pending in a Docker-capable environment.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -164,7 +192,7 @@ Konkourix is a pnpm monorepo. Current repository structure includes:
 - `packages/api-client`, `packages/shared`, `packages/types`, `packages/ui`, and `packages/validation`: currently placeholder directories
 - `database/prisma`: Prisma schema, generated-client configuration, and migrations
 - `docs`: project documentation
-- `infrastructure`: currently an empty placeholder
+- `infrastructure/docker`: shared container-only health and static-server configuration
 
 Repository reality takes precedence over aspirational directory layouts or architecture.
 
@@ -241,7 +269,10 @@ Neither starter application should be described as an implemented product merely
 - Production image definitions exist for the API, Student Web, and Counselor Web.
 - `infrastructure/docker/` contains the API liveness script and a shared container-local SPA static-server configuration.
 - The root `.dockerignore` excludes real environment files and irrelevant local artifacts while preserving required monorepo inputs.
-- No Docker Compose configuration is implemented.
+- The root `docker-compose.yml` defines a statically verified API/web/PostgreSQL topology on a private network with named PostgreSQL persistence and no published host ports.
+- `.env.production.example` documents placeholder-only Compose inputs; real runtime values remain external and ignored.
+- Compose waits for PostgreSQL health before starting the API and configures the API image's existing probe to use database-aware `/health`.
+- Compose does not execute Prisma migrations; migration orchestration remains deferred.
 - No public/edge Nginx configuration is implemented; the frontend image's internal Nginx serves static files only.
 - No deployment scripts are implemented.
 - No backup or restore scripts are implemented.
@@ -259,14 +290,14 @@ This local constraint does not remove the requirement to implement production-qu
 
 **NO.** Production infrastructure has not been runtime-verified.
 
-Infrastructure configuration may later be implemented and statically checked locally. Docker runtime verification must be reported separately and performed in an appropriate environment.
+The implemented container-image and Compose configuration is statically checked locally. Docker runtime verification must be reported separately and performed in an appropriate environment.
 
 ## Known Remaining Foundation Work
 
 - Logging and error-handling completeness review
 - Shared package strategy and implementation
 - Independent student and counselor routing/authentication shells
-- Docker Compose topology
+- Docker Compose runtime verification and migration execution policy
 - Nginx routing and TLS-origin strategy
 - Production environment configuration and secret handling
 - Deployment and rollback scripts
@@ -308,4 +339,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 0 Milestones 1, 2, and 3 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin Docker Compose, edge Nginx, deployment, or another Phase 0 milestone.
+Phase 0 Milestones 1, 2, 3, and 4 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin edge Nginx, deployment, or another Phase 0 milestone.
