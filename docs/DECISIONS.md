@@ -93,3 +93,15 @@ This lightweight decision log records architectural constraints established by t
 **Secrets and operations:** Runtime secrets such as `DATABASE_URL` and `ACCESS_TOKEN_SECRET` are runtime environment inputs only and are not Docker build arguments or image defaults. Real environment files are excluded from the build context. Docker Compose, database orchestration, edge Nginx, TLS, deployment, and migration execution orchestration remain deferred. Local development remains Docker-independent, and actual image build/runtime execution is unverified until a Docker-capable environment is available.
 
 **Status:** Accepted
+
+## ADR-011 — Development Toolchain and Validation Contract
+
+**Decision:** Local development standardizes on Node.js 24.x and pnpm 11.24.0. The verified Node version is recorded in `.node-version`, the supported major is enforced through the root `engines` field, and the exact pnpm version remains declared through `packageManager` and `engines`.
+
+**Workflow policy:** `pnpm install` from the repository root is the canonical dependency installation flow. Existing root `dev`, `build`, `test`, and `typecheck` behavior remains API-scoped for compatibility. Explicit frontend commands and `pnpm validate` provide a discoverable all-workspace validation path without changing application behavior.
+
+**Validation policy:** The canonical gate runs API tests, API type-check and production build, both frontend linters and production builds, and Prisma schema validation. Frontend production builds require an explicit public HTTPS `VITE_API_URL`. Validation neither starts services nor executes migrations.
+
+**Environment and safety policy:** Local runtime values are copied from committed example files into ignored local environment files. Real secrets and environment files remain untracked. Local development uses a locally reachable PostgreSQL service and remains Docker-independent. Workspace-specific TypeScript versions and existing test/lint tools are preserved; this decision does not upgrade dependencies.
+
+**Status:** Accepted

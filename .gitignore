@@ -12,6 +12,10 @@ node_modules/
 dist/
 build/
 coverage/
+.vite/
+.cache/
+.pnpm-store/
+*.tsbuildinfo
 
 # Logs
 *.log

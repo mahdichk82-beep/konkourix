@@ -20,10 +20,10 @@ Phase 0 is not complete. Some Phase 1 and later backend foundations already exis
 - Confidence: **HIGH**
 - Audit and baseline re-verification date: **2026-09-09**
 
-## Milestone 2 Baseline Git Checkpoint
+## Milestone 3 Baseline Git Checkpoint
 
-- HEAD: `630130a2f90f6f6b1b1f38467411f814bbc4dffa`
-- Message: `feat: establish runtime browser environment contract`
+- HEAD: `442f907847ba5bf81932cdfce3c163d9f03c7334`
+- Message: `feat: establish production container build foundation`
 
 Foundation repair checkpoint:
 
@@ -59,7 +59,7 @@ Re-verified on 2026-09-09 after successful local dependency-state recovery:
 | Student Web | SCAFFOLDED ONLY |
 | Counselor Web | SCAFFOLDED ONLY |
 | Shared packages | SCAFFOLDED ONLY |
-| Development workflow | PARTIAL |
+| Development workflow | HARDENED; LOCAL VALIDATION COMPLETE |
 | Container image definitions | COMPLETE; RUNTIME UNVERIFIED |
 | Docker Compose | NOT STARTED |
 | Edge Nginx | NOT STARTED |
@@ -126,6 +126,33 @@ Milestone verification:
 - Docker image build/runtime execution: **NOT RUN; Docker is intentionally unavailable locally**
 
 The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** for the source and static container contract; actual image execution remains pending in a Docker-capable environment.
+
+### Milestone 3 — Development Workflow & Repository Hardening
+
+**Status: COMPLETE**
+
+Completed and locally verified on 2026-09-10:
+
+- Node.js 24.x is the supported local runtime, with verified version 24.19.0 recorded in `.node-version` and the root package engine contract.
+- pnpm 11.24.0 remains the only package manager, declared through `packageManager` and `engines`; no dependency versions were changed.
+- A root README documents installation, environment setup, local PostgreSQL assumptions, application development commands, and the Docker-independent workflow.
+- Existing API-scoped root commands retain their behavior. Explicit frontend development/build commands, aggregate lint/build commands, and the canonical `pnpm validate` gate are available at the root.
+- The canonical validation gate covers API tests/type-check/build, both frontend lint/build flows, and Prisma schema validation without starting services or running migrations.
+- Root and per-app environment examples remain the source for ignored local configuration. No real environment file or secret was added.
+- `.gitignore` now explicitly covers Vite/cache/pnpm-store directories and TypeScript build metadata while continuing to preserve source, Prisma schema/migrations, the lockfile, workspace configuration, and documentation.
+
+Milestone verification:
+
+- API tests: **61/61 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical root validation workflow: **PASS**
+- Docker required: **NO**
+
+The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** based on the complete local validation gate.
 
 ## Implemented Architecture
 
@@ -200,10 +227,11 @@ Neither starter application should be described as an implemented product merely
 
 ## Development Workflow State
 
-- Root scripts currently emphasize the API and do not yet provide a complete all-workspace verification gate.
+- Existing root `dev`, `build`, `test`, and `typecheck` commands retain their API scope; explicit frontend and aggregate commands supplement them.
+- `pnpm validate` is the canonical all-workspace local verification gate.
 - Both frontend applications have independent lint and build scripts; their build commands include TypeScript project builds.
 - Local development uses API port 4000, Student Web port 5173, and Counselor Web port 5174 with explicit environment examples.
-- No Node.js version pin is currently committed.
+- `.node-version` records Node.js 24.19.0, while root package metadata supports Node.js 24.x and pins pnpm 11.24.0.
 - Ordinary local development must remain Docker-independent and use Node.js processes with a locally available PostgreSQL instance.
 
 ## Infrastructure State
@@ -244,8 +272,7 @@ Infrastructure configuration may later be implemented and statically checked loc
 - Deployment and rollback scripts
 - PostgreSQL and upload backup/restore procedures
 - CI/CD validation foundation
-- Root README and broader documentation
-- Root-level scripts that comprehensively verify every workspace
+- Broader product and operational documentation
 - Security hardening, including rate limiting and production-focused review
 
 These items are not authorization to implement all remaining Phase 0 work in one task.
@@ -281,4 +308,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 0 Milestones 1 and 2 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin Docker Compose, edge Nginx, deployment, or another Phase 0 milestone.
+Phase 0 Milestones 1, 2, and 3 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin Docker Compose, edge Nginx, deployment, or another Phase 0 milestone.

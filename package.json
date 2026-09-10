@@ -3,11 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "pnpm@11.24.0",
+  "engines": {
+    "node": ">=24 <25",
+    "pnpm": "11.24.0"
+  },
   "scripts": {
     "dev": "pnpm --filter api dev",
+    "dev:student": "pnpm --filter student-web dev",
+    "dev:counselor": "pnpm --filter counselor-web dev",
     "build": "pnpm --filter api build",
+    "build:student": "pnpm --filter student-web build",
+    "build:counselor": "pnpm --filter counselor-web build",
+    "build:all": "pnpm run build && pnpm run build:student && pnpm run build:counselor",
+    "lint": "pnpm --filter student-web lint && pnpm --filter counselor-web lint",
     "test": "pnpm --filter api test",
     "typecheck": "pnpm --filter api typecheck",
+    "validate": "pnpm run test && pnpm run typecheck && pnpm run lint && pnpm run build:all && pnpm run db:validate",
     "db:validate": "pnpm --filter api exec prisma validate --config ../../prisma.config.ts",
     "db:status": "pnpm --filter api exec prisma migrate status --config ../../prisma.config.ts",
     "db:seed": "pnpm --filter api seed"
