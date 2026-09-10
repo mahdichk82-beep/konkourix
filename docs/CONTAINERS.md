@@ -1,6 +1,6 @@
-# Production Container and Compose Contract
+# Production Container, Compose, and Edge Contract
 
-Phase 0 Milestone 2 defines the production image contracts, and Milestone 4 defines their first multi-service Compose foundation. Docker is not installed on the development laptop, so both layers are statically reviewed but have not been executed by a Docker engine. Local Node.js development remains Docker-independent.
+Phase 0 Milestone 2 defines the production image contracts, Milestone 4 defines their first multi-service Compose foundation, and Milestone 5 defines the future HTTP edge routing layer. Docker and Nginx are not installed on the development laptop, so these layers are statically reviewed but have not been executed by their runtimes. Local Node.js development remains Docker-independent.
 
 All image builds use the repository root as their build context. The repository pins pnpm 11.24.0, and each build installs from `pnpm-lock.yaml` with `--frozen-lockfile` and a workspace filter.
 
@@ -41,6 +41,21 @@ Definition: `docker-compose.yml`
 
 The absence of published ports is intentional: this foundation is not directly public. A future edge service may join the internal network and publish only approved entry points, but that routing is not part of this milestone.
 
+## Edge foundation
+
+Definitions: `infrastructure/nginx/nginx.conf` and `infrastructure/nginx/conf.d/*.conf`
+
+- Exact host routing maps `app.konkourix.ir` to `student-web:8080`, `counselor.konkourix.ir` to `counselor-web:8080`, and `api.konkourix.ir` to `api:4000`. An unmatched host receives Nginx's connection-closing 444 response instead of a default application.
+- Proxy paths are not rewritten. Nginx passes request headers and cookies normally and overwrites `Host`, `X-Real-IP`, `X-Forwarded-For`, and `X-Forwarded-Proto` from the observed request. HTTP upgrade headers are ready for a later WebSocket endpoint without changing current application behavior.
+- CORS remains solely in the API. The edge does not grant origins, alter cookie attributes, or implement authentication.
+- `TRUST_PROXY` remains disabled until the edge has a controlled source address or network CIDR. At integration time, the API may trust only that explicit address/CIDR, and API port 4000 must remain unreachable directly from untrusted clients.
+- Frontend requests proxy to the existing static containers, whose `try_files` behavior provides SPA fallback. The edge gives `/assets/` a one-year expiry because Vite filenames are content-hashed; other frontend routes use no-cache expiry.
+- The edge emits the existing baseline `nosniff`, frame-denial, and no-referrer policy consistently. Other API security headers pass through. API request bodies are limited to 2 MiB at this layer.
+
+The committed edge has only port 80 listeners. It contains no certificate paths, TLS directives, HSTS, DNS automation, Cloudflare integration, or deployment behavior. The production hostnames express the intended routing contract only; they are not a claim that the domains are active.
+
+No edge image or Compose service is introduced in this milestone. Later authorized integration must package or mount these files, join the controlled internal network, publish the required edge ports, configure TLS, and set a matching explicit API proxy-trust value.
+
 ## Deferred work
 
-Compose runtime execution, migration execution orchestration, edge Nginx, public-domain routing, TLS, deployment, backups, and runtime infrastructure validation are explicitly deferred to later authorized milestones.
+Compose and Nginx runtime execution, edge packaging/Compose integration, migration execution orchestration, TLS, DNS activation, deployment, backups, and runtime infrastructure validation are explicitly deferred to later authorized milestones.

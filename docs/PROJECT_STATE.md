@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 0 Milestone 4 and baseline re-verification, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 0 Milestone 5 and baseline re-verification, not a claim of overall product completion.
 
 ## Project
 
@@ -20,10 +20,10 @@ Phase 0 is not complete. Some Phase 1 and later backend foundations already exis
 - Confidence: **HIGH**
 - Audit and baseline re-verification date: **2026-09-09**
 
-## Milestone 4 Baseline Git Checkpoint
+## Milestone 5 Baseline Git Checkpoint
 
-- HEAD: `45d6903324760748e2df9d701fe8f4d48239e9b4`
-- Message: `feat: harden development workflow and repository consistency`
+- HEAD: `e960df62a68a4046affa13625c17a8800ccb0966`
+- Message: `feat: establish docker compose infrastructure foundation`
 
 Foundation repair checkpoint:
 
@@ -62,7 +62,7 @@ Re-verified on 2026-09-09 after successful local dependency-state recovery:
 | Development workflow | HARDENED; LOCAL VALIDATION COMPLETE |
 | Container image definitions | COMPLETE; RUNTIME UNVERIFIED |
 | Docker Compose | FOUNDATION COMPLETE; RUNTIME UNVERIFIED |
-| Edge Nginx | NOT STARTED |
+| Edge Nginx | FOUNDATION COMPLETE; SYNTAX/RUNTIME UNVERIFIED |
 | Deployment | NOT STARTED |
 | Backup/Restore | NOT STARTED |
 | CI/CD | NOT STARTED |
@@ -182,6 +182,33 @@ Milestone verification:
 
 The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** for the validated source and static infrastructure contract; actual Compose execution remains pending in a Docker-capable environment.
 
+### Milestone 5 — Reverse Proxy & Production Edge Foundation
+
+**Status: COMPLETE (STATICALLY VERIFIED; NGINX EXECUTION PENDING)**
+
+Completed and locally verified on 2026-09-10:
+
+- `infrastructure/nginx/` defines an HTTP-only edge configuration with exact virtual hosts for `app.konkourix.ir`, `counselor.konkourix.ir`, and `api.konkourix.ir`. Unknown hosts are rejected by a default server.
+- Upstreams use the existing service names and internal ports: Student Web and Counselor Web on 8080 and API on 4000. Request URIs are preserved without application-route rewrites.
+- The edge overwrites `Host`, `X-Real-IP`, `X-Forwarded-For`, and `X-Forwarded-Proto` and includes harmless HTTP upgrade handling. CORS, authentication, and cookie attributes remain application responsibilities.
+- The trusted-proxy contract is unchanged. When the edge is later attached to a controlled network, the API must explicitly trust only its source IP/CIDR and must not be directly exposed to untrusted clients.
+- Both frontend hosts proxy all browser paths to their existing static containers, preserving the container-level SPA fallback. Only Vite's hashed `/assets/` path receives long-lived browser expiry; general routes use no-cache expiry.
+- The edge provides `nosniff`, frame denial, and no-referrer headers without weakening the API's existing values. API CSP and Permissions-Policy remain untouched, and API request bodies are capped at 2 MiB at the edge.
+- TLS listeners, certificates, HSTS, DNS, Cloudflare, deployment, firewall rules, and edge Compose integration are absent and explicitly deferred. The defined domains are intended routing identities, not a claim that DNS or production traffic is active.
+
+Milestone verification:
+
+- API tests: **61/61 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Nginx host/upstream/header/cache/SPA/security structure: **STATIC REVIEW PASS**
+- Nginx syntax/runtime execution: **NOT RUN; Nginx and Docker are intentionally unavailable locally**
+
+The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** for the validated source and static edge contract; Nginx syntax and runtime execution remain pending in an appropriate environment.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -193,6 +220,7 @@ Konkourix is a pnpm monorepo. Current repository structure includes:
 - `database/prisma`: Prisma schema, generated-client configuration, and migrations
 - `docs`: project documentation
 - `infrastructure/docker`: shared container-only health and static-server configuration
+- `infrastructure/nginx`: future HTTP edge routing and upstream configuration
 
 Repository reality takes precedence over aspirational directory layouts or architecture.
 
@@ -273,7 +301,9 @@ Neither starter application should be described as an implemented product merely
 - `.env.production.example` documents placeholder-only Compose inputs; real runtime values remain external and ignored.
 - Compose waits for PostgreSQL health before starting the API and configures the API image's existing probe to use database-aware `/health`.
 - Compose does not execute Prisma migrations; migration orchestration remains deferred.
-- No public/edge Nginx configuration is implemented; the frontend image's internal Nginx serves static files only.
+- `infrastructure/nginx/` defines statically verified exact-host HTTP edge routing to the three application services, forwarded headers, frontend asset expiry, and baseline response headers.
+- The edge is not yet packaged or attached to Compose. It has no TLS, certificate, DNS, Cloudflare, or deployment configuration.
+- The frontend image's internal Nginx remains a static file server and supplies SPA history fallback; it does not proxy API traffic.
 - No deployment scripts are implemented.
 - No backup or restore scripts are implemented.
 - No CI workflow is implemented.
@@ -298,7 +328,7 @@ The implemented container-image and Compose configuration is statically checked 
 - Shared package strategy and implementation
 - Independent student and counselor routing/authentication shells
 - Docker Compose runtime verification and migration execution policy
-- Nginx routing and TLS-origin strategy
+- Nginx syntax/runtime verification, Compose integration, and TLS termination strategy
 - Production environment configuration and secret handling
 - Deployment and rollback scripts
 - PostgreSQL and upload backup/restore procedures
@@ -339,4 +369,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 0 Milestones 1, 2, 3, and 4 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin edge Nginx, deployment, or another Phase 0 milestone.
+Phase 0 Milestones 1, 2, 3, 4, and 5 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin TLS, deployment, or another Phase 0 milestone.

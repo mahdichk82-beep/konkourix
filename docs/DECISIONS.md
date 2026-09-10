@@ -119,3 +119,17 @@ This lightweight decision log records architectural constraints established by t
 **Verification boundary:** Local development remains Docker-independent. Docker Compose execution, public edge Nginx, TLS, deployment, backups, and runtime infrastructure verification remain deferred. The Compose contract is statically verified only because Docker is intentionally unavailable on the development laptop.
 
 **Status:** Accepted
+
+## ADR-013 — Reverse Proxy and Production Edge Foundation
+
+**Decision:** The future public edge uses one Nginx HTTP routing layer with exact host mappings: `app.konkourix.ir` to `student-web:8080`, `counselor.konkourix.ir` to `counselor-web:8080`, and `api.konkourix.ir` to `api:4000`. Unknown hosts terminate at a default server without reaching an application. The configuration names the existing Compose services but is not yet packaged or attached to Compose; runtime integration remains a later explicit step.
+
+**Proxy and browser policy:** The edge preserves request paths and authentication cookies and does not implement CORS or authentication. It overwrites `Host`, `X-Real-IP`, `X-Forwarded-For`, and `X-Forwarded-Proto` using edge-observed request data and carries harmless HTTP upgrade headers for future WebSocket compatibility. The API must remain inaccessible to untrusted clients except through the edge and must set `TRUST_PROXY` only to the eventual controlled edge IP or network CIDR. The existing default `TRUST_PROXY=false` remains unchanged until that topology exists.
+
+**Frontend and caching policy:** Browser routes proxy unchanged to each frontend container, whose existing `try_files` rule provides SPA history fallback. Only Vite's content-hashed `/assets/` path receives a one-year browser expiry; other frontend routes use no-cache expiry so HTML and route fallbacks do not become stale. The frontend edge hosts never proxy API traffic.
+
+**Security policy:** The edge removes upstream duplicates and consistently emits `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and `Referrer-Policy: no-referrer`, matching the API's existing values. API Content-Security-Policy and Permissions-Policy pass through unchanged. API request bodies are limited to 2 MiB at the edge. This is a baseline only, not a claim of complete production security hardening.
+
+**Verification boundary:** The committed edge listens on HTTP port 80 only. Certificates, TLS listeners, HSTS, DNS, Cloudflare, firewall policy, edge container/Compose integration, deployment, and production availability are deliberately absent. Nginx is unavailable locally, so syntax and runtime execution remain pending in an Nginx-capable environment; local validation is static and Docker-independent.
+
+**Status:** Accepted
