@@ -133,3 +133,17 @@ This lightweight decision log records architectural constraints established by t
 **Verification boundary:** The committed edge listens on HTTP port 80 only. Certificates, TLS listeners, HSTS, DNS, Cloudflare, firewall policy, edge container/Compose integration, deployment, and production availability are deliberately absent. Nginx is unavailable locally, so syntax and runtime execution remain pending in an Nginx-capable environment; local validation is static and Docker-independent.
 
 **Status:** Accepted
+
+## ADR-014 — Production Security and Operational Baseline
+
+**Decision:** Production request logging uses one application-owned structured completion event rather than Fastify's duplicate default request logs. Each event contains timestamp/start time, method, normalized route, status, duration, request ID, and authenticated user ID when available. Raw URLs/query strings, bodies, headers, cookies, tokens, password material, secrets, and database URLs are excluded. Defensive Pino redaction covers common credential fields, and unhandled/lifecycle errors log only validated short error names/codes instead of arbitrary messages or stacks.
+
+**Abuse-control policy:** Public register, login, and refresh routes use bounded per-process, per-IP fixed-window limits with standard 429 responses and `Retry-After`. Logout remains unlimited. This is a single-process baseline only; state resets on restart and is not shared across replicas. Horizontal scaling or materially different traffic requires a reviewed shared limiter or controlled edge policy. Correct client attribution depends on trusting only the explicit controlled edge IP/CIDR.
+
+**Health and error policy:** `/health/live` (and `/v1/health/live`) is process liveness without a database query. `/health` (and `/v1/health`) is database readiness through `SELECT 1`; no `/ready` alias exists. Health and error responses never include credentials, connection details, stack traces, or raw internal exceptions. Request IDs correlate sanitized client responses with restricted operational logs.
+
+**Storage and recovery policy:** No upload subsystem exists. Any future file feature must add content validation, server-generated names, path containment, non-executable storage/serving, explicit size limits, malware handling, ownership metadata, and restore-tested backups before activation. PostgreSQL backup/restore is design-only: encrypted off-host logical backups, approved retention/RPO/RTO, checksums, least-privilege credentials, age/failure alerting, and periodic isolated restore verification are required before production. A Compose named volume is not a backup.
+
+**Verification boundary:** TLS, DNS, Cloudflare, monitoring services, backup scripts/schedules, restore execution, and deployment remain unimplemented. The production checklist in `docs/SECURITY.md` records required evidence and does not mark those controls complete.
+
+**Status:** Accepted

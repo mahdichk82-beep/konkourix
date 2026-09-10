@@ -10,6 +10,7 @@ import { createStudyTrackingServices } from './study-tracking/services.js'
 import { env } from './config/env.js'
 import { closeResources } from './lib/lifecycle.js'
 import { prisma } from './lib/prisma.js'
+import { operationalErrorFields } from './lib/operational-logging.js'
 
 const app = buildApp({
   auth: createAuthService({
@@ -46,7 +47,10 @@ const shutdown = (signal: NodeJS.Signals): Promise<void> => {
     try {
       await closeResources(app, prisma)
     } catch (error) {
-      app.log.error(error, 'Failed to close API resources')
+      app.log.error(
+        operationalErrorFields(error),
+        'Failed to close API resources',
+      )
       process.exitCode = 1
     }
   })()
@@ -69,12 +73,15 @@ const start = async (): Promise<void> => {
       host: env.HOST,
     })
   } catch (error) {
-    app.log.error(error, 'Failed to start API')
+    app.log.error(operationalErrorFields(error), 'Failed to start API')
 
     try {
       await closeResources(app, prisma)
     } catch (closeError) {
-      app.log.error(closeError, 'Failed to close API resources after startup failure')
+      app.log.error(
+        operationalErrorFields(closeError),
+        'Failed to close API resources after startup failure',
+      )
     }
 
     process.exitCode = 1

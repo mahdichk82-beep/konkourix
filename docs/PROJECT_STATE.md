@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 0 Milestone 5 and baseline re-verification, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 0 Milestone 6 and baseline re-verification, not a claim of overall product completion.
 
 ## Project
 
@@ -20,10 +20,10 @@ Phase 0 is not complete. Some Phase 1 and later backend foundations already exis
 - Confidence: **HIGH**
 - Audit and baseline re-verification date: **2026-09-09**
 
-## Milestone 5 Baseline Git Checkpoint
+## Milestone 6 Baseline Git Checkpoint
 
-- HEAD: `e960df62a68a4046affa13625c17a8800ccb0966`
-- Message: `feat: establish docker compose infrastructure foundation`
+- HEAD: `2d116da800bd9b6eaa6c437b597590c35c9b901c`
+- Message: `feat: establish nginx edge routing foundation`
 
 Foundation repair checkpoint:
 
@@ -55,7 +55,7 @@ Re-verified on 2026-09-09 after successful local dependency-state recovery:
 | --- | --- |
 | Backend foundation | MOSTLY COMPLETE |
 | Database foundation | MOSTLY COMPLETE |
-| Environment and security | PARTIAL |
+| Environment and security | HARDENED BASELINE; PRODUCTION VERIFICATION PENDING |
 | Student Web | SCAFFOLDED ONLY |
 | Counselor Web | SCAFFOLDED ONLY |
 | Shared packages | SCAFFOLDED ONLY |
@@ -64,7 +64,7 @@ Re-verified on 2026-09-09 after successful local dependency-state recovery:
 | Docker Compose | FOUNDATION COMPLETE; RUNTIME UNVERIFIED |
 | Edge Nginx | FOUNDATION COMPLETE; SYNTAX/RUNTIME UNVERIFIED |
 | Deployment | NOT STARTED |
-| Backup/Restore | NOT STARTED |
+| Backup/Restore | DESIGN COMPLETE; EXECUTION UNVERIFIED |
 | CI/CD | NOT STARTED |
 | Documentation | PARTIAL |
 
@@ -209,6 +209,35 @@ Milestone verification:
 
 The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** for the validated source and static edge contract; Nginx syntax and runtime execution remain pending in an appropriate environment.
 
+### Milestone 6 — Production Security & Operational Hardening
+
+**Status: COMPLETE (LOCAL CONTRACT VERIFIED; PRODUCTION OPERATIONS PENDING)**
+
+Completed and locally verified on 2026-09-10:
+
+- API request completion logs now use an explicit safe schema containing request time, method, normalized route, status, duration, request ID, and authenticated user ID when available. Fastify's duplicate default request logs are disabled through its current `LogController` API.
+- Pino redaction covers common credential fields. Unhandled and lifecycle error logs omit arbitrary messages/stacks and retain only validated short error names/codes plus request correlation.
+- Edge access logs now use an edge-generated request ID and normalized URI without query arguments. Query strings, referrers, cookies, authorization headers, and bodies are not part of the edge log format.
+- Bounded in-memory per-IP limits protect public registration, login, and refresh routes with standard 429/`Retry-After` responses. Logout remains available. The per-process/non-distributed limitation is documented for future scaling.
+- Existing security headers, exact CORS allowlist, secure refresh-cookie attributes, trusted-proxy allowlist, strict input validation, authorization, scrypt password hashing, and token/session behavior were reviewed and preserved.
+- The canonical liveness paths are `/health/live` and `/v1/health/live`; readiness paths are `/health` and `/v1/health`. No `/ready` alias exists. Readiness checks PostgreSQL without exposing errors or credentials.
+- No upload subsystem exists. `docs/SECURITY.md` records mandatory future file validation, path, size, execution, malware, ownership, and backup controls.
+- `docs/backup-restore.md` defines future encrypted off-host PostgreSQL backup, retention approval, checksum, alerting, and isolated restore-verification requirements. No backup/restore script, schedule, dump, or restore was executed.
+- The production checklist explicitly leaves TLS, DNS, secrets provisioning, migrations, monitoring, backup evidence, restore drills, permissions, deployment, and incident/rollback verification incomplete.
+
+Milestone verification:
+
+- API tests: **63/63 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Secret/schema/migration/dependency/scope review: **PASS**
+- Deployment, TLS, monitoring, backup, and restore execution: **NOT RUN; explicitly outside milestone scope**
+
+The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** for the reviewed and locally verified security/operational contract; production controls and recovery execution still require environment-specific evidence.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -230,6 +259,7 @@ The following capabilities are present and covered by the current API baseline:
 
 - Process liveness and database readiness endpoints
 - Request IDs, a standard API response envelope, centralized error handling, structured Fastify logging, and baseline security headers
+- Safe normalized request-completion logging and bounded single-process abuse limits for register/login/refresh
 - Users, roles, and account status foundations
 - Student registration and login
 - Access-token authentication
@@ -304,6 +334,8 @@ Neither starter application should be described as an implemented product merely
 - `infrastructure/nginx/` defines statically verified exact-host HTTP edge routing to the three application services, forwarded headers, frontend asset expiry, and baseline response headers.
 - The edge is not yet packaged or attached to Compose. It has no TLS, certificate, DNS, Cloudflare, or deployment configuration.
 - The frontend image's internal Nginx remains a static file server and supplies SPA history fallback; it does not proxy API traffic.
+- `docs/SECURITY.md` records the reviewed production security, logging, error, health, rate-limit, upload, and launch-checklist contracts.
+- `docs/backup-restore.md` defines backup/restore design and required evidence; no backup or restore automation exists.
 - No deployment scripts are implemented.
 - No backup or restore scripts are implemented.
 - No CI workflow is implemented.
@@ -324,17 +356,16 @@ The implemented container-image and Compose configuration is statically checked 
 
 ## Known Remaining Foundation Work
 
-- Logging and error-handling completeness review
 - Shared package strategy and implementation
 - Independent student and counselor routing/authentication shells
 - Docker Compose runtime verification and migration execution policy
 - Nginx syntax/runtime verification, Compose integration, and TLS termination strategy
 - Production environment configuration and secret handling
 - Deployment and rollback scripts
-- PostgreSQL and upload backup/restore procedures
+- Backup automation and isolated restore execution; upload backup design only if uploads are introduced
 - CI/CD validation foundation
 - Broader product and operational documentation
-- Security hardening, including rate limiting and production-focused review
+- Distributed abuse protection, security monitoring, and environment-specific hardening verification
 
 These items are not authorization to implement all remaining Phase 0 work in one task.
 
@@ -369,4 +400,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 0 Milestones 1, 2, 3, 4, and 5 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin TLS, deployment, or another Phase 0 milestone.
+Phase 0 Milestones 1, 2, 3, 4, 5, and 6 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin TLS, deployment, monitoring, backup execution, or another Phase 0 milestone.

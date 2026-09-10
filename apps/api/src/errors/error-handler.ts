@@ -1,6 +1,7 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 import { errorResponse } from '../contracts/api-response.js'
 import { ApiError } from './api-error.js'
+import { operationalErrorFields } from '../lib/operational-logging.js'
 
 const requestIdFor = (request: FastifyRequest): string =>
   request.context?.requestId ?? request.id
@@ -32,7 +33,10 @@ export const registerErrorHandling = (app: FastifyInstance): void => {
         .send(errorResponse('VALIDATION_ERROR', 'Request validation failed', requestId))
     }
 
-    request.log.error({ err: error, requestId }, 'Unhandled API error')
+    request.log.error(
+      { ...operationalErrorFields(error), requestId },
+      'Unhandled API error',
+    )
 
     return reply
       .status(500)
