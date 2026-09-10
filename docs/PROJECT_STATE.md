@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 2, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 3, not a claim of overall product completion.
 
 ## Project
 
@@ -12,9 +12,9 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 2 — Student Subject & Topic Foundation**.
+The project has completed **Phase 2 Milestone 3 — Task Topic Integration**.
 
-Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today planning, and student-owned subject/topic management are verified; later student and counselor product capabilities are not implied complete.
+Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today planning, student-owned subject/topic management, and optional task-topic assignment are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
@@ -44,6 +44,11 @@ Study Tracking recovery checkpoint:
 
 - HEAD: `634e99083d24d4e62d941390108d0f17f476a82c`
 - Message: `feat: add student today planning`
+
+## Phase 2 Milestone 3 Starting Checkpoint
+
+- HEAD: `1173b57823d4416714ee2736f8a9ca858767b367`
+- Message: `feat: add student topic foundation`
 
 ## Verified Baseline
 
@@ -408,6 +413,34 @@ Milestone verification:
 
 Deferred Phase 2 capabilities include weekly planning, drag-and-drop/manual ordering, free-text search, counselor-authored tasks/plans or topics, task-topic linkage, and richer task lifecycle/progress data. They require separately authorized milestones.
 
+### Phase 2 Milestone 3 — Task Topic Integration
+
+**Status: COMPLETE**
+
+- `DailyTask` now has a nullable `topicId` foreign key and optional `Topic` relation. Existing tasks remain valid with `topicId = NULL`, deleting a topic sets linked task topic IDs to null, and the indexed foreign key supports task-topic access without adding analytics fields.
+- The additive `20260910220542_connect_tasks_to_topics` migration was applied successfully to the local development database; all 7 migrations are up to date.
+- Existing student daily-task create and patch contracts accept optional nullable `topicId`. Task get/list/create/update responses expose the scalar `topicId`, matching the established relationship-ID response pattern without breaking existing clients.
+- Backend services require any selected topic to belong to the authenticated student's profile through its subject and to match the task's effective `subjectId`. A topic cannot be supplied without its subject, and archived topics cannot be newly attached.
+- Partial task updates validate the combined current and requested relationship state, so changing a subject cannot silently retain an incompatible topic. Status-only updates preserve existing completion timestamp behavior and do not revalidate unchanged historical relationships.
+- Student Web `/planning` retains its existing layout and now loads active topics after a subject is selected, clears topic selection when the subject changes, permits no topic, and presents localized loading, empty, and error states. Topic management remains exclusively in `/study`.
+- Focused tests cover topic-free and valid-topic task creation, same-student cross-subject mismatch rejection, cross-student topic rejection, valid topic attachment during update, invalid update rejection, route parsing/response behavior, and all existing task ownership, authorization, pagination, filtering, and completion behavior.
+- No dependency, lockfile, authentication, infrastructure, Counselor Web, topic analytics, weekly-planning, ordering, search, or counselor-planning feature was changed.
+
+Milestone verification:
+
+- API tests: **93/93 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 7 migrations found and the database is up to date
+- Schema changed: **YES; nullable DailyTask topic relation only**
+- Migration added and run: **YES; local development database only**
+
+Deferred Phase 2 capabilities include weekly planning, drag-and-drop/manual ordering, free-text search, topic analytics/mastery, counselor-authored tasks/plans, and counselor planning. They require separately authorized milestones.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -437,7 +470,7 @@ The following capabilities are present and covered by the current API baseline:
 - Current-session logout, all-session revocation, authenticated password change, and versioned `/auth/me` functionality under `/api/v1`
 - Student and counselor profile APIs
 - Student-counselor relationship foundation
-- Student subjects, topics, study plans, and daily tasks
+- Student subjects, topics, study plans, and daily tasks with optional validated topic assignment
 - Study Sessions and Student Goals
 - Backend role and ownership enforcement foundations; student resources are resolved from the authenticated user's StudentProfile
 
@@ -456,8 +489,10 @@ Commit `5fffa805d99e1fc870410c3b5115b2924059399f` records four verified repairs:
 
 - Persistent storage: PostgreSQL
 - ORM and migration system: Prisma
-- Known migrations: 6
+- Known migrations: 7
 - Migration status at this checkpoint: applied and up to date
+- Task Topic migration: `20260910220542_connect_tasks_to_topics`
+- Task Topic migration state: committed and applied locally
 - Student Topic migration: `20260910184152_add_student_topic_foundation`
 - Student Topic migration state: committed and applied locally
 - Study Tracking migration: `20260903002126_add_study_tracking`
@@ -475,7 +510,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - It verifies authenticated access against the backend-protected student boundary before rendering protected content.
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing student profile fields, theme selection, password change, current logout, and logout-all.
-- Its planning page provides persistent today-task listing and creation, completion/skipping, status and subject filters, cursor pagination, and inline subject creation through the existing authenticated backend contracts.
+- Its planning page provides persistent today-task listing and creation with optional subject/topic assignment, completion/skipping, status and subject filters, cursor pagination, and inline subject creation through the existing authenticated backend contracts.
 - Its study page provides persistent student-owned subject listing/creation and topic listing/creation/rename/archive/restore through the authenticated backend contracts.
 - It remains an application foundation rather than a complete student product UI.
 
@@ -580,4 +615,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 2 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin weekly planning, drag-and-drop/manual ordering, search, counselor planning/topics, task-topic linkage, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 3 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin weekly planning, drag-and-drop/manual ordering, search, topic analytics/mastery, counselor planning, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.

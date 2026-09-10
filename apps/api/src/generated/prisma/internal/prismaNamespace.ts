@@ -1394,6 +1394,7 @@ export const DailyTaskScalarFieldEnum = {
   studentProfileId: 'studentProfileId',
   studyPlanId: 'studyPlanId',
   subjectId: 'subjectId',
+  topicId: 'topicId',
   title: 'title',
   description: 'description',
   scheduledFor: 'scheduledFor',

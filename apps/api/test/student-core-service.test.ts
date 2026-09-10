@@ -94,7 +94,7 @@ const createStore = (): StudentCoreStore & {
       store.tasks.push(record)
       return record
     },
-    async updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'title' | 'description' | 'scheduledFor' | 'estimatedMinutes' | 'status' | 'completedAt'>>) {
+    async updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'scheduledFor' | 'estimatedMinutes' | 'status' | 'completedAt'>>) {
       const task = store.tasks.find((item) => item.id === id && item.studentProfileId === profileId)
       if (!task) return null
       Object.assign(task, input, { updatedAt: timestamp })
@@ -260,6 +260,7 @@ test('student core completes tasks with a completion timestamp and protects owne
     status: 'PENDING',
     studyPlanId: null,
     subjectId: null,
+    topicId: null,
   })
 
   const updated = await services.tasks.update(student, task.id, { status: 'COMPLETED' })
@@ -280,6 +281,203 @@ test('student core completes tasks with a completion timestamp and protects owne
   )
 })
 
+test('student core creates tasks with no topic or a valid owned subject topic', async () => {
+  const store = createStore()
+  store.subjects.push({
+    id: 'subject-1',
+    studentProfileId: profile.id,
+    name: 'Biology',
+    normalizedName: 'biology',
+    archivedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  store.topics.push({
+    id: 'topic-1',
+    subjectId: 'subject-1',
+    title: 'Genetics',
+    normalizedTitle: 'genetics',
+    archivedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  const services = createStudentCoreServices(store, () => timestamp)
+
+  const withoutTopic = await services.tasks.create(student, {
+    title: 'General review',
+    description: null,
+    scheduledFor: '2026-09-03',
+    estimatedMinutes: 20,
+    status: 'PENDING',
+    studyPlanId: null,
+    subjectId: null,
+    topicId: null,
+  })
+  const withTopic = await services.tasks.create(student, {
+    title: 'Review genetics',
+    description: null,
+    scheduledFor: '2026-09-03',
+    estimatedMinutes: 30,
+    status: 'PENDING',
+    studyPlanId: null,
+    subjectId: 'subject-1',
+    topicId: 'topic-1',
+  })
+
+  assert.equal(withoutTopic.topicId, null)
+  assert.equal(withTopic.subjectId, 'subject-1')
+  assert.equal(withTopic.topicId, 'topic-1')
+})
+
+test('student core rejects mismatched and foreign topics during task creation', async () => {
+  const store = createStore()
+  store.subjects.push(
+    {
+      id: 'subject-1',
+      studentProfileId: profile.id,
+      name: 'Biology',
+      normalizedName: 'biology',
+      archivedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    {
+      id: 'subject-2',
+      studentProfileId: profile.id,
+      name: 'Chemistry',
+      normalizedName: 'chemistry',
+      archivedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    {
+      id: 'foreign-subject',
+      studentProfileId: 'student-profile-2',
+      name: 'Private subject',
+      normalizedName: 'private subject',
+      archivedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+  )
+  store.topics.push(
+    {
+      id: 'other-subject-topic',
+      subjectId: 'subject-2',
+      title: 'Atoms',
+      normalizedTitle: 'atoms',
+      archivedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    {
+      id: 'foreign-topic',
+      subjectId: 'foreign-subject',
+      title: 'Private topic',
+      normalizedTitle: 'private topic',
+      archivedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+  )
+  const services = createStudentCoreServices(store, () => timestamp)
+  const taskInput = {
+    title: 'Invalid topic task',
+    description: null,
+    scheduledFor: '2026-09-03',
+    estimatedMinutes: null,
+    status: 'PENDING' as const,
+    studyPlanId: null,
+    subjectId: 'subject-1',
+  }
+
+  await assert.rejects(
+    services.tasks.create(student, { ...taskInput, topicId: 'other-subject-topic' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TOPIC_SUBJECT_MISMATCH',
+  )
+  await assert.rejects(
+    services.tasks.create(student, { ...taskInput, topicId: 'foreign-topic' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TOPIC_NOT_FOUND',
+  )
+  await assert.rejects(
+    services.tasks.create(student, {
+      ...taskInput,
+      subjectId: null,
+      topicId: 'other-subject-topic',
+    }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TOPIC_SUBJECT_REQUIRED',
+  )
+  assert.equal(store.tasks.length, 0)
+})
+
+test('student core attaches only a valid topic during task update', async () => {
+  const store = createStore()
+  store.subjects.push(
+    {
+      id: 'subject-1',
+      studentProfileId: profile.id,
+      name: 'Biology',
+      normalizedName: 'biology',
+      archivedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    {
+      id: 'subject-2',
+      studentProfileId: profile.id,
+      name: 'Chemistry',
+      normalizedName: 'chemistry',
+      archivedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+  )
+  store.topics.push(
+    {
+      id: 'topic-1',
+      subjectId: 'subject-1',
+      title: 'Genetics',
+      normalizedTitle: 'genetics',
+      archivedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    {
+      id: 'topic-2',
+      subjectId: 'subject-2',
+      title: 'Atoms',
+      normalizedTitle: 'atoms',
+      archivedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+  )
+  const services = createStudentCoreServices(store, () => timestamp)
+  const task = await services.tasks.create(student, {
+    title: 'Biology review',
+    description: null,
+    scheduledFor: '2026-09-03',
+    estimatedMinutes: null,
+    status: 'PENDING',
+    studyPlanId: null,
+    subjectId: 'subject-1',
+    topicId: null,
+  })
+
+  const attached = await services.tasks.update(student, task.id, { topicId: 'topic-1' })
+  assert.equal(attached.topicId, 'topic-1')
+
+  await assert.rejects(
+    services.tasks.update(student, task.id, { topicId: 'topic-2' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TOPIC_SUBJECT_MISMATCH',
+  )
+  await assert.rejects(
+    services.tasks.update(student, task.id, { subjectId: null }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TOPIC_SUBJECT_REQUIRED',
+  )
+  assert.equal(store.tasks[0]?.topicId, 'topic-1')
+})
+
 test('student core hides another student task from get and update operations', async () => {
   const store = createStore()
   store.tasks.push({
@@ -287,6 +485,7 @@ test('student core hides another student task from get and update operations', a
     studentProfileId: 'student-profile-2',
     studyPlanId: null,
     subjectId: null,
+    topicId: null,
     title: 'Private task',
     description: null,
     scheduledFor: timestamp,
@@ -329,6 +528,7 @@ test('student core rejects another student subject on task create and update', a
     status: 'PENDING',
     studyPlanId: null,
     subjectId: null,
+    topicId: null,
   })
 
   await assert.rejects(
@@ -340,6 +540,7 @@ test('student core rejects another student subject on task create and update', a
       status: 'PENDING',
       studyPlanId: null,
       subjectId: 'foreign-subject',
+      topicId: null,
     }),
     (error: unknown) => error instanceof ApiError && error.code === 'SUBJECT_NOT_FOUND',
   )
@@ -373,6 +574,7 @@ test('student core rejects another student study plan on task create and update'
     status: 'PENDING',
     studyPlanId: null,
     subjectId: null,
+    topicId: null,
   })
 
   await assert.rejects(
@@ -384,6 +586,7 @@ test('student core rejects another student study plan on task create and update'
       status: 'PENDING',
       studyPlanId: 'foreign-plan',
       subjectId: null,
+      topicId: null,
     }),
     (error: unknown) => error instanceof ApiError && error.code === 'PLAN_NOT_FOUND',
   )
@@ -417,6 +620,7 @@ test('student core rejects archived subjects for new task assignments', async ()
       status: 'PENDING',
       studyPlanId: null,
       subjectId: 'archived-subject',
+      topicId: null,
     }),
     (error: unknown) => error instanceof ApiError && error.code === 'SUBJECT_ARCHIVED',
   )
@@ -443,6 +647,7 @@ test('student core plan and task pages use lookahead rows without repeating the 
       studentProfileId: profile.id,
       studyPlanId: null,
       subjectId: null,
+      topicId: null,
       title: id,
       description: null,
       scheduledFor: new Date(`2026-09-0${3 - index}T00:00:00.000Z`),

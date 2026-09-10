@@ -26,5 +26,5 @@ export interface StudentCoreStore {
   listTasks(profileId: string, query?: PageQuery & { scheduledFor?: Date; status?: DailyTaskStatus; studyPlanId?: string; subjectId?: string }): Promise<DailyTaskRecord[]>
   findTaskById(profileId: string, id: string): Promise<DailyTaskRecord | null>
   createTask(input: Omit<DailyTaskRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<DailyTaskRecord>
-  updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'title' | 'description' | 'scheduledFor' | 'estimatedMinutes' | 'status' | 'completedAt'>>): Promise<DailyTaskRecord | null>
+  updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'scheduledFor' | 'estimatedMinutes' | 'status' | 'completedAt'>>): Promise<DailyTaskRecord | null>
 }

@@ -108,7 +108,11 @@
 .planning-form input, .planning-form textarea, .planning-form select, .planning-filters select { width: 100%; min-height: 46px; padding: 0.75rem 0.9rem; border: 1px solid var(--border); border-radius: 12px; color: var(--text); background: var(--surface-muted); outline: none; }
 .planning-form textarea { min-height: 92px; resize: vertical; }
 .planning-form input:focus, .planning-form textarea:focus, .planning-form select:focus, .planning-filters select:focus { border-color: var(--accent); }
+.planning-form select:disabled { cursor: not-allowed; opacity: 0.68; }
 .planning-form__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.planning-topic-field__state, .planning-topic-field__error { font-size: 0.78rem; font-weight: 500; line-height: 1.7; }
+.planning-topic-field__state { color: var(--text-muted); }
+.planning-topic-field__error { color: var(--danger); }
 .planning-form__actions { display: flex; justify-content: flex-end; }
 .inline-subject { padding: 0.85rem; display: grid; gap: 0.8rem; border: 1px dashed var(--border); border-radius: 14px; background: var(--surface-muted); }
 .inline-subject > .button { justify-self: start; }

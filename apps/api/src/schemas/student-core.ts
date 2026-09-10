@@ -46,6 +46,7 @@ export const listTasksSchema = z.object({
 export const createTaskSchema = z.object({
   studyPlanId: z.string().uuid().nullable().optional().default(null),
   subjectId: z.string().uuid().nullable().optional().default(null),
+  topicId: z.string().uuid().nullable().optional().default(null),
   title: z.string().trim().min(1).max(200),
   description: optionalText(2000),
   scheduledFor: dateOnly,
@@ -55,6 +56,7 @@ export const createTaskSchema = z.object({
 export const updateTaskSchema = z.object({
   studyPlanId: z.string().uuid().nullable().optional(),
   subjectId: z.string().uuid().nullable().optional(),
+  topicId: z.string().uuid().nullable().optional(),
   title: z.string().trim().min(1).max(200).optional(),
   description: optionalText(2000),
   scheduledFor: dateOnly.optional(),

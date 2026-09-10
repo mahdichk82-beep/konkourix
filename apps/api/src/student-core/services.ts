@@ -38,6 +38,26 @@ const conflict = (error: unknown, code: string, message: string): never => {
   throw error
 }
 
+const requireTaskTopicConsistency = async (
+  store: StudentCoreStore,
+  profileId: string,
+  subjectId: string | null,
+  topicId: string | null,
+): Promise<void> => {
+  if (!topicId) return
+  if (!subjectId) {
+    throw new ApiError(400, 'TOPIC_SUBJECT_REQUIRED', 'A topic requires its subject')
+  }
+  const topic = await store.findTopicById(profileId, topicId)
+  if (!topic) throw new ApiError(404, 'TOPIC_NOT_FOUND', 'Topic not found')
+  if (topic.subjectId !== subjectId) {
+    throw new ApiError(409, 'TOPIC_SUBJECT_MISMATCH', 'Topic does not belong to the selected subject')
+  }
+  if (topic.archivedAt) {
+    throw new ApiError(409, 'TOPIC_ARCHIVED', 'Archived topics cannot be assigned to tasks')
+  }
+}
+
 export const createStudentCoreServices = (store: StudentCoreStore, now = () => new Date()) => {
   const subjects = {
     async list(actor: DomainStudent, query?: PageQuery): Promise<Page<StudySubjectRecord>> {
@@ -184,7 +204,7 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
       if (!result) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
       return result
     },
-    async create(actor: DomainStudent, input: { studyPlanId: string | null; subjectId: string | null; title: string; description?: string | null; scheduledFor: string; estimatedMinutes: number | null; status: DailyTaskStatus }) {
+    async create(actor: DomainStudent, input: { studyPlanId: string | null; subjectId: string | null; topicId: string | null; title: string; description?: string | null; scheduledFor: string; estimatedMinutes: number | null; status: DailyTaskStatus }) {
       const profile = await requireProfile(store, actor)
       if (!validDate(input.scheduledFor)) throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
       if (input.studyPlanId && !await store.findPlanById(profile.id, input.studyPlanId)) throw new ApiError(404, 'PLAN_NOT_FOUND', 'Study plan not found')
@@ -193,9 +213,10 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         if (!subject) throw new ApiError(404, 'SUBJECT_NOT_FOUND', 'Study subject not found')
         if (subject.archivedAt) throw new ApiError(409, 'SUBJECT_ARCHIVED', 'Archived subjects cannot be assigned to new tasks')
       }
+      await requireTaskTopicConsistency(store, profile.id, input.subjectId, input.topicId)
       return store.createTask({ ...input, description: input.description ?? null, studentProfileId: profile.id, scheduledFor: dateOnly(input.scheduledFor), completedAt: input.status === 'COMPLETED' ? now() : null })
     },
-    async update(actor: DomainStudent, id: string, input: { studyPlanId?: string | null; subjectId?: string | null; title?: string; description?: string | null; scheduledFor?: string; estimatedMinutes?: number | null; status?: DailyTaskStatus }) {
+    async update(actor: DomainStudent, id: string, input: { studyPlanId?: string | null; subjectId?: string | null; topicId?: string | null; title?: string; description?: string | null; scheduledFor?: string; estimatedMinutes?: number | null; status?: DailyTaskStatus }) {
       const profile = await requireProfile(store, actor)
       const current = await store.findTaskById(profile.id, id)
       if (!current) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
@@ -206,9 +227,18 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         if (!subject) throw new ApiError(404, 'SUBJECT_NOT_FOUND', 'Study subject not found')
         if (subject.archivedAt) throw new ApiError(409, 'SUBJECT_ARCHIVED', 'Archived subjects cannot be assigned to new tasks')
       }
+      if (input.subjectId !== undefined || input.topicId !== undefined) {
+        await requireTaskTopicConsistency(
+          store,
+          profile.id,
+          input.subjectId === undefined ? current.subjectId : input.subjectId,
+          input.topicId === undefined ? current.topicId : input.topicId,
+        )
+      }
       const result = await store.updateTask(profile.id, id, {
         ...(input.studyPlanId === undefined ? {} : { studyPlanId: input.studyPlanId }),
         ...(input.subjectId === undefined ? {} : { subjectId: input.subjectId }),
+        ...(input.topicId === undefined ? {} : { topicId: input.topicId }),
         ...(input.title === undefined ? {} : { title: input.title.trim() }),
         ...(input.description === undefined ? {} : { description: input.description }),
         ...(input.scheduledFor === undefined ? {} : { scheduledFor: dateOnly(input.scheduledFor) }),

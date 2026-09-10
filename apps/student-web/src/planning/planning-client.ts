@@ -8,6 +8,13 @@ export type StudySubject = {
   name: string
 }
 
+export type StudyTopic = {
+  archivedAt: string | null
+  id: string
+  subjectId: string
+  title: string
+}
+
 export type DailyTask = {
   completedAt: string | null
   createdAt: string
@@ -17,6 +24,7 @@ export type DailyTask = {
   scheduledFor: string
   status: DailyTaskStatus
   subjectId: string | null
+  topicId: string | null
   title: string
   updatedAt: string
 }
@@ -39,7 +47,14 @@ export type CreateTaskInput = {
   estimatedMinutes: number | null
   scheduledFor: string
   subjectId: string | null
+  topicId: string | null
   title: string
+}
+
+export type UpdateTaskInput = {
+  status?: DailyTaskStatus
+  subjectId?: string | null
+  topicId?: string | null
 }
 
 const withQuery = (
@@ -70,6 +85,15 @@ class PlanningClient {
     })
   }
 
+  listTopics(subjectId: string, cursor?: string): Promise<Page<StudyTopic>> {
+    return authClient.authorizedRequest<Page<StudyTopic>>(
+      withQuery(`/student/subjects/${encodeURIComponent(subjectId)}/topics`, {
+        cursor,
+        limit: 100,
+      }),
+    )
+  }
+
   listTasks(query: TaskListQuery): Promise<Page<DailyTask>> {
     return authClient.authorizedRequest<Page<DailyTask>>(
       withQuery('/student/daily-tasks', {
@@ -89,14 +113,18 @@ class PlanningClient {
     })
   }
 
-  updateTaskStatus(id: string, status: DailyTaskStatus): Promise<DailyTask> {
+  updateTask(id: string, input: UpdateTaskInput): Promise<DailyTask> {
     return authClient.authorizedRequest<DailyTask>(
       `/student/daily-tasks/${encodeURIComponent(id)}`,
       {
-        body: JSON.stringify({ status }),
+        body: JSON.stringify(input),
         method: 'PATCH',
       },
     )
+  }
+
+  updateTaskStatus(id: string, status: DailyTaskStatus): Promise<DailyTask> {
+    return this.updateTask(id, { status })
   }
 }
 

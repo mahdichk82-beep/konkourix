@@ -167,6 +167,7 @@ model Topic {
   updatedAt       DateTime  @updatedAt
 
   subject StudySubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  dailyTasks DailyTask[]
 
   @@unique([subjectId, normalizedTitle])
   @@index([subjectId])
@@ -197,6 +198,7 @@ model DailyTask {
   studentProfileId String          @db.Uuid
   studyPlanId      String?         @db.Uuid
   subjectId        String?         @db.Uuid
+  topicId          String?         @db.Uuid
   title            String
   description      String?
   scheduledFor     DateTime        @db.Date
@@ -209,12 +211,14 @@ model DailyTask {
   studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   studyPlan      StudyPlan?     @relation(fields: [studyPlanId], references: [id], onDelete: SetNull)
   subject        StudySubject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  topic          Topic?         @relation(fields: [topicId], references: [id], onDelete: SetNull)
   studySessions  StudySession[]
 
   @@index([studentProfileId, scheduledFor])
   @@index([studentProfileId, status, scheduledFor])
   @@index([studyPlanId])
   @@index([subjectId])
+  @@index([topicId])
   @@map("daily_tasks")
 }
 

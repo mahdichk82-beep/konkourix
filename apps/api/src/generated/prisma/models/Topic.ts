@@ -199,6 +199,7 @@ export type TopicWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Topic"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Topic"> | Date | string
   subject?: Prisma.XOR<Prisma.StudySubjectScalarRelationFilter, Prisma.StudySubjectWhereInput>
+  dailyTasks?: Prisma.DailyTaskListRelationFilter
 }
 
 export type TopicOrderByWithRelationInput = {
@@ -210,6 +211,7 @@ export type TopicOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   subject?: Prisma.StudySubjectOrderByWithRelationInput
+  dailyTasks?: Prisma.DailyTaskOrderByRelationAggregateInput
 }
 
 export type TopicWhereUniqueInput = Prisma.AtLeast<{
@@ -225,6 +227,7 @@ export type TopicWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Topic"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Topic"> | Date | string
   subject?: Prisma.XOR<Prisma.StudySubjectScalarRelationFilter, Prisma.StudySubjectWhereInput>
+  dailyTasks?: Prisma.DailyTaskListRelationFilter
 }, "id" | "subjectId_normalizedTitle">
 
 export type TopicOrderByWithAggregationInput = {
@@ -261,6 +264,7 @@ export type TopicCreateInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   subject: Prisma.StudySubjectCreateNestedOneWithoutTopicsInput
+  dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutTopicInput
 }
 
 export type TopicUncheckedCreateInput = {
@@ -271,6 +275,7 @@ export type TopicUncheckedCreateInput = {
   archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutTopicInput
 }
 
 export type TopicUpdateInput = {
@@ -281,6 +286,7 @@ export type TopicUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   subject?: Prisma.StudySubjectUpdateOneRequiredWithoutTopicsNestedInput
+  dailyTasks?: Prisma.DailyTaskUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicUncheckedUpdateInput = {
@@ -291,6 +297,7 @@ export type TopicUncheckedUpdateInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicCreateManyInput = {
@@ -367,6 +374,11 @@ export type TopicMinOrderByAggregateInput = {
   updatedAt?: Prisma.SortOrder
 }
 
+export type TopicNullableScalarRelationFilter = {
+  is?: Prisma.TopicWhereInput | null
+  isNot?: Prisma.TopicWhereInput | null
+}
+
 export type TopicCreateNestedManyWithoutSubjectInput = {
   create?: Prisma.XOR<Prisma.TopicCreateWithoutSubjectInput, Prisma.TopicUncheckedCreateWithoutSubjectInput> | Prisma.TopicCreateWithoutSubjectInput[] | Prisma.TopicUncheckedCreateWithoutSubjectInput[]
   connectOrCreate?: Prisma.TopicCreateOrConnectWithoutSubjectInput | Prisma.TopicCreateOrConnectWithoutSubjectInput[]
@@ -409,6 +421,22 @@ export type TopicUncheckedUpdateManyWithoutSubjectNestedInput = {
   deleteMany?: Prisma.TopicScalarWhereInput | Prisma.TopicScalarWhereInput[]
 }
 
+export type TopicCreateNestedOneWithoutDailyTasksInput = {
+  create?: Prisma.XOR<Prisma.TopicCreateWithoutDailyTasksInput, Prisma.TopicUncheckedCreateWithoutDailyTasksInput>
+  connectOrCreate?: Prisma.TopicCreateOrConnectWithoutDailyTasksInput
+  connect?: Prisma.TopicWhereUniqueInput
+}
+
+export type TopicUpdateOneWithoutDailyTasksNestedInput = {
+  create?: Prisma.XOR<Prisma.TopicCreateWithoutDailyTasksInput, Prisma.TopicUncheckedCreateWithoutDailyTasksInput>
+  connectOrCreate?: Prisma.TopicCreateOrConnectWithoutDailyTasksInput
+  upsert?: Prisma.TopicUpsertWithoutDailyTasksInput
+  disconnect?: Prisma.TopicWhereInput | boolean
+  delete?: Prisma.TopicWhereInput | boolean
+  connect?: Prisma.TopicWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TopicUpdateToOneWithWhereWithoutDailyTasksInput, Prisma.TopicUpdateWithoutDailyTasksInput>, Prisma.TopicUncheckedUpdateWithoutDailyTasksInput>
+}
+
 export type TopicCreateWithoutSubjectInput = {
   id?: string
   title: string
@@ -416,6 +444,7 @@ export type TopicCreateWithoutSubjectInput = {
   archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutTopicInput
 }
 
 export type TopicUncheckedCreateWithoutSubjectInput = {
@@ -425,6 +454,7 @@ export type TopicUncheckedCreateWithoutSubjectInput = {
   archivedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
+  dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutTopicInput
 }
 
 export type TopicCreateOrConnectWithoutSubjectInput = {
@@ -466,6 +496,62 @@ export type TopicScalarWhereInput = {
   updatedAt?: Prisma.DateTimeFilter<"Topic"> | Date | string
 }
 
+export type TopicCreateWithoutDailyTasksInput = {
+  id?: string
+  title: string
+  normalizedTitle: string
+  archivedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  subject: Prisma.StudySubjectCreateNestedOneWithoutTopicsInput
+}
+
+export type TopicUncheckedCreateWithoutDailyTasksInput = {
+  id?: string
+  subjectId: string
+  title: string
+  normalizedTitle: string
+  archivedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+}
+
+export type TopicCreateOrConnectWithoutDailyTasksInput = {
+  where: Prisma.TopicWhereUniqueInput
+  create: Prisma.XOR<Prisma.TopicCreateWithoutDailyTasksInput, Prisma.TopicUncheckedCreateWithoutDailyTasksInput>
+}
+
+export type TopicUpsertWithoutDailyTasksInput = {
+  update: Prisma.XOR<Prisma.TopicUpdateWithoutDailyTasksInput, Prisma.TopicUncheckedUpdateWithoutDailyTasksInput>
+  create: Prisma.XOR<Prisma.TopicCreateWithoutDailyTasksInput, Prisma.TopicUncheckedCreateWithoutDailyTasksInput>
+  where?: Prisma.TopicWhereInput
+}
+
+export type TopicUpdateToOneWithWhereWithoutDailyTasksInput = {
+  where?: Prisma.TopicWhereInput
+  data: Prisma.XOR<Prisma.TopicUpdateWithoutDailyTasksInput, Prisma.TopicUncheckedUpdateWithoutDailyTasksInput>
+}
+
+export type TopicUpdateWithoutDailyTasksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subject?: Prisma.StudySubjectUpdateOneRequiredWithoutTopicsNestedInput
+}
+
+export type TopicUncheckedUpdateWithoutDailyTasksInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  subjectId?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
 export type TopicCreateManySubjectInput = {
   id?: string
   title: string
@@ -482,6 +568,7 @@ export type TopicUpdateWithoutSubjectInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  dailyTasks?: Prisma.DailyTaskUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicUncheckedUpdateWithoutSubjectInput = {
@@ -491,6 +578,7 @@ export type TopicUncheckedUpdateWithoutSubjectInput = {
   archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicUncheckedUpdateManyWithoutSubjectInput = {
@@ -503,6 +591,35 @@ export type TopicUncheckedUpdateManyWithoutSubjectInput = {
 }
 
 
+/**
+ * Count Type TopicCountOutputType
+ */
+
+export type TopicCountOutputType = {
+  dailyTasks: number
+}
+
+export type TopicCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  dailyTasks?: boolean | TopicCountOutputTypeCountDailyTasksArgs
+}
+
+/**
+ * TopicCountOutputType without action
+ */
+export type TopicCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TopicCountOutputType
+   */
+  select?: Prisma.TopicCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * TopicCountOutputType without action
+ */
+export type TopicCountOutputTypeCountDailyTasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.DailyTaskWhereInput
+}
+
 
 export type TopicSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -513,6 +630,8 @@ export type TopicSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   createdAt?: boolean
   updatedAt?: boolean
   subject?: boolean | Prisma.StudySubjectDefaultArgs<ExtArgs>
+  dailyTasks?: boolean | Prisma.Topic$dailyTasksArgs<ExtArgs>
+  _count?: boolean | Prisma.TopicCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["topic"]>
 
 export type TopicSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -550,6 +669,8 @@ export type TopicSelectScalar = {
 export type TopicOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "subjectId" | "title" | "normalizedTitle" | "archivedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["topic"]>
 export type TopicInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   subject?: boolean | Prisma.StudySubjectDefaultArgs<ExtArgs>
+  dailyTasks?: boolean | Prisma.Topic$dailyTasksArgs<ExtArgs>
+  _count?: boolean | Prisma.TopicCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TopicIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   subject?: boolean | Prisma.StudySubjectDefaultArgs<ExtArgs>
@@ -562,6 +683,7 @@ export type $TopicPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
   name: "Topic"
   objects: {
     subject: Prisma.$StudySubjectPayload<ExtArgs>
+    dailyTasks: Prisma.$DailyTaskPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -966,6 +1088,7 @@ readonly fields: TopicFieldRefs;
 export interface Prisma__TopicClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
   subject<T extends Prisma.StudySubjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudySubjectDefaultArgs<ExtArgs>>): Prisma.Prisma__StudySubjectClient<runtime.Types.Result.GetResult<Prisma.$StudySubjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  dailyTasks<T extends Prisma.Topic$dailyTasksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Topic$dailyTasksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DailyTaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1400,6 +1523,30 @@ export type TopicDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Interna
    * Limit how many Topics to delete.
    */
   limit?: number
+}
+
+/**
+ * Topic.dailyTasks
+ */
+export type Topic$dailyTasksArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the DailyTask
+   */
+  select?: Prisma.DailyTaskSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the DailyTask
+   */
+  omit?: Prisma.DailyTaskOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.DailyTaskInclude<ExtArgs> | null
+  where?: Prisma.DailyTaskWhereInput
+  orderBy?: Prisma.DailyTaskOrderByWithRelationInput | Prisma.DailyTaskOrderByWithRelationInput[]
+  cursor?: Prisma.DailyTaskWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.DailyTaskScalarFieldEnum | Prisma.DailyTaskScalarFieldEnum[]
 }
 
 /**

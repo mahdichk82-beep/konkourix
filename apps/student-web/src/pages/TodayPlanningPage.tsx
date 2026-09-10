@@ -9,6 +9,7 @@ import {
   type DailyTask,
   type DailyTaskStatus,
   type StudySubject,
+  type StudyTopic,
 } from '../planning/planning-client'
 
 type StatusFilter = DailyTaskStatus | 'ALL'
@@ -36,6 +37,10 @@ const planningErrorMessage = (error: unknown): string => {
     SUBJECT_CONFLICT: 'درسی با این نام از قبل وجود دارد.',
     SUBJECT_NOT_FOUND: 'درس انتخاب‌شده دیگر در دسترس نیست.',
     TASK_NOT_FOUND: 'این کار دیگر در دسترس نیست. فهرست را تازه‌سازی کنید.',
+    TOPIC_ARCHIVED: 'این مبحث بایگانی شده و برای کار جدید قابل استفاده نیست.',
+    TOPIC_NOT_FOUND: 'مبحث انتخاب‌شده دیگر در دسترس نیست.',
+    TOPIC_SUBJECT_MISMATCH: 'مبحث انتخاب‌شده به این درس تعلق ندارد.',
+    TOPIC_SUBJECT_REQUIRED: 'برای انتخاب مبحث، ابتدا درس آن را انتخاب کنید.',
     VALIDATION_ERROR: 'اطلاعات واردشده معتبر نیست. فیلدها را بررسی کنید.',
   }
 
@@ -70,6 +75,22 @@ const loadSubjects = async (): Promise<StudySubject[]> => {
   return mergeSubjects(subjects)
 }
 
+const loadTopics = async (subjectId: string): Promise<StudyTopic[]> => {
+  const topics: StudyTopic[] = []
+  const seenCursors = new Set<string>()
+  let cursor: string | undefined
+
+  do {
+    const page = await planningClient.listTopics(subjectId, cursor)
+    topics.push(...page.items)
+    cursor = page.nextCursor ?? undefined
+    if (cursor && seenCursors.has(cursor)) break
+    if (cursor) seenCursors.add(cursor)
+  } while (cursor)
+
+  return topics.filter((topic) => topic.archivedAt === null)
+}
+
 export function TodayPlanningPage() {
   const today = new Date()
   const todayKey = localDateKey(today)
@@ -83,6 +104,7 @@ export function TodayPlanningPage() {
 
   const [tasks, setTasks] = useState<DailyTask[]>([])
   const [subjects, setSubjects] = useState<StudySubject[]>([])
+  const [topics, setTopics] = useState<StudyTopic[]>([])
   const [nextCursor, setNextCursor] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [subjectFilter, setSubjectFilter] = useState('ALL')
@@ -90,6 +112,7 @@ export function TodayPlanningPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [listError, setListError] = useState<string | null>(null)
   const [subjectError, setSubjectError] = useState<string | null>(null)
+  const [topicError, setTopicError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [updatingTaskIds, setUpdatingTaskIds] = useState<Set<string>>(new Set())
@@ -99,6 +122,8 @@ export function TodayPlanningPage() {
   const [description, setDescription] = useState('')
   const [estimatedMinutes, setEstimatedMinutes] = useState('')
   const [taskSubjectId, setTaskSubjectId] = useState('')
+  const [taskTopicId, setTaskTopicId] = useState('')
+  const [isTopicsLoading, setIsTopicsLoading] = useState(false)
   const [isSubmittingTask, setIsSubmittingTask] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [formSuccess, setFormSuccess] = useState<string | null>(null)
@@ -123,6 +148,32 @@ export function TodayPlanningPage() {
       setSubjectError(planningErrorMessage(error))
     }
   }, [])
+
+  useEffect(() => {
+    if (!taskSubjectId) return
+
+    let active = true
+    const fetchTopics = async () => {
+      await Promise.resolve()
+      if (!active) return
+      setIsTopicsLoading(true)
+      setTopicError(null)
+      setTopics([])
+      try {
+        const items = await loadTopics(taskSubjectId)
+        if (active) setTopics(items)
+      } catch (error) {
+        if (active) setTopicError(planningErrorMessage(error))
+      } finally {
+        if (active) setIsTopicsLoading(false)
+      }
+    }
+
+    void fetchTopics()
+    return () => {
+      active = false
+    }
+  }, [taskSubjectId])
 
   useEffect(() => {
     let active = true
@@ -261,6 +312,7 @@ export function TodayPlanningPage() {
         estimatedMinutes: minutes,
         scheduledFor: todayKey,
         subjectId: taskSubjectId || null,
+        topicId: taskTopicId || null,
         title: trimmedTitle,
       })
       if (taskMatchesFilters(created)) {
@@ -296,6 +348,8 @@ export function TodayPlanningPage() {
     try {
       const created = await planningClient.createSubject(name)
       setSubjects((current) => mergeSubjects([created, ...current]))
+      setTaskTopicId('')
+      setTopics([])
       setTaskSubjectId(created.id)
       setSubjectName('')
       setIsSubjectCreateOpen(false)
@@ -345,7 +399,12 @@ export function TodayPlanningPage() {
                 درس (اختیاری)
                 <select
                   id="task-subject"
-                  onChange={(event) => setTaskSubjectId(event.target.value)}
+                  onChange={(event) => {
+                    setTaskTopicId('')
+                    setTopics([])
+                    setTopicError(null)
+                    setTaskSubjectId(event.target.value)
+                  }}
                   value={taskSubjectId}
                 >
                   <option value="">بدون درس</option>
@@ -368,6 +427,33 @@ export function TodayPlanningPage() {
                 />
               </label>
             </div>
+
+            <label className="planning-topic-field" htmlFor="task-topic">
+              مبحث (اختیاری)
+              <select
+                disabled={!taskSubjectId || isTopicsLoading || topics.length === 0}
+                id="task-topic"
+                onChange={(event) => setTaskTopicId(event.target.value)}
+                value={taskTopicId}
+              >
+                <option value="">
+                  {!taskSubjectId
+                    ? 'ابتدا درس را انتخاب کنید'
+                    : isTopicsLoading
+                      ? 'در حال دریافت مباحث…'
+                      : topics.length === 0
+                        ? 'برای این درس مبحث فعالی ثبت نشده است'
+                        : 'بدون مبحث'}
+                </option>
+                {topics.map((topic) => (
+                  <option key={topic.id} value={topic.id}>{topic.title}</option>
+                ))}
+              </select>
+              {!isTopicsLoading && taskSubjectId && topics.length === 0 && !topicError && (
+                <span className="planning-topic-field__state">مباحث این درس را می‌توانید در بخش «درس‌ها و مباحث» مدیریت کنید.</span>
+              )}
+              {topicError && <span className="planning-topic-field__error" role="alert">{topicError}</span>}
+            </label>
 
             <label htmlFor="task-description">
               توضیحات (اختیاری)

@@ -45,6 +45,7 @@ export type DailyTaskRecord = {
   studentProfileId: string
   studyPlanId: string | null
   subjectId: string | null
+  topicId: string | null
   title: string
   description: string | null
   scheduledFor: Date

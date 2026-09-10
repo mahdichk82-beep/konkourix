@@ -109,6 +109,53 @@ test('student task routes reject counselor users', async () => {
   await app.close()
 })
 
+test('student task route accepts an owned topic that belongs to the selected subject', async () => {
+  const subjectId = '00000000-0000-4000-8000-000000000401'
+  const topicId = '00000000-0000-4000-8000-000000000402'
+  const topicTaskStore: StudentCoreStore = {
+    ...store,
+    findSubjectById: async (profileId, id) => profileId === 'student-profile-1' && id === subjectId
+      ? {
+          id: subjectId,
+          studentProfileId: profileId,
+          name: 'Biology',
+          normalizedName: 'biology',
+          archivedAt: null,
+          createdAt: new Date('2026-09-03T00:00:00.000Z'),
+          updatedAt: new Date('2026-09-03T00:00:00.000Z'),
+        }
+      : null,
+    findTopicById: async (profileId, id) => profileId === 'student-profile-1' && id === topicId
+      ? {
+          id: topicId,
+          subjectId,
+          title: 'Genetics',
+          normalizedTitle: 'genetics',
+          archivedAt: null,
+          createdAt: new Date('2026-09-03T00:00:00.000Z'),
+          updatedAt: new Date('2026-09-03T00:00:00.000Z'),
+        }
+      : null,
+  }
+  const app = createApp(topicTaskStore)
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'POST',
+    payload: {
+      title: 'Review genetics',
+      scheduledFor: '2026-09-03',
+      subjectId,
+      topicId,
+    },
+    url: '/api/v1/student/daily-tasks',
+  })
+
+  assert.equal(response.statusCode, 201)
+  assert.equal(response.json().data.subjectId, subjectId)
+  assert.equal(response.json().data.topicId, topicId)
+  await app.close()
+})
+
 test('student topic route creates a topic under an owned subject', async () => {
   const subjectId = '00000000-0000-4000-8000-000000000301'
   const subject: StudySubjectRecord = {
@@ -174,6 +221,7 @@ test('daily task date query is mapped to the scheduled date filter', async () =>
       studentProfileId: 'student-profile-1',
       studyPlanId: null,
       subjectId: null,
+      topicId: null,
       title: 'September third task',
       description: null,
       scheduledFor: timestamp,
@@ -188,6 +236,7 @@ test('daily task date query is mapped to the scheduled date filter', async () =>
       studentProfileId: 'student-profile-1',
       studyPlanId: null,
       subjectId: null,
+      topicId: null,
       title: 'September fourth task',
       description: null,
       scheduledFor: new Date('2026-09-04T00:00:00.000Z'),
