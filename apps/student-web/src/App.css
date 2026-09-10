@@ -98,6 +98,51 @@
 .security-note { margin: 0; text-align: center; font-size: 0.78rem; }
 .form-error { margin: 0; padding: 0.8rem; border-radius: 10px; color: var(--danger); background: var(--danger-soft); font-size: 0.85rem; }
 
+.planning-page { gap: 1.5rem; }
+.planning-hero { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; background: linear-gradient(135deg, color-mix(in srgb, var(--accent-soft) 72%, var(--surface)), var(--surface)); box-shadow: none; }
+.planning-hero h2 { margin: 0.2rem 0 0.55rem; font-size: clamp(1.35rem, 3vw, 2rem); }
+.planning-hero p:last-child { margin: 0; color: var(--text-muted); }
+.planning-create-card { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); box-shadow: none; }
+.planning-form { display: grid; gap: 1rem; }
+.planning-form label, .planning-filters label, .inline-subject__form label { display: grid; gap: 0.5rem; color: var(--text); font-size: 0.86rem; font-weight: 700; }
+.planning-form input, .planning-form textarea, .planning-form select, .planning-filters select { width: 100%; min-height: 46px; padding: 0.75rem 0.9rem; border: 1px solid var(--border); border-radius: 12px; color: var(--text); background: var(--surface-muted); outline: none; }
+.planning-form textarea { min-height: 92px; resize: vertical; }
+.planning-form input:focus, .planning-form textarea:focus, .planning-form select:focus, .planning-filters select:focus { border-color: var(--accent); }
+.planning-form__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.planning-form__actions { display: flex; justify-content: flex-end; }
+.inline-subject { padding: 0.85rem; display: grid; gap: 0.8rem; border: 1px dashed var(--border); border-radius: 14px; background: var(--surface-muted); }
+.inline-subject > .button { justify-self: start; }
+.inline-subject__form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 0.75rem; }
+.planning-summary .summary-card { border-top-width: 3px; }
+.summary-card--pending { border-top-color: #b98224; }
+.summary-card--completed { border-top-color: var(--accent); }
+.summary-card--skipped { border-top-color: var(--danger); }
+.planning-list-card { padding: clamp(1rem, 3vw, 1.5rem); box-shadow: none; }
+.planning-toolbar { margin-bottom: 1.25rem; display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.planning-toolbar h2 { margin: 0 0 0.35rem; font-size: 1.2rem; }
+.planning-toolbar p { margin: 0; color: var(--text-muted); font-size: 0.82rem; }
+.planning-filters { width: min(480px, 100%); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.planning-alert { margin-bottom: 1rem; padding: 0.8rem 0.9rem; display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; border: 1px solid color-mix(in srgb, var(--danger) 28%, var(--border)); border-radius: 12px; color: var(--danger); background: var(--danger-soft); font-size: 0.85rem; }
+.task-list { display: grid; gap: 0.85rem; }
+.task-item { padding: 1rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; border: 1px solid var(--border); border-inline-start-width: 4px; border-radius: 16px; background: var(--surface-muted); }
+.task-item--pending { border-inline-start-color: #b98224; }
+.task-item--completed { border-inline-start-color: var(--accent); }
+.task-item--skipped { border-inline-start-color: var(--danger); }
+.task-item__main { min-width: 0; flex: 1; }
+.task-item__heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+.task-item__heading h3 { margin: 0; overflow-wrap: anywhere; font-size: 1rem; }
+.task-status { flex: 0 0 auto; padding: 0.3rem 0.55rem; border: 1px solid var(--border); border-radius: 99px; font-size: 0.72rem; font-weight: 800; }
+.task-status--pending { color: #835500; background: #fff4d9; border-color: #e5c77d; }
+.task-status--completed { color: var(--accent-strong); background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); }
+.task-status--skipped { color: var(--danger); background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 30%, var(--border)); }
+.task-meta { margin-top: 0.65rem; display: flex; flex-wrap: wrap; gap: 0.45rem; color: var(--text-muted); font-size: 0.78rem; }
+.task-meta span { padding: 0.25rem 0.5rem; border-radius: 8px; background: var(--surface); }
+.task-description { margin: 0.75rem 0 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; white-space: pre-wrap; }
+.task-actions { flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.55rem; }
+.load-more { padding-top: 1rem; display: flex; justify-content: center; }
+
+:root[data-theme='dark'] .task-status--pending { color: #f1d390; background: #3a2e16; border-color: #6d5524; }
+
 @media (max-width: 900px) {
   .app-shell { display: block; padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .sidebar { display: none; }
@@ -107,6 +152,8 @@
   .mobile-nav__link { min-width: 0; min-height: 58px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.2rem; border-radius: 10px; color: var(--text-muted); text-decoration: none; font-size: 0.67rem; }
   .mobile-nav__link--active { color: var(--accent-strong); background: var(--accent-soft); }
   .summary-grid { grid-template-columns: 1fr; }
+  .planning-toolbar { align-items: stretch; flex-direction: column; }
+  .planning-filters { width: 100%; }
 }
 
 @media (max-width: 760px) {
@@ -120,4 +167,10 @@
   .dashboard-grid, .settings-grid, .settings-stack { grid-template-columns: 1fr; }
   .account-summary { grid-template-columns: 1fr; }
   .theme-label { display: none; }
+  .planning-hero, .task-item { align-items: stretch; flex-direction: column; }
+  .planning-hero .button, .task-actions .button { width: 100%; }
+  .planning-form__row, .planning-filters, .inline-subject__form { grid-template-columns: 1fr; }
+  .planning-form__actions .button { width: 100%; }
+  .task-actions { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .planning-alert { align-items: stretch; flex-direction: column; }
 }

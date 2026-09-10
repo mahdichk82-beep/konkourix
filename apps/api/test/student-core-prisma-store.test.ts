@@ -54,3 +54,38 @@ test('Prisma plan and task queries skip cursor rows and fetch one lookahead row'
     },
   })
 })
+
+test('Prisma task reads and updates always include student ownership', async () => {
+  const findQueries: unknown[] = []
+  const updateQueries: unknown[] = []
+  const prisma = {
+    dailyTask: {
+      async findFirst(query: unknown) {
+        findQueries.push(query)
+        return null
+      },
+      async updateMany(query: unknown) {
+        updateQueries.push(query)
+        return { count: 0 }
+      },
+    },
+  } as unknown as PrismaClient
+  const store = createPrismaStudentCoreStore(prisma)
+
+  const found = await store.findTaskById('student-profile-1', 'task-1')
+  const updated = await store.updateTask('student-profile-1', 'task-1', {
+    status: 'COMPLETED',
+  })
+
+  assert.equal(found, null)
+  assert.equal(updated, null)
+  assert.deepEqual(findQueries, [
+    { where: { id: 'task-1', studentProfileId: 'student-profile-1' } },
+  ])
+  assert.deepEqual(updateQueries, [
+    {
+      data: { status: 'COMPLETED' },
+      where: { id: 'task-1', studentProfileId: 'student-profile-1' },
+    },
+  ])
+})

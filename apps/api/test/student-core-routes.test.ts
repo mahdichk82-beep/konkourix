@@ -16,6 +16,13 @@ const user: PublicUser = {
   updatedAt: new Date('2026-09-03T00:00:00.000Z'),
 }
 
+const counselor: PublicUser = {
+  ...user,
+  id: 'counselor-user-1',
+  email: 'counselor@example.com',
+  role: 'COUNSELOR',
+}
+
 const auth: AuthService = {
   authenticateAccessToken: async () => user,
   changePassword: async () => undefined,
@@ -43,8 +50,11 @@ const store: StudentCoreStore = {
   updateTask: async () => null,
 }
 
-const createApp = (studentCoreStore: StudentCoreStore = store) => buildApp({
-  auth,
+const createApp = (
+  studentCoreStore: StudentCoreStore = store,
+  authService: AuthService = auth,
+) => buildApp({
+  auth: authService,
   environment: 'test',
   logger: false,
   prisma: { $queryRaw: async () => [{ '?column?': 1 }] },
@@ -69,9 +79,29 @@ test('student subject route returns the standard v1 response contract', async ()
 
 test('student core routes reject unauthenticated requests', async () => {
   const app = createApp()
-  const response = await app.inject({ method: 'GET', url: '/api/v1/student/subjects' })
-  assert.equal(response.statusCode, 401)
-  assert.equal(response.json().error.code, 'TOKEN_MISSING')
+  const subjectResponse = await app.inject({ method: 'GET', url: '/api/v1/student/subjects' })
+  const taskResponse = await app.inject({ method: 'GET', url: '/api/v1/student/daily-tasks' })
+  assert.equal(subjectResponse.statusCode, 401)
+  assert.equal(subjectResponse.json().error.code, 'TOKEN_MISSING')
+  assert.equal(taskResponse.statusCode, 401)
+  assert.equal(taskResponse.json().error.code, 'TOKEN_MISSING')
+  await app.close()
+})
+
+test('student task routes reject counselor users', async () => {
+  const counselorAuth: AuthService = {
+    ...auth,
+    authenticateAccessToken: async () => counselor,
+  }
+  const app = createApp(store, counselorAuth)
+  const response = await app.inject({
+    headers: { authorization: 'Bearer counselor-access-token' },
+    method: 'GET',
+    url: '/api/v1/student/daily-tasks',
+  })
+
+  assert.equal(response.statusCode, 403)
+  assert.equal(response.json().error.code, 'ROLE_FORBIDDEN')
   await app.close()
 })
 
@@ -144,5 +174,37 @@ test('daily task date query is mapped to the scheduled date filter', async () =>
   assert.equal('date' in (receivedQueries[1] ?? {}), false)
   assert.equal(unrelated.json().data.items.length, 0)
 
+  await app.close()
+})
+
+test('daily task filters retain authenticated profile scope', async () => {
+  const received: Array<{
+    profileId: string
+    query: Parameters<StudentCoreStore['listTasks']>[1]
+  }> = []
+  const filteringStore: StudentCoreStore = {
+    ...store,
+    async listTasks(profileId, query) {
+      received.push({ profileId, query })
+      return []
+    },
+  }
+  const app = createApp(filteringStore)
+  const subjectId = '00000000-0000-4000-8000-000000000201'
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'GET',
+    url: `/api/v1/student/daily-tasks?date=2026-09-03&status=PENDING&subjectId=${subjectId}&limit=20`,
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(received.length, 1)
+  assert.equal(received[0]?.profileId, 'student-profile-1')
+  assert.deepEqual(received[0]?.query, {
+    limit: 20,
+    scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+    status: 'PENDING',
+    subjectId,
+  })
   await app.close()
 })

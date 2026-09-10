@@ -31,42 +31,42 @@ const createStore = (): StudentCoreStore & {
       return userId === profile.userId ? profile : null
     },
     async listSubjects() { return store.subjects },
-    async findSubjectById(_profileId: string, id: string) {
-      return store.subjects.find((subject) => subject.id === id) ?? null
+    async findSubjectById(profileId: string, id: string) {
+      return store.subjects.find((subject) => subject.id === id && subject.studentProfileId === profileId) ?? null
     },
     async createSubject(input: { studentProfileId: string; name: string; normalizedName: string }) {
       const record = { id: `subject-${store.subjects.length + 1}`, ...input, archivedAt: null, createdAt: timestamp, updatedAt: timestamp }
       store.subjects.push(record)
       return record
     },
-    async updateSubject(_profileId: string, id: string, input: { name?: string; normalizedName?: string; archivedAt?: Date | null }) {
-      const subject = store.subjects.find((item) => item.id === id)
+    async updateSubject(profileId: string, id: string, input: { name?: string; normalizedName?: string; archivedAt?: Date | null }) {
+      const subject = store.subjects.find((item) => item.id === id && item.studentProfileId === profileId)
       if (!subject) return null
       Object.assign(subject, input, { updatedAt: timestamp })
       return subject
     },
     async listPlans() { return store.plans },
-    async findPlanById(_profileId: string, id: string) { return store.plans.find((plan) => plan.id === id) ?? null },
+    async findPlanById(profileId: string, id: string) { return store.plans.find((plan) => plan.id === id && plan.studentProfileId === profileId) ?? null },
     async createPlan(input: Omit<StudyPlanRecord, 'id' | 'createdAt' | 'updatedAt'>) {
       const record = { id: `plan-${store.plans.length + 1}`, ...input, createdAt: timestamp, updatedAt: timestamp }
       store.plans.push(record)
       return record
     },
-    async updatePlan(_profileId: string, id: string, input: Partial<Pick<StudyPlanRecord, 'title' | 'description' | 'status' | 'startsOn' | 'endsOn'>>) {
-      const plan = store.plans.find((item) => item.id === id)
+    async updatePlan(profileId: string, id: string, input: Partial<Pick<StudyPlanRecord, 'title' | 'description' | 'status' | 'startsOn' | 'endsOn'>>) {
+      const plan = store.plans.find((item) => item.id === id && item.studentProfileId === profileId)
       if (!plan) return null
       Object.assign(plan, input, { updatedAt: timestamp })
       return plan
     },
     async listTasks() { return store.tasks },
-    async findTaskById(_profileId: string, id: string) { return store.tasks.find((task) => task.id === id) ?? null },
+    async findTaskById(profileId: string, id: string) { return store.tasks.find((task) => task.id === id && task.studentProfileId === profileId) ?? null },
     async createTask(input: Omit<DailyTaskRecord, 'id' | 'createdAt' | 'updatedAt'>) {
       const record = { id: `task-${store.tasks.length + 1}`, ...input, createdAt: timestamp, updatedAt: timestamp }
       store.tasks.push(record)
       return record
     },
-    async updateTask(_profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'title' | 'description' | 'scheduledFor' | 'estimatedMinutes' | 'status' | 'completedAt'>>) {
-      const task = store.tasks.find((item) => item.id === id)
+    async updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'title' | 'description' | 'scheduledFor' | 'estimatedMinutes' | 'status' | 'completedAt'>>) {
+      const task = store.tasks.find((item) => item.id === id && item.studentProfileId === profileId)
       if (!task) return null
       Object.assign(task, input, { updatedAt: timestamp })
       return task
@@ -134,9 +134,159 @@ test('student core completes tasks with a completion timestamp and protects owne
   assert.equal(updated.status, 'COMPLETED')
   assert.deepEqual(updated.completedAt, timestamp)
 
+  const skipped = await services.tasks.update(student, task.id, { status: 'SKIPPED' })
+  assert.equal(skipped.status, 'SKIPPED')
+  assert.equal(skipped.completedAt, null)
+
+  const reopened = await services.tasks.update(student, task.id, { status: 'PENDING' })
+  assert.equal(reopened.status, 'PENDING')
+  assert.equal(reopened.completedAt, null)
+
   await assert.rejects(
     services.tasks.get({ id: 'other-student', role: 'STUDENT', status: 'ACTIVE' }, task.id),
     (error: unknown) => error instanceof ApiError && error.code === 'STUDENT_PROFILE_REQUIRED',
+  )
+})
+
+test('student core hides another student task from get and update operations', async () => {
+  const store = createStore()
+  store.tasks.push({
+    id: 'foreign-task',
+    studentProfileId: 'student-profile-2',
+    studyPlanId: null,
+    subjectId: null,
+    title: 'Private task',
+    description: null,
+    scheduledFor: timestamp,
+    estimatedMinutes: 20,
+    status: 'PENDING',
+    completedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  const services = createStudentCoreServices(store, () => timestamp)
+
+  await assert.rejects(
+    services.tasks.get(student, 'foreign-task'),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_NOT_FOUND',
+  )
+  await assert.rejects(
+    services.tasks.update(student, 'foreign-task', { status: 'COMPLETED' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_NOT_FOUND',
+  )
+  assert.equal(store.tasks[0]?.status, 'PENDING')
+})
+
+test('student core rejects another student subject on task create and update', async () => {
+  const store = createStore()
+  store.subjects.push({
+    id: 'foreign-subject',
+    studentProfileId: 'student-profile-2',
+    name: 'Private subject',
+    normalizedName: 'private subject',
+    archivedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  const services = createStudentCoreServices(store, () => timestamp)
+  const task = await services.tasks.create(student, {
+    title: 'Own task',
+    description: null,
+    scheduledFor: '2026-09-03',
+    estimatedMinutes: null,
+    status: 'PENDING',
+    studyPlanId: null,
+    subjectId: null,
+  })
+
+  await assert.rejects(
+    services.tasks.create(student, {
+      title: 'Invalid task',
+      description: null,
+      scheduledFor: '2026-09-03',
+      estimatedMinutes: null,
+      status: 'PENDING',
+      studyPlanId: null,
+      subjectId: 'foreign-subject',
+    }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SUBJECT_NOT_FOUND',
+  )
+  await assert.rejects(
+    services.tasks.update(student, task.id, { subjectId: 'foreign-subject' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SUBJECT_NOT_FOUND',
+  )
+  assert.equal(store.tasks.length, 1)
+  assert.equal(store.tasks[0]?.subjectId, null)
+})
+
+test('student core rejects another student study plan on task create and update', async () => {
+  const store = createStore()
+  store.plans.push({
+    id: 'foreign-plan',
+    studentProfileId: 'student-profile-2',
+    title: 'Private plan',
+    description: null,
+    status: 'ACTIVE',
+    startsOn: timestamp,
+    endsOn: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  const services = createStudentCoreServices(store, () => timestamp)
+  const task = await services.tasks.create(student, {
+    title: 'Own task',
+    description: null,
+    scheduledFor: '2026-09-03',
+    estimatedMinutes: null,
+    status: 'PENDING',
+    studyPlanId: null,
+    subjectId: null,
+  })
+
+  await assert.rejects(
+    services.tasks.create(student, {
+      title: 'Invalid task',
+      description: null,
+      scheduledFor: '2026-09-03',
+      estimatedMinutes: null,
+      status: 'PENDING',
+      studyPlanId: 'foreign-plan',
+      subjectId: null,
+    }),
+    (error: unknown) => error instanceof ApiError && error.code === 'PLAN_NOT_FOUND',
+  )
+  await assert.rejects(
+    services.tasks.update(student, task.id, { studyPlanId: 'foreign-plan' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'PLAN_NOT_FOUND',
+  )
+  assert.equal(store.tasks.length, 1)
+  assert.equal(store.tasks[0]?.studyPlanId, null)
+})
+
+test('student core rejects archived subjects for new task assignments', async () => {
+  const store = createStore()
+  store.subjects.push({
+    id: 'archived-subject',
+    studentProfileId: profile.id,
+    name: 'Archived subject',
+    normalizedName: 'archived subject',
+    archivedAt: timestamp,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  const services = createStudentCoreServices(store, () => timestamp)
+
+  await assert.rejects(
+    services.tasks.create(student, {
+      title: 'Invalid task',
+      description: null,
+      scheduledFor: '2026-09-03',
+      estimatedMinutes: null,
+      status: 'PENDING',
+      studyPlanId: null,
+      subjectId: 'archived-subject',
+    }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SUBJECT_ARCHIVED',
   )
 })
 
