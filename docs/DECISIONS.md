@@ -72,7 +72,7 @@ This lightweight decision log records architectural constraints established by t
 
 **CORS and browser-origin policy:** `CORS_ORIGINS` is a normalized exact-origin allowlist. Wildcards, malformed values, empty entries, and automatic origin reflection are not permitted. Production validation requires both application origins in the allowlist. Allowed browser origins receive credential support, and browser clients must opt into credentials when calling the API; unknown browser origins are rejected. Requests without an `Origin` header remain available to non-browser clients, health checks, and tests. The same global origin check protects cookie-authenticated refresh and logout requests from untrusted browser origins.
 
-**Refresh cookie policy:** Refresh cookies are `HttpOnly`, `SameSite=Lax`, scoped to `/v1/auth`, and `Secure` in production. `COOKIE_DOMAIN` is optional; empty or absent means a host-only API cookie and is the preferred production configuration. A domain attribute is supported only for explicit compatibility needs. Cookie clearing uses the same Domain, Path, Secure, HttpOnly, and SameSite attributes as cookie creation.
+**Refresh cookie policy:** Refresh cookies are `HttpOnly`, `SameSite=Lax`, scoped to `/api/v1/auth`, and `Secure` in production. `COOKIE_DOMAIN` is optional; empty or absent means a host-only API cookie and is the preferred production configuration. A domain attribute is supported only for explicit compatibility needs. Cookie clearing uses the same Domain, Path, Secure, HttpOnly, and SameSite attributes as cookie creation.
 
 **Trusted proxy policy:** Proxy headers are not trusted by default. `TRUST_PROXY=false`, empty, or absent disables proxy trust. Enabling trust requires an explicit IP/CIDR allowlist for the controlled immediate proxy. `true` and numeric hop-count-only values are rejected because they cannot authenticate the immediate peer and can permit forwarded-header spoofing if the API is directly exposed. Even a one-proxy topology must identify the controlled ingress by IP/CIDR and must not leave the API directly reachable by untrusted clients. That topology is not implemented by this milestone.
 
@@ -140,7 +140,7 @@ This lightweight decision log records architectural constraints established by t
 
 **Abuse-control policy:** Public register, login, and refresh routes use bounded per-process, per-IP fixed-window limits with standard 429 responses and `Retry-After`. Logout remains unlimited. This is a single-process baseline only; state resets on restart and is not shared across replicas. Horizontal scaling or materially different traffic requires a reviewed shared limiter or controlled edge policy. Correct client attribution depends on trusting only the explicit controlled edge IP/CIDR.
 
-**Health and error policy:** `/health/live` (and `/v1/health/live`) is process liveness without a database query. `/health` (and `/v1/health`) is database readiness through `SELECT 1`; no `/ready` alias exists. Health and error responses never include credentials, connection details, stack traces, or raw internal exceptions. Request IDs correlate sanitized client responses with restricted operational logs.
+**Health and error policy:** `/health/live` (and `/api/v1/health/live`) is process liveness without a database query. `/health` (and `/api/v1/health`) is database readiness through `SELECT 1`; no `/ready` alias exists. Health and error responses never include credentials, connection details, stack traces, or raw internal exceptions. Request IDs correlate sanitized client responses with restricted operational logs.
 
 **Storage and recovery policy:** No upload subsystem exists. Any future file feature must add content validation, server-generated names, path containment, non-executable storage/serving, explicit size limits, malware handling, ownership metadata, and restore-tested backups before activation. PostgreSQL backup/restore is design-only: encrypted off-host logical backups, approved retention/RPO/RTO, checksums, least-privilege credentials, age/failure alerting, and periodic isolated restore verification are required before production. A Compose named volume is not a backup.
 
@@ -159,5 +159,17 @@ This lightweight decision log records architectural constraints established by t
 **Domain and ingress policy:** The intended HTTPS mappings remain `app.konkourix.ir` to Student Web, `counselor.konkourix.ir` to Counselor Web, and `api.konkourix.ir` to the API. `COOKIE_DOMAIN` remains empty by preference, and `TRUST_PROXY` remains false until a controlled edge address/CIDR is known. Edge packaging/Compose attachment, public ports, DNS, TLS/certificates, firewall implementation, VPS provisioning, deployment execution, and automation remain separate authorized work.
 
 **Verification boundary:** This milestone creates documentation and a production environment template only. It does not access a VPS, install Docker locally, execute Compose, run migrations, change DNS, issue certificates, configure monitoring/backups, or claim production availability. Local development remains Docker-independent.
+
+**Status:** Accepted
+
+## ADR-016 — Authentication Foundation and Application Boundaries
+
+**Decision:** The canonical versioned API prefix is `/api/v1`. Authentication exposes register, login, refresh, logout, and current-user operations below `/api/v1/auth`. Student self-registration always creates a `STUDENT`; the public API accepts no registration role field. Counselor and admin identities remain server-provisioned model-compatible roles.
+
+**Token and session policy:** Access tokens are short-lived signed JWTs returned in the response and held only in each web application's runtime memory. Refresh tokens are opaque random values stored only as SHA-256 representations in server-side `AuthSession` rows and delivered through an `HttpOnly`, `SameSite=Lax` cookie scoped to `/api/v1/auth`; the cookie is `Secure` in production. Refresh rotates the token atomically, reuse revokes the session family, and logout revokes the current server-side session.
+
+**Authorization policy:** Authentication resolves the current user and account status from server storage for every access token; authorization uses that server-resolved role, not browser state or a client-provided role. Reusable `requireAuth` and `requireRole` guards protect explicit `/api/v1/student/*` and `/api/v1/counselor/*` boundaries. Ownership checks remain service/store responsibilities based on authenticated identity.
+
+**Frontend policy:** Student Web and Counselor Web have independent login screens, auth providers, API clients, protected-route shells, and logout flows. Neither provides role selection or switching. Both send credentialed requests, bootstrap from refresh cookies, keep access tokens out of Web Storage, and verify the session against their role-specific backend boundary before rendering protected content.
 
 **Status:** Accepted

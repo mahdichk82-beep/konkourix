@@ -15,7 +15,7 @@ type AuthRouteOptions = {
   refreshTokenTtlSeconds: number
 }
 
-const refreshCookiePath = '/v1/auth'
+const refreshCookiePath = '/api/v1/auth'
 
 const refreshCookieAttributes = (options: AuthRouteOptions) => ({
   ...(options.cookieDomain ? { domain: options.cookieDomain } : {}),

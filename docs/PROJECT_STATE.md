@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 0 Milestone 7 and baseline re-verification, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 1 Milestone 1, not a claim of overall product completion.
 
 ## Project
 
@@ -12,18 +12,18 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project is currently completing **Phase 0 — Architecture & Infrastructure / Foundation**.
+The project has completed **Phase 1 Milestone 1 — Authentication Foundation**.
 
-Phase 0 is not complete. Some Phase 1 and later backend foundations already exist ahead of the intended phase order, including authentication, student planning, study sessions, and goals. Their presence does not imply the corresponding product phases or browser experiences are complete.
+Phase 0 remains partially complete while explicitly authorized Phase 1 work proceeds. Authentication now has verified backend and independent browser foundations; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
 - Audit and baseline re-verification date: **2026-09-10**
 
-## Milestone 7 Baseline Git Checkpoint
+## Phase 1 Milestone 1 Starting Checkpoint
 
-- HEAD: `41d516d8b24db6dff3bccdb41f0434871909f4b5`
-- Message: `feat: harden production security and operational contracts`
+- HEAD: `9afbeabe4a93847bd8f896700d68a27419183445`
+- Message: `feat: prepare production deployment workflow`
 
 Foundation repair checkpoint:
 
@@ -81,7 +81,7 @@ Completed and locally verified on 2026-09-09:
 - Student Web and Counselor Web each require their own build-time `VITE_API_URL`; production builds reject non-HTTPS API origins.
 - Local ports are explicit: API 4000, Student Web 5173, and Counselor Web 5174.
 - Browser CORS is exact-origin and credentialed. Unknown origins are rejected, while requests without an `Origin` header preserve non-browser behavior.
-- Refresh cookies are `HttpOnly`, `SameSite=Lax`, limited to `/v1/auth`, `Secure` in production, and host-only by default. Logout clears them with matching attributes.
+- Refresh cookies are `HttpOnly`, `SameSite=Lax`, limited to `/api/v1/auth`, `Secure` in production, and host-only by default. Logout clears them with matching attributes.
 - Proxy headers are ignored by default. Proxy trust accepts only configured IP/CIDR entries and rejects trust-all and hop-count-only values.
 - Local development remains Docker-independent. No Docker, Nginx, deployment, database schema, or migration work is part of this milestone.
 
@@ -220,7 +220,7 @@ Completed and locally verified on 2026-09-10:
 - Edge access logs now use an edge-generated request ID and normalized URI without query arguments. Query strings, referrers, cookies, authorization headers, and bodies are not part of the edge log format.
 - Bounded in-memory per-IP limits protect public registration, login, and refresh routes with standard 429/`Retry-After` responses. Logout remains available. The per-process/non-distributed limitation is documented for future scaling.
 - Existing security headers, exact CORS allowlist, secure refresh-cookie attributes, trusted-proxy allowlist, strict input validation, authorization, scrypt password hashing, and token/session behavior were reviewed and preserved.
-- The canonical liveness paths are `/health/live` and `/v1/health/live`; readiness paths are `/health` and `/v1/health`. No `/ready` alias exists. Readiness checks PostgreSQL without exposing errors or credentials.
+- The canonical liveness paths are `/health/live` and `/api/v1/health/live`; readiness paths are `/health` and `/api/v1/health`. No `/ready` alias exists. Readiness checks PostgreSQL without exposing errors or credentials.
 - No upload subsystem exists. `docs/SECURITY.md` records mandatory future file validation, path, size, execution, malware, ownership, and backup controls.
 - `docs/backup-restore.md` defines future encrypted off-host PostgreSQL backup, retention approval, checksum, alerting, and isolated restore-verification requirements. No backup/restore script, schedule, dump, or restore was executed.
 - The production checklist explicitly leaves TLS, DNS, secrets provisioning, migrations, monitoring, backup evidence, restore drills, permissions, deployment, and incident/rollback verification incomplete.
@@ -266,6 +266,32 @@ Milestone verification:
 
 The official Phase 0 completion estimate remains **50%** because no explicit milestone weighting rubric exists. Confidence remains **HIGH** for the reviewed documentation and locally validated repository; deployment/runtime claims still require target-environment evidence.
 
+### Phase 1 Milestone 1 — Authentication Foundation
+
+**Status: COMPLETE**
+
+Completed and locally verified on 2026-09-10:
+
+- Existing `User` and `AuthSession` persistence was retained without schema or migration changes. Users carry server-controlled roles/status, and sessions store hashed refresh-token representations, expiry, revocation, rotation-family, and request metadata.
+- Canonical API routes are `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout`, and `GET /api/v1/auth/me`.
+- Student registration cannot choose a role. Counselor login uses a server-provisioned counselor identity; `ADMIN` remains available only for model and backend compatibility.
+- Short-lived access JWTs are returned to the browser and held only in application memory. Opaque refresh tokens remain in an `HttpOnly`, production-`Secure`, `SameSite=Lax` cookie and are rotated against revocable server-side sessions.
+- Reusable authentication and role guards protect explicit `/api/v1/student/session` and `/api/v1/counselor/session` boundaries. Cross-role access is rejected by the API.
+- Student Web and Counselor Web now have independent login pages, API clients, in-memory auth state, refresh bootstrap, protected-route foundations, and logout. Neither application has a role selector or role-switching control.
+- The backend remains authoritative for identity, current account status, roles, ownership, and student-counselor relationship checks.
+
+Milestone verification:
+
+- API tests: **69/69 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Secret, dependency, schema, migration, and scope review: **PASS**
+
+The official Phase 0 completion estimate remains **50%**. Phase 1 Milestone 1 is **COMPLETE**, and confidence remains **HIGH**.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -292,7 +318,7 @@ The following capabilities are present and covered by the current API baseline:
 - Student registration and login
 - Access-token authentication
 - Refresh-token sessions with rotation and reuse handling
-- Logout and versioned `/auth/me` functionality under `/v1`
+- Logout and versioned `/auth/me` functionality under `/api/v1`
 - Student and counselor profile APIs
 - Student-counselor relationship foundation
 - Student subjects, study plans, and daily tasks
@@ -327,17 +353,19 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 
 - The project exists as an independent React/Vite application.
 - Its API origin is supplied by the validated build-time `VITE_API_URL` contract.
-- It remains a framework starter rather than a real Konkourix product UI.
-- It has no complete browser authentication, protected routing, dashboard, or API workflow.
+- It has an independent student login screen, credentialed auth API client, in-memory access-token state, refresh bootstrap, protected-route shell, and logout.
+- It verifies authenticated access against the backend-protected student boundary before rendering protected content.
+- It remains an authentication shell rather than a complete student product UI.
 
 ### Counselor application
 
 - The project exists as an independent React/Vite application.
 - Its API origin is supplied by the validated build-time `VITE_API_URL` contract.
-- It remains a framework starter rather than a real Konkourix product UI.
-- It has no complete browser authentication, protected routing, dashboard, or API workflow.
+- It has an independent counselor login screen, credentialed auth API client, in-memory access-token state, refresh bootstrap, protected-route shell, and logout.
+- It verifies authenticated access against the backend-protected counselor boundary before rendering protected content.
+- It remains an authentication shell rather than a complete counselor product UI.
 
-Neither starter application should be described as an implemented product merely because it builds.
+Neither authentication shell should be described as a complete product merely because it builds.
 
 ## Development Workflow State
 
@@ -386,7 +414,6 @@ The implemented container-image and Compose configuration is statically checked 
 ## Known Remaining Foundation Work
 
 - Shared package strategy and implementation
-- Independent student and counselor routing/authentication shells
 - Docker Compose runtime verification and a reviewed migration execution mechanism
 - Nginx syntax/runtime verification, Compose integration, and TLS termination strategy
 - Production secret provisioning and target-environment validation
@@ -429,4 +456,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 0 Milestones 1, 2, 3, 4, 5, 6, and 7 are complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin TLS, deployment execution, monitoring, backup execution, or another Phase 0 milestone.
+Phase 1 Milestone 1 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin later product work, TLS, deployment execution, monitoring, or backup execution.

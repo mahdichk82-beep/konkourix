@@ -40,7 +40,7 @@ const createApp = (role: PublicUser['role']) => {
   })
 
   app.get(
-    '/v1/test/admin-only',
+    '/api/v1/test/admin-only',
     {
       preHandler: [authenticateRequest(auth), requireRoles('ADMIN')],
     },
@@ -55,7 +55,7 @@ test('RBAC allows an authorized role through the route guard', async () => {
   const response = await app.inject({
     headers: { authorization: 'Bearer valid-token' },
     method: 'GET',
-    url: '/v1/test/admin-only',
+    url: '/api/v1/test/admin-only',
   })
 
   assert.equal(response.statusCode, 200)
@@ -67,7 +67,7 @@ test('RBAC rejects an authenticated user with an insufficient role', async () =>
   const response = await app.inject({
     headers: { authorization: 'Bearer valid-token' },
     method: 'GET',
-    url: '/v1/test/admin-only',
+    url: '/api/v1/test/admin-only',
   })
   const body = response.json()
 

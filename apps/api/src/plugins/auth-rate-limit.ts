@@ -2,9 +2,9 @@ import type { FastifyInstance } from 'fastify'
 import { ApiError } from '../errors/api-error.js'
 
 const authRateLimitRoutes = [
-  '/v1/auth/register',
-  '/v1/auth/login',
-  '/v1/auth/refresh',
+  '/api/v1/auth/register',
+  '/api/v1/auth/login',
+  '/api/v1/auth/refresh',
 ] as const
 
 type AuthRateLimitRoute = (typeof authRateLimitRoutes)[number]
@@ -26,9 +26,9 @@ type RateLimitBucket = {
 }
 
 const defaultPolicies: Record<AuthRateLimitRoute, AuthRateLimitPolicy> = {
-  '/v1/auth/register': { maxAttempts: 10, windowMs: 10 * 60_000 },
-  '/v1/auth/login': { maxAttempts: 20, windowMs: 60_000 },
-  '/v1/auth/refresh': { maxAttempts: 60, windowMs: 60_000 },
+  '/api/v1/auth/register': { maxAttempts: 10, windowMs: 10 * 60_000 },
+  '/api/v1/auth/login': { maxAttempts: 20, windowMs: 60_000 },
+  '/api/v1/auth/refresh': { maxAttempts: 60, windowMs: 60_000 },
 }
 
 const assertPositiveInteger = (value: number, name: string): void => {

@@ -56,7 +56,7 @@ test('study session route uses the standard v1 contract', async () => {
       startedAt: '2026-09-03T08:00:00.000Z',
       endedAt: '2026-09-03T09:00:00.000Z',
     },
-    url: '/v1/student/study-sessions',
+    url: '/api/v1/student/study-sessions',
   })
   assert.equal(response.statusCode, 201)
   assert.equal(response.headers['x-request-id'], 'tracking-route-test')
@@ -67,7 +67,7 @@ test('study session route uses the standard v1 contract', async () => {
 
 test('study tracking routes reject unauthenticated requests', async () => {
   const app = createApp()
-  const response = await app.inject({ method: 'GET', url: '/v1/student/goals' })
+  const response = await app.inject({ method: 'GET', url: '/api/v1/student/goals' })
   assert.equal(response.statusCode, 401)
   assert.equal(response.json().error.code, 'TOKEN_MISSING')
   await app.close()

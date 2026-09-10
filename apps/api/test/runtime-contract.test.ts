@@ -27,7 +27,7 @@ test('runtime environment normalizes origins and defaults to host-only cookies',
 
 test('runtime environment rejects malformed origins and empty CORS entries', () => {
   assert.throws(
-    () => parseEnv({ ...developmentEnvironment(), API_URL: 'http://localhost:4000/v1' }),
+    () => parseEnv({ ...developmentEnvironment(), API_URL: 'http://localhost:4000/api/v1' }),
     /API_URL must be an HTTP\(S\) origin/,
   )
   assert.throws(

@@ -101,7 +101,7 @@ export const buildApp = ({
 
   app.register(registerV1Routes, {
     ...routeOptions,
-    prefix: '/v1',
+    prefix: '/api/v1',
   })
 
   registerHealthRoutes(app, routeOptions)

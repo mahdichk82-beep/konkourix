@@ -55,7 +55,7 @@ test('student subject route returns the standard v1 response contract', async ()
     headers: { authorization: 'Bearer access-token', 'x-request-id': 'student-core-route' },
     method: 'POST',
     payload: { name: 'Mathematics' },
-    url: '/v1/student/subjects',
+    url: '/api/v1/student/subjects',
   })
 
   assert.equal(response.statusCode, 201)
@@ -67,7 +67,7 @@ test('student subject route returns the standard v1 response contract', async ()
 
 test('student core routes reject unauthenticated requests', async () => {
   const app = createApp()
-  const response = await app.inject({ method: 'GET', url: '/v1/student/subjects' })
+  const response = await app.inject({ method: 'GET', url: '/api/v1/student/subjects' })
   assert.equal(response.statusCode, 401)
   assert.equal(response.json().error.code, 'TOKEN_MISSING')
   await app.close()
@@ -120,17 +120,17 @@ test('daily task date query is mapped to the scheduled date filter', async () =>
   const unfiltered = await app.inject({
     headers: { authorization: 'Bearer access-token' },
     method: 'GET',
-    url: '/v1/student/daily-tasks',
+    url: '/api/v1/student/daily-tasks',
   })
   const matching = await app.inject({
     headers: { authorization: 'Bearer access-token' },
     method: 'GET',
-    url: '/v1/student/daily-tasks?date=2026-09-03',
+    url: '/api/v1/student/daily-tasks?date=2026-09-03',
   })
   const unrelated = await app.inject({
     headers: { authorization: 'Bearer access-token' },
     method: 'GET',
-    url: '/v1/student/daily-tasks?date=2026-09-05',
+    url: '/api/v1/student/daily-tasks?date=2026-09-05',
   })
 
   assert.equal(unfiltered.statusCode, 200)

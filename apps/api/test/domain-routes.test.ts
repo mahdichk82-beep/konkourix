@@ -63,7 +63,7 @@ test('student profile route uses the v1 contract and request id', async () => {
     headers: { authorization: 'Bearer access-token', 'x-request-id': 'domain-route-test' },
     method: 'PATCH',
     payload: { educationLevel: 'secondary' },
-    url: '/v1/me/student-profile',
+    url: '/api/v1/me/student-profile',
   })
 
   assert.equal(response.statusCode, 200)
@@ -89,7 +89,7 @@ test('domain routes reject unauthenticated requests', async () => {
     prisma: { $queryRaw: async () => [{ '?column?': 1 }] },
   })
 
-  const response = await app.inject({ method: 'GET', url: '/v1/me/student-profile' })
+  const response = await app.inject({ method: 'GET', url: '/api/v1/me/student-profile' })
   assert.equal(response.statusCode, 401)
   assert.equal(response.json().error.code, 'TOKEN_MISSING')
 

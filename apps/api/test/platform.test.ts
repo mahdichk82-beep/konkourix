@@ -17,7 +17,7 @@ test('versioned liveness route returns the standard success contract', async () 
     prisma: createFakePrisma(),
   })
 
-  const response = await app.inject({ method: 'GET', url: '/v1/health/live' })
+  const response = await app.inject({ method: 'GET', url: '/api/v1/health/live' })
   const body = response.json()
 
   assert.equal(response.statusCode, 200)
@@ -38,7 +38,7 @@ test('readiness route uses the versioned prefix and preserves valid request ids'
 
   const response = await app.inject({
     method: 'GET',
-    url: '/v1/health',
+    url: '/api/v1/health',
     headers: { 'x-request-id': 'client-request-123' },
   })
 
@@ -58,7 +58,7 @@ test('invalid request ids are replaced with generated ids', async () => {
 
   const response = await app.inject({
     method: 'GET',
-    url: '/v1/health/live',
+    url: '/api/v1/health/live',
     headers: { 'x-request-id': 'contains spaces' },
   })
   const requestId = response.json().requestId
@@ -76,11 +76,11 @@ test('unexpected errors use the standard sanitized error contract', async () => 
     logger: false,
     prisma: createFakePrisma(),
   })
-  app.get('/v1/test-error', async () => {
+  app.get('/api/v1/test-error', async () => {
     throw new Error('secret database connection details')
   })
 
-  const response = await app.inject({ method: 'GET', url: '/v1/test-error' })
+  const response = await app.inject({ method: 'GET', url: '/api/v1/test-error' })
   const body = response.json()
 
   assert.equal(response.statusCode, 500)
@@ -102,7 +102,7 @@ test('unknown routes use the standard not-found error contract', async () => {
     prisma: createFakePrisma(),
   })
 
-  const response = await app.inject({ method: 'GET', url: '/v1/missing' })
+  const response = await app.inject({ method: 'GET', url: '/api/v1/missing' })
   const body = response.json()
 
   assert.equal(response.statusCode, 404)
@@ -122,7 +122,7 @@ test('security headers are applied to API responses', async () => {
     prisma: createFakePrisma(),
   })
 
-  const response = await app.inject({ method: 'GET', url: '/v1/health/live' })
+  const response = await app.inject({ method: 'GET', url: '/api/v1/health/live' })
 
   assert.equal(response.headers['x-content-type-options'], 'nosniff')
   assert.equal(response.headers['x-frame-options'], 'DENY')

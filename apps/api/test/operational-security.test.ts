@@ -45,7 +45,7 @@ test('auth rate limiting returns the standard error contract and retry window', 
     authRateLimit: {
       now: () => 1_000,
       policies: {
-        '/v1/auth/login': { maxAttempts: 2, windowMs: 60_000 },
+        '/api/v1/auth/login': { maxAttempts: 2, windowMs: 60_000 },
       },
     },
     environment: 'test',
@@ -60,7 +60,7 @@ test('auth rate limiting returns the standard error contract and retry window', 
         identifier: 'student@example.com',
         password: 'strong password',
       },
-      url: '/v1/auth/login',
+      url: '/api/v1/auth/login',
     })
 
   assert.equal((await request()).statusCode, 200)
@@ -75,7 +75,7 @@ test('auth rate limiting returns the standard error contract and retry window', 
   })
   assert.equal(typeof limited.json().requestId, 'string')
 
-  const liveness = await app.inject({ method: 'GET', url: '/v1/health/live' })
+  const liveness = await app.inject({ method: 'GET', url: '/api/v1/health/live' })
   assert.equal(liveness.statusCode, 200)
 
   await app.close()

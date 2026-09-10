@@ -48,7 +48,7 @@ test('registration returns an access token and HttpOnly refresh cookie', async (
       email: 'student@example.com',
       password: 'strong password',
     },
-    url: '/v1/auth/register',
+    url: '/api/v1/auth/register',
   })
   const body = response.json()
 
@@ -62,7 +62,7 @@ test('registration returns an access token and HttpOnly refresh cookie', async (
   })
   assert.match(response.headers['set-cookie'], /refresh_token=refresh-token/)
   assert.match(response.headers['set-cookie'], /HttpOnly/)
-  assert.match(response.headers['set-cookie'], /Path=\/v1\/auth/)
+  assert.match(response.headers['set-cookie'], /Path=\/api\/v1\/auth/)
   assert.match(response.headers['set-cookie'], /SameSite=Lax/)
   assert.doesNotMatch(response.headers['set-cookie'], /Domain=/)
   assert.doesNotMatch(response.headers['set-cookie'], /Secure/)
@@ -78,7 +78,7 @@ test('login returns a standard response contract', async () => {
       identifier: 'student@example.com',
       password: 'strong password',
     },
-    url: '/v1/auth/login',
+    url: '/api/v1/auth/login',
   })
   const body = response.json()
 
@@ -95,7 +95,7 @@ test('refresh reads the HttpOnly cookie and rotates the session cookie', async (
   const response = await app.inject({
     headers: { cookie: 'refresh_token=old-refresh-token' },
     method: 'POST',
-    url: '/v1/auth/refresh',
+    url: '/api/v1/auth/refresh',
   })
 
   assert.equal(response.statusCode, 200)
@@ -110,12 +110,12 @@ test('logout clears the refresh cookie', async () => {
   const response = await app.inject({
     headers: { cookie: 'refresh_token=refresh-token' },
     method: 'POST',
-    url: '/v1/auth/logout',
+    url: '/api/v1/auth/logout',
   })
 
   assert.equal(response.statusCode, 200)
   assert.match(response.headers['set-cookie'], /refresh_token=;/)
-  assert.match(response.headers['set-cookie'], /Path=\/v1\/auth/)
+  assert.match(response.headers['set-cookie'], /Path=\/api\/v1\/auth/)
   assert.match(response.headers['set-cookie'], /SameSite=Lax/)
 
   await app.close()
@@ -129,7 +129,7 @@ test('production refresh cookie is Secure, HttpOnly, and host-only by default', 
       identifier: 'student@example.com',
       password: 'strong password',
     },
-    url: '/v1/auth/login',
+    url: '/api/v1/auth/login',
   })
 
   assert.match(response.headers['set-cookie'], /HttpOnly/)
@@ -147,17 +147,17 @@ test('configured cookie domain is applied consistently when setting and clearing
       identifier: 'student@example.com',
       password: 'strong password',
     },
-    url: '/v1/auth/login',
+    url: '/api/v1/auth/login',
   })
   const logout = await app.inject({
     headers: { cookie: 'refresh_token=refresh-token' },
     method: 'POST',
-    url: '/v1/auth/logout',
+    url: '/api/v1/auth/logout',
   })
 
   for (const header of [login.headers['set-cookie'], logout.headers['set-cookie']]) {
     assert.match(header, /Domain=api\.konkourix\.ir/)
-    assert.match(header, /Path=\/v1\/auth/)
+    assert.match(header, /Path=\/api\/v1\/auth/)
     assert.match(header, /HttpOnly/)
     assert.match(header, /Secure/)
     assert.match(header, /SameSite=Lax/)
@@ -169,13 +169,13 @@ test('configured cookie domain is applied consistently when setting and clearing
 test('current-user endpoint requires a bearer token and returns a sanitized user', async () => {
   const app = createApp()
 
-  const unauthorized = await app.inject({ method: 'GET', url: '/v1/auth/me' })
+  const unauthorized = await app.inject({ method: 'GET', url: '/api/v1/auth/me' })
   assert.equal(unauthorized.statusCode, 401)
 
   const authorized = await app.inject({
     headers: { authorization: 'Bearer access-token' },
     method: 'GET',
-    url: '/v1/auth/me',
+    url: '/api/v1/auth/me',
   })
 
   assert.equal(authorized.statusCode, 200)

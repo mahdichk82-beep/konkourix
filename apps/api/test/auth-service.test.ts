@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { randomUUID } from 'node:crypto'
 import { createAuthService } from '../src/auth/auth-service.js'
+import { hashPassword } from '../src/auth/password.js'
 import type {
   AuthSessionRecord,
   AuthStore,
@@ -158,6 +159,50 @@ test('login rejects invalid credentials without exposing account existence', asy
   )
 })
 
+test('login authenticates a registered student', async () => {
+  const store = new InMemoryAuthStore()
+  const service = serviceFor(store)
+  await service.register(
+    { email: 'student@example.com', phone: null, password: 'strong password' },
+    {},
+  )
+
+  const result = await service.login(
+    'STUDENT@example.com',
+    'strong password',
+    {},
+  )
+
+  assert.equal(result.user.role, 'STUDENT')
+  assert.equal(result.user.email, 'student@example.com')
+  assert.equal(store.sessions.length, 2)
+})
+
+test('login authenticates a server-assigned counselor role', async () => {
+  const store = new InMemoryAuthStore()
+  store.users.push({
+    id: randomUUID(),
+    email: 'counselor@example.com',
+    phone: null,
+    passwordHash: await hashPassword('counselor password'),
+    role: 'COUNSELOR',
+    status: 'ACTIVE',
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  })
+  const service = serviceFor(store)
+
+  const result = await service.login(
+    'COUNSELOR@example.com',
+    'counselor password',
+    {},
+  )
+
+  assert.equal(result.user.role, 'COUNSELOR')
+  assert.equal(result.user.email, 'counselor@example.com')
+  assert.equal(store.sessions.at(-1)?.userId, result.user.id)
+})
+
 test('refresh rotates a session and reused tokens revoke the session family', async () => {
   const store = new InMemoryAuthStore()
   const service = serviceFor(store)
@@ -192,6 +237,22 @@ test('logout revokes the refresh session and current user excludes credentials',
   const user = await service.getCurrentUser(initial.user.id)
   assert.equal('passwordHash' in user, false)
   assert.equal(user.id, initial.user.id)
+})
+
+test('refresh rejects an expired server-side session', async () => {
+  const store = new InMemoryAuthStore()
+  const service = serviceFor(store)
+  const initial = await service.register(
+    { email: 'student@example.com', phone: null, password: 'strong password' },
+    {},
+  )
+  store.sessions[0]!.expiresAt = new Date(0)
+
+  await assert.rejects(
+    service.refresh(initial.refreshToken, {}),
+    { code: 'SESSION_INVALID', statusCode: 401 },
+  )
+  assert.notEqual(store.sessions[0]?.revokedAt, null)
 })
 
 test('refresh fails closed when session rotation loses an update race', async () => {

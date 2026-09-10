@@ -67,7 +67,7 @@ test('CORS answers allowed preflight requests with the credential policy', async
       'access-control-request-headers': 'content-type',
     },
     method: 'OPTIONS',
-    url: '/v1/auth/refresh',
+    url: '/api/v1/auth/refresh',
   })
 
   assert.equal(response.statusCode, 204)

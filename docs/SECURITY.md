@@ -7,7 +7,7 @@ This document records the Phase 0 Milestone 6 security and operational baseline.
 - Production public origins are required to use HTTPS by API and frontend environment validation. The current edge configuration is HTTP-only; TLS termination, certificates, HSTS, DNS, and Cloudflare remain mandatory pre-production work.
 - API responses set `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: no-referrer`, a restrictive API Content-Security-Policy, and a restrictive Permissions-Policy. The edge replaces only the three shared baseline headers with the same values and preserves the other API headers.
 - CORS is an exact, credentialed allowlist owned by the API. The student and counselor origins must both be configured in production. Nginx does not add CORS headers.
-- Refresh cookies remain `HttpOnly`, `Secure` in production, `SameSite=Lax`, scoped to `/v1/auth`, and host-only by default. Creation and clearing use matching attributes.
+- Refresh cookies remain `HttpOnly`, `Secure` in production, `SameSite=Lax`, scoped to `/api/v1/auth`, and host-only by default. Creation and clearing use matching attributes.
 - Proxy headers are ignored unless `TRUST_PROXY` names an explicit trusted IP/CIDR. When the edge is integrated, the API must trust only the controlled edge source, and API port 4000 must not be directly reachable by untrusted clients.
 
 ## Authentication, input, and secret handling
@@ -49,8 +49,8 @@ The repository has no `/ready` alias. The canonical endpoints are:
 
 | Purpose | Unversioned | Versioned | Contract |
 | --- | --- | --- | --- |
-| Liveness | `/health/live` | `/v1/health/live` | Confirms the API process can answer; does not query PostgreSQL. |
-| Readiness | `/health` | `/v1/health` | Runs `SELECT 1`; returns 200 only when PostgreSQL is reachable, otherwise a sanitized 503. |
+| Liveness | `/health/live` | `/api/v1/health/live` | Confirms the API process can answer; does not query PostgreSQL. |
+| Readiness | `/health` | `/api/v1/health` | Runs `SELECT 1`; returns 200 only when PostgreSQL is reachable, otherwise a sanitized 503. |
 
 Health responses expose only status, environment name, database connectivity state, and request ID. They contain no credentials, database URL, host details, or exception text. The API image defaults to liveness; Compose selects readiness for its service-health decision.
 
@@ -60,9 +60,9 @@ The API applies a bounded, per-process, per-client-IP fixed-window limiter befor
 
 | Route | Limit |
 | --- | --- |
-| `POST /v1/auth/register` | 10 attempts per 10 minutes |
-| `POST /v1/auth/login` | 20 attempts per minute |
-| `POST /v1/auth/refresh` | 60 attempts per minute |
+| `POST /api/v1/auth/register` | 10 attempts per 10 minutes |
+| `POST /api/v1/auth/login` | 20 attempts per minute |
+| `POST /api/v1/auth/refresh` | 60 attempts per minute |
 
 All attempts count, successful or unsuccessful. Exceeded limits return HTTP 429 with the standard `RATE_LIMITED` error and `Retry-After`. Logout is deliberately not limited so a client can always end a session.
 
