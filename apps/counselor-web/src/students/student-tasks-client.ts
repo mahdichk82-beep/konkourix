@@ -11,24 +11,29 @@ export type CounselorTaskTopic = {
   title: string
 }
 
-export type CounselorCreatedTask = {
+export type CounselorVisibleTask = {
   completedAt: string | null
   createdAt: string
   description: string | null
   estimatedMinutes: number | null
   id: string
   scheduledFor: string
-  source: 'COUNSELOR'
-  status: 'PENDING'
+  source: 'PERSONAL' | 'COUNSELOR'
+  status: 'PENDING' | 'COMPLETED' | 'SKIPPED'
   studentProfileId: string
-  studyPlanId: null
+  studyPlanId: string | null
   subjectId: string | null
   title: string
   topicId: string | null
   updatedAt: string
 }
 
-type Page<T> = {
+export type CounselorCreatedTask = CounselorVisibleTask & {
+  source: 'COUNSELOR'
+  status: 'PENDING'
+}
+
+export type Page<T> = {
   items: T[]
   nextCursor: string | null
 }
@@ -45,8 +50,8 @@ export type CreateCounselorTaskInput = {
 const resourcePath = (studentProfileId: string, suffix: string) =>
   `/counselor/students/${encodeURIComponent(studentProfileId)}${suffix}`
 
-const withPage = (path: string, cursor?: string) => {
-  const query = new URLSearchParams({ limit: '100' })
+const withPage = (path: string, cursor?: string, limit = 100) => {
+  const query = new URLSearchParams({ limit: String(limit) })
   if (cursor) query.set('cursor', cursor)
   return `${path}?${query.toString()}`
 }
@@ -65,6 +70,15 @@ const listAll = async <T>(path: string): Promise<T[]> => {
 }
 
 export const studentTasksClient = {
+  listTasks(
+    studentProfileId: string,
+    cursor?: string,
+  ): Promise<Page<CounselorVisibleTask>> {
+    return authClient.authorizedRequest<Page<CounselorVisibleTask>>(
+      withPage(resourcePath(studentProfileId, '/tasks'), cursor, 20),
+    )
+  },
+
   listSubjects(studentProfileId: string): Promise<CounselorTaskSubject[]> {
     return listAll<CounselorTaskSubject>(resourcePath(studentProfileId, '/subjects'))
   },

@@ -10,6 +10,7 @@ import {
 } from './student-tasks-client'
 
 type StudentTaskFormProps = {
+  onTaskCreated?(): void
   studentId: string
 }
 
@@ -47,7 +48,7 @@ const createError = (error: unknown) => {
   return 'ثبت وظیفه ممکن نشد. اطلاعات را بررسی و دوباره تلاش کنید.'
 }
 
-export function StudentTaskForm({ studentId }: StudentTaskFormProps) {
+export function StudentTaskForm({ onTaskCreated, studentId }: StudentTaskFormProps) {
   const [subjects, setSubjects] = useState<CounselorTaskSubject[]>([])
   const [topics, setTopics] = useState<CounselorTaskTopic[]>([])
   const [subjectsLoading, setSubjectsLoading] = useState(true)
@@ -136,6 +137,7 @@ export function StudentTaskForm({ studentId }: StudentTaskFormProps) {
       setDescription('')
       setEstimatedMinutes('')
       setSuccess(`وظیفه «${task.title}» برای دانش‌آموز ثبت شد.`)
+      onTaskCreated?.()
     } catch (error) {
       setFormError(createError(error))
     } finally {

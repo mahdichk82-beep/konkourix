@@ -8,6 +8,7 @@ import {
   type CounselorStudent,
 } from './students-client'
 import { StudentTaskForm } from './StudentTaskForm'
+import { StudentTaskList } from './StudentTaskList'
 
 type StudentDetailPageProps = {
   navigate(path: string): void
@@ -31,6 +32,7 @@ export function StudentDetailPage({ navigate, studentId }: StudentDetailPageProp
   const [student, setStudent] = useState<CounselorStudent | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [taskRefreshKey, setTaskRefreshKey] = useState(0)
 
   const load = async () => {
     setLoading(true)
@@ -110,10 +112,14 @@ export function StudentDetailPage({ navigate, studentId }: StudentDetailPageProp
           <div><dt>وضعیت حساب</dt><dd>{statusLabel(student.status)}</dd></div>
         </dl>
         <p className="student-profile-card__note">
-          اطلاعات پایه این پرونده فقط خواندنی است. در این مرحله تنها ایجاد وظیفه جدید برای دانش‌آموز فعال شده است.
+          اطلاعات پایه پرونده و فهرست وظایف فقط خواندنی هستند. می‌توانید وضعیت اجرای برنامه دانش‌آموز را ببینید یا وظیفه جدیدی برای او ثبت کنید.
         </p>
       </Card>
-      <StudentTaskForm studentId={student.id} />
+      <StudentTaskList key={student.id} refreshKey={taskRefreshKey} studentId={student.id} />
+      <StudentTaskForm
+        onTaskCreated={() => setTaskRefreshKey((value) => value + 1)}
+        studentId={student.id}
+      />
     </div>
   )
 }

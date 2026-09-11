@@ -64,6 +64,19 @@ const throwCreateFailure = (
 }
 
 export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
+  async list(
+    actor: CounselorTaskActor,
+    studentProfileId: string,
+    query: CounselorTaskPageQuery,
+  ): Promise<CounselorTaskPage<CounselorTaskView>> {
+    ensureCounselor(actor)
+    const result = await store.listAssignedStudentTasks(actor.id, studentProfileId, query)
+    if (!result.ok) {
+      throw new ApiError(404, 'STUDENT_NOT_FOUND', 'Student not found')
+    }
+    return page(result.value, query)
+  },
+
   async listSubjects(
     actor: CounselorTaskActor,
     studentProfileId: string,

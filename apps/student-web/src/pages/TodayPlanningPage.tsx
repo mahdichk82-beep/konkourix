@@ -614,6 +614,9 @@ export function TodayPlanningPage() {
                     </div>
                     <div className="task-meta">
                       <span>{subject?.name ?? (task.subjectId ? 'درس نامشخص' : 'بدون درس')}</span>
+                      {task.source === 'COUNSELOR' && (
+                        <span className="task-source--counselor">تعیین‌شده توسط مشاور</span>
+                      )}
                       {task.estimatedMinutes !== null && (
                         <span>{numberFormatter.format(task.estimatedMinutes)} دقیقه</span>
                       )}

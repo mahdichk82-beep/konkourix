@@ -33,6 +33,21 @@ export const registerCounselorTaskRoutes = (
   }
 
   app.get(
+    '/counselor/students/:studentProfileId/tasks',
+    counselorOnly,
+    async (request) => {
+      const { studentProfileId } = parseInput(
+        counselorStudentTaskParamSchema.safeParse(request.params),
+      )
+      const query = parseInput(listCounselorTaskResourcesSchema.safeParse(request.query))
+      return successResponse(
+        await options.counselorTasks.list(request.user!, studentProfileId, query),
+        request.context.requestId,
+      )
+    },
+  )
+
+  app.get(
     '/counselor/students/:studentProfileId/subjects',
     counselorOnly,
     async (request) => {

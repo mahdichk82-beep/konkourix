@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 6, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 7, not a claim of overall product completion.
 
 ## Project
 
@@ -12,9 +12,9 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 6 — Counselor Task Creation Foundation**.
+The project has completed **Phase 2 Milestone 7 — Counselor Task Visibility Foundation**.
 
-Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today planning, student-owned subject/topic management, optional task-topic assignment, read-only counselor access to assigned student profiles, and counselor task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
+Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today planning, student-owned subject/topic management, optional task-topic assignment, read-only counselor access to assigned student profiles and tasks, and counselor task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
@@ -59,6 +59,11 @@ Study Tracking recovery checkpoint:
 
 - HEAD: `b3fa0cfc084bcfe7c3ab9fb8b5daf98f6b952e9b`
 - Message: `feat: add task provenance foundation`
+
+## Phase 2 Milestone 7 Starting Checkpoint
+
+- HEAD: `0b6457970ccbd2f126c9f292c434e886645ec436`
+- Message: `feat: add counselor task creation`
 
 ## Verified Baseline
 
@@ -534,6 +539,35 @@ Milestone verification:
 
 Counselor task editing, full counselor planning, revisions, approval workflows, conflict handling, audit history, reports, notifications, and messaging remain deferred and require separately authorized milestones.
 
+### Phase 2 Milestone 7 — Counselor Task Visibility Foundation
+
+**Status: COMPLETE**
+
+- `GET /api/v1/counselor/students/:studentProfileId/tasks` returns a bounded cursor page of canonical `DailyTask` records only when the authenticated counselor has an active `StudentCounselor` relationship with the target student. The path identifier never authorizes access by itself.
+- Visibility is scoped by task ownership (`studentProfileId`), not task creator. Assigned counselors therefore see both `PERSONAL` and `COUNSELOR` tasks, including status and completion timestamps when available.
+- The Prisma read transaction verifies the active assignment before querying tasks. Its explicit task selection excludes `createdByUserId`, so raw creator identity and internal user identifiers are not fetched for or exposed by the endpoint.
+- Unassigned and cross-counselor targets retain the established not-found behavior. Student and anonymous callers are rejected by the existing authenticated counselor route boundary.
+- Counselor Web assigned-student detail now includes a read-only Persian/RTL task section with scheduled date, status, safe source label, completion state, optional duration/description, cursor pagination, and localized loading, empty, and error states. It contains no edit, delete, completion, or reassignment control.
+- Successful counselor task creation refreshes the read-only task section without changing create authorization or adding shared editing behavior.
+- Student Web Today Planning now displays `تعیین‌شده توسط مشاور` for counselor-created tasks. It exposes no counselor ID or creator identity and otherwise preserves the existing planning experience.
+- Focused tests cover assigned visibility, personal and counselor-source inclusion, completion data, creator redaction, unassigned and cross-counselor denial, student and anonymous denial, active-assignment Prisma predicates, student ownership filtering, and the absence of creator/source filters in the task query.
+- No Prisma schema, migration, dependency, lockfile, authentication, task ownership, StudySession, or infrastructure change was required.
+
+Milestone verification:
+
+- API tests: **116/116 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 8 migrations found and the database is up to date
+- Schema changed: **NO**
+- Migration added or run: **NO**
+
+Counselor task editing, task revisions, approval workflows, conflict handling, reports, analytics, weekly planning, notifications, and messaging remain deferred and require separately authorized milestones.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -565,6 +599,7 @@ The following capabilities are present and covered by the current API baseline:
 - Student-counselor relationship foundation
 - Counselor-only read access to actively assigned student lists and basic profiles
 - Counselor-only creation of scheduled tasks for actively assigned students with server-owned provenance
+- Counselor-only read access to personal and counselor-created tasks owned by actively assigned students, without creator identity exposure
 - Student subjects, topics, study plans, and daily tasks with optional validated topic assignment and server-owned provenance
 - Study Sessions and Student Goals
 - Backend role and ownership enforcement foundations; student resources are resolved from the authenticated user's StudentProfile
@@ -607,7 +642,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - It verifies authenticated access against the backend-protected student boundary before rendering protected content.
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing student profile fields, theme selection, password change, current logout, and logout-all.
-- Its planning page provides persistent today-task listing and creation with optional subject/topic assignment, completion/skipping, status and subject filters, cursor pagination, and inline subject creation through the existing authenticated backend contracts.
+- Its planning page provides persistent today-task listing and creation with optional subject/topic assignment, completion/skipping, status and subject filters, cursor pagination, inline subject creation, and a safe counselor-source indicator through the existing authenticated backend contracts.
 - Its study page provides persistent student-owned subject listing/creation and topic listing/creation/rename/archive/restore through the authenticated backend contracts.
 - It remains an application foundation rather than a complete student product UI.
 
@@ -620,7 +655,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing counselor profile fields, theme selection, password change, current logout, and logout-all.
 - Its student area provides a persistent assigned-student list and read-only basic profile detail through counselor-scoped backend contracts, with localized loading, empty, error, and pagination states.
-- Assigned-student detail provides constrained task creation with active subject/topic selectors and localized loading, empty, error, submitting, and success states; counselor editing and broader planning remain absent.
+- Assigned-student detail provides constrained task creation with active subject/topic selectors and a separate read-only, paginated view of personal and counselor-created tasks, their statuses, sources, and completion information. Counselor editing and broader planning remain absent.
 - It remains an application foundation rather than a complete counselor product UI.
 
 Neither application shell should be described as a complete product merely because it builds.
@@ -714,4 +749,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 6 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin counselor task editing, full counselor planning, task permissions, revisions, approval workflows, conflict handling, audit history, reports, analytics, messaging, notes, notifications, weekly planning, drag-and-drop/manual ordering, search, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 7 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin counselor task editing, full counselor planning, task permissions, revisions, approval workflows, conflict handling, audit history, reports, analytics, messaging, notes, notifications, weekly planning, drag-and-drop/manual ordering, search, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.

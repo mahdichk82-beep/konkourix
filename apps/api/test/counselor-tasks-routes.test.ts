@@ -9,6 +9,7 @@ import {
 import type {
   CounselorStudentSubject,
   CounselorStudentTopic,
+  CounselorTaskView,
   CreateCounselorTaskRecordInput,
 } from '../src/counselor-tasks/types.js'
 import { ApiError } from '../src/errors/api-error.js'
@@ -88,6 +89,25 @@ const assignments = new Map<string, string[]>([
 const createStore = (): CounselorTaskStore & { tasks: DailyTaskRecord[] } => {
   const store = {
     tasks: [] as DailyTaskRecord[],
+    async listAssignedStudentTasks(
+      counselorUserId: string,
+      studentProfileId: string,
+      query: { cursor?: string; limit?: number },
+    ) {
+      if (!(assignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
+        return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
+      }
+      const tasks: CounselorTaskView[] = store.tasks
+        .filter((task) => task.studentProfileId === studentProfileId)
+        .map(({ createdByUserId: _createdByUserId, ...task }) => task)
+      const start = query.cursor
+        ? Math.max(tasks.findIndex(({ id }) => id === query.cursor) + 1, 0)
+        : 0
+      return {
+        ok: true as const,
+        value: tasks.slice(start, start + (query.limit ?? 50) + 1),
+      }
+    },
     async listAssignedStudentSubjects(
       counselorUserId: string,
       studentProfileId: string,
@@ -200,6 +220,98 @@ const createRequest = (
   method: 'POST',
   payload,
   url: `/api/v1/counselor/students/${studentProfileId}/tasks`,
+})
+
+const listRequest = (
+  app: ReturnType<typeof createApp>['app'],
+  studentProfileId: string,
+  token?: string,
+) => app.inject({
+  headers: token ? { authorization: `Bearer ${token}` } : undefined,
+  method: 'GET',
+  url: `/api/v1/counselor/students/${studentProfileId}/tasks`,
+})
+
+const taskRecord = (
+  id: string,
+  overrides: Partial<DailyTaskRecord> = {},
+): DailyTaskRecord => ({
+  completedAt: null,
+  createdAt: timestamp,
+  createdByUserId: ids.studentUser,
+  description: null,
+  estimatedMinutes: null,
+  id,
+  scheduledFor: new Date('2026-09-12T00:00:00.000Z'),
+  source: 'PERSONAL',
+  status: 'PENDING',
+  studentProfileId: ids.studentA,
+  studyPlanId: null,
+  subjectId: null,
+  title: 'Task',
+  topicId: null,
+  updatedAt: timestamp,
+  ...overrides,
+})
+
+test('assigned counselor sees personal and counselor-created tasks without creator identity', async () => {
+  const { app, store } = createApp()
+  const completedAt = new Date('2026-09-12T10:30:00.000Z')
+  store.tasks.push(
+    taskRecord('60000000-0000-4000-8000-000000000010', {
+      completedAt,
+      status: 'COMPLETED',
+      title: 'Personal completed task',
+    }),
+    taskRecord('60000000-0000-4000-8000-000000000011', {
+      createdByUserId: ids.counselorB,
+      source: 'COUNSELOR',
+      title: 'Counselor task',
+    }),
+    taskRecord('60000000-0000-4000-8000-000000000012', {
+      studentProfileId: ids.studentB,
+      title: 'Other student task',
+    }),
+  )
+
+  const response = await listRequest(app, ids.studentA, 'counselor-a')
+
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(
+    response.json().data.items.map((task: { source: string }) => task.source),
+    ['PERSONAL', 'COUNSELOR'],
+  )
+  assert.equal(response.json().data.items[0].completedAt, completedAt.toISOString())
+  assert.equal(response.json().data.items[0].status, 'COMPLETED')
+  assert.equal(response.json().data.items[1].status, 'PENDING')
+  assert.equal(
+    response.json().data.items.every((task: Record<string, unknown>) => !('createdByUserId' in task)),
+    true,
+  )
+  await app.close()
+})
+
+test('counselor cannot list tasks for unassigned or another counselor assigned students', async () => {
+  const { app } = createApp()
+
+  for (const studentProfileId of [ids.studentUnassigned, ids.studentB]) {
+    const response = await listRequest(app, studentProfileId, 'counselor-a')
+    assert.equal(response.statusCode, 404)
+    assert.equal(response.json().error.code, 'STUDENT_NOT_FOUND')
+  }
+  await app.close()
+})
+
+test('student and unauthenticated callers cannot list counselor-scoped tasks', async () => {
+  const { app } = createApp()
+  const studentResponse = await listRequest(app, ids.studentA, 'student')
+  assert.equal(studentResponse.statusCode, 403)
+  assert.equal(studentResponse.json().error.code, 'ROLE_FORBIDDEN')
+
+  const unauthenticated = await listRequest(app, ids.studentA)
+  assert.equal(unauthenticated.statusCode, 401)
+  assert.equal(unauthenticated.json().error.code, 'TOKEN_MISSING')
+  await app.close()
 })
 
 test('assigned counselor creates a pending counselor task with server-owned provenance', async () => {

@@ -48,6 +48,8 @@ export type AssignedResourceResult<T> =
   | { ok: true; value: T }
   | { ok: false; reason: 'STUDENT_NOT_FOUND' }
 
+export type AssignedTaskResult = AssignedResourceResult<CounselorTaskView[]>
+
 export type AssignedTopicResult =
   | AssignedResourceResult<CounselorStudentTopic[]>
   | { ok: false; reason: 'SUBJECT_NOT_FOUND' }

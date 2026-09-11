@@ -141,6 +141,7 @@
 .task-status--skipped { color: var(--danger); background: var(--danger-soft); border-color: color-mix(in srgb, var(--danger) 30%, var(--border)); }
 .task-meta { margin-top: 0.65rem; display: flex; flex-wrap: wrap; gap: 0.45rem; color: var(--text-muted); font-size: 0.78rem; }
 .task-meta span { padding: 0.25rem 0.5rem; border-radius: 8px; background: var(--surface); }
+.task-meta .task-source--counselor { color: var(--accent-strong); background: var(--accent-soft); font-weight: 750; }
 .task-description { margin: 0.75rem 0 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; white-space: pre-wrap; }
 .task-actions { flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.55rem; }
 .load-more { padding-top: 1rem; display: flex; justify-content: center; }

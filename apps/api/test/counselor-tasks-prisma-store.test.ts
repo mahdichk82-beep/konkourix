@@ -14,6 +14,89 @@ const ids = {
 
 const timestamp = new Date('2026-09-11T00:00:00.000Z')
 
+test('Prisma counselor task visibility is assignment-scoped and does not select creator identity', async () => {
+  const profileQueries: unknown[] = []
+  const taskQueries: unknown[] = []
+  const transaction = {
+    studentProfile: {
+      async findFirst(query: unknown) {
+        profileQueries.push(query)
+        return { id: ids.student }
+      },
+    },
+    dailyTask: {
+      async findMany(query: unknown) {
+        taskQueries.push(query)
+        return [{
+          completedAt: null,
+          createdAt: timestamp,
+          description: null,
+          estimatedMinutes: 30,
+          id: ids.task,
+          scheduledFor: timestamp,
+          source: 'PERSONAL',
+          status: 'PENDING',
+          studentProfileId: ids.student,
+          studyPlanId: null,
+          subjectId: null,
+          title: 'Visible task',
+          topicId: null,
+          updatedAt: timestamp,
+        }]
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+  const services = createCounselorTaskServices(createPrismaCounselorTaskStore(prisma))
+
+  const result = await services.list(
+    { id: ids.counselor, role: 'COUNSELOR', status: 'ACTIVE' },
+    ids.student,
+    { limit: 25 },
+  )
+
+  assert.deepEqual(profileQueries, [{
+    select: { id: true },
+    where: {
+      id: ids.student,
+      user: {
+        studentRelationships: {
+          some: { counselorId: ids.counselor, status: 'ACTIVE' },
+        },
+      },
+    },
+  }])
+  assert.deepEqual(taskQueries, [{
+    cursor: undefined,
+    orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
+    select: {
+      completedAt: true,
+      createdAt: true,
+      description: true,
+      estimatedMinutes: true,
+      id: true,
+      scheduledFor: true,
+      source: true,
+      status: true,
+      studentProfileId: true,
+      studyPlanId: true,
+      subjectId: true,
+      title: true,
+      topicId: true,
+      updatedAt: true,
+    },
+    skip: undefined,
+    take: 26,
+    where: { studentProfileId: ids.student },
+  }])
+  assert.equal(result.items[0]?.source, 'PERSONAL')
+  assert.equal('createdByUserId' in (result.items[0] ?? {}), false)
+})
+
 test('Prisma counselor task creation validates assignment and relations atomically', async () => {
   const profileQueries: unknown[] = []
   const subjectQueries: unknown[] = []

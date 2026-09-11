@@ -13,6 +13,41 @@ const assignedStudentWhere = (counselorUserId: string, studentProfileId: string)
 export const createPrismaCounselorTaskStore = (
   prisma: PrismaClient,
 ): CounselorTaskStore => ({
+  async listAssignedStudentTasks(counselorUserId, studentProfileId, query) {
+    return prisma.$transaction(async (transaction) => {
+      const student = await transaction.studentProfile.findFirst({
+        select: { id: true },
+        where: assignedStudentWhere(counselorUserId, studentProfileId),
+      })
+      if (!student) return { ok: false, reason: 'STUDENT_NOT_FOUND' as const }
+
+      const tasks = await transaction.dailyTask.findMany({
+        cursor: query.cursor ? { id: query.cursor } : undefined,
+        orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
+        select: {
+          completedAt: true,
+          createdAt: true,
+          description: true,
+          estimatedMinutes: true,
+          id: true,
+          scheduledFor: true,
+          source: true,
+          status: true,
+          studentProfileId: true,
+          studyPlanId: true,
+          subjectId: true,
+          title: true,
+          topicId: true,
+          updatedAt: true,
+        },
+        skip: query.cursor ? 1 : undefined,
+        take: (query.limit ?? 50) + 1,
+        where: { studentProfileId },
+      })
+      return { ok: true, value: tasks }
+    })
+  },
+
   async listAssignedStudentSubjects(counselorUserId, studentProfileId, query) {
     return prisma.$transaction(async (transaction) => {
       const student = await transaction.studentProfile.findFirst({
