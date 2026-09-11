@@ -3,6 +3,7 @@ import type { StudentCoreStore } from './store.js'
 import type {
   DailyTaskRecord,
   DailyTaskStatus,
+  DailyTaskView,
   DomainStudent,
   Page,
   PageQuery,
@@ -28,6 +29,7 @@ const page = <T extends { id: string }>(items: T[], query: PageQuery = {}): Page
 }
 
 const dateOnly = (value: string): Date => new Date(`${value}T00:00:00.000Z`)
+const toTaskView = ({ createdByUserId: _createdByUserId, ...task }: DailyTaskRecord): DailyTaskView => task
 const validDate = (value: string): boolean => {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false
   const parsed = dateOnly(value)
@@ -196,13 +198,14 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
   const tasks = {
     async list(actor: DomainStudent, query?: PageQuery & { scheduledFor?: string; status?: DailyTaskStatus; studyPlanId?: string; subjectId?: string }) {
       const profile = await requireProfile(store, actor)
-      return page(await store.listTasks(profile.id, { ...query, scheduledFor: query?.scheduledFor ? dateOnly(query.scheduledFor) : undefined }), query)
+      const records = await store.listTasks(profile.id, { ...query, scheduledFor: query?.scheduledFor ? dateOnly(query.scheduledFor) : undefined })
+      return page(records.map(toTaskView), query)
     },
     async get(actor: DomainStudent, id: string) {
       const profile = await requireProfile(store, actor)
       const result = await store.findTaskById(profile.id, id)
       if (!result) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
-      return result
+      return toTaskView(result)
     },
     async create(actor: DomainStudent, input: { studyPlanId: string | null; subjectId: string | null; topicId: string | null; title: string; description?: string | null; scheduledFor: string; estimatedMinutes: number | null; status: DailyTaskStatus }) {
       const profile = await requireProfile(store, actor)
@@ -214,7 +217,16 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         if (subject.archivedAt) throw new ApiError(409, 'SUBJECT_ARCHIVED', 'Archived subjects cannot be assigned to new tasks')
       }
       await requireTaskTopicConsistency(store, profile.id, input.subjectId, input.topicId)
-      return store.createTask({ ...input, description: input.description ?? null, studentProfileId: profile.id, scheduledFor: dateOnly(input.scheduledFor), completedAt: input.status === 'COMPLETED' ? now() : null })
+      const result = await store.createTask({
+        ...input,
+        completedAt: input.status === 'COMPLETED' ? now() : null,
+        createdByUserId: actor.id,
+        description: input.description ?? null,
+        scheduledFor: dateOnly(input.scheduledFor),
+        source: 'PERSONAL',
+        studentProfileId: profile.id,
+      })
+      return toTaskView(result)
     },
     async update(actor: DomainStudent, id: string, input: { studyPlanId?: string | null; subjectId?: string | null; topicId?: string | null; title?: string; description?: string | null; scheduledFor?: string; estimatedMinutes?: number | null; status?: DailyTaskStatus }) {
       const profile = await requireProfile(store, actor)
@@ -247,7 +259,7 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         ...(input.status === undefined ? {} : { completedAt: input.status === 'COMPLETED' ? now() : null }),
       })
       if (!result) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
-      return result
+      return toTaskView(result)
     },
   }
 

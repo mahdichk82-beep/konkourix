@@ -76,6 +76,14 @@ test('development domain seed is deterministic and idempotent by key', async () 
     assert.equal(input.create?.studentProfileId, studentProfileId)
     assert.equal(input.update?.studentProfileId, studentProfileId)
   }
+
+  const taskCalls = calls.filter(({ model }) => model === 'dailyTask')
+  for (const { input } of taskCalls) {
+    assert.equal(input.create?.createdByUserId, developmentSeedIds.student)
+    assert.equal(input.create?.source, 'PERSONAL')
+    assert.equal('createdByUserId' in (input.update ?? {}), false)
+    assert.equal('source' in (input.update ?? {}), false)
+  }
 })
 
 test('development domain seed refuses production', async () => {

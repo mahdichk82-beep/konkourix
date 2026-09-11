@@ -192,6 +192,8 @@ export type StudyPlanScalarFieldEnum = (typeof StudyPlanScalarFieldEnum)[keyof t
 export const DailyTaskScalarFieldEnum = {
   id: 'id',
   studentProfileId: 'studentProfileId',
+  createdByUserId: 'createdByUserId',
+  source: 'source',
   studyPlanId: 'studyPlanId',
   subjectId: 'subjectId',
   topicId: 'topicId',

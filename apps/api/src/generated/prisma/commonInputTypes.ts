@@ -230,6 +230,13 @@ export type EnumStudyPlanStatusWithAggregatesFilter<$PrismaModel = never> = {
   _max?: Prisma.NestedEnumStudyPlanStatusFilter<$PrismaModel>
 }
 
+export type EnumDailyTaskSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.DailyTaskSource | Prisma.EnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.DailyTaskSource[] | Prisma.ListEnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DailyTaskSource[] | Prisma.ListEnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDailyTaskSourceFilter<$PrismaModel> | $Enums.DailyTaskSource
+}
+
 export type UuidNullableFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
@@ -258,6 +265,16 @@ export type EnumDailyTaskStatusFilter<$PrismaModel = never> = {
   in?: $Enums.DailyTaskStatus[] | Prisma.ListEnumDailyTaskStatusFieldRefInput<$PrismaModel>
   notIn?: $Enums.DailyTaskStatus[] | Prisma.ListEnumDailyTaskStatusFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel> | $Enums.DailyTaskStatus
+}
+
+export type EnumDailyTaskSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DailyTaskSource | Prisma.EnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.DailyTaskSource[] | Prisma.ListEnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DailyTaskSource[] | Prisma.ListEnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDailyTaskSourceWithAggregatesFilter<$PrismaModel> | $Enums.DailyTaskSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDailyTaskSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDailyTaskSourceFilter<$PrismaModel>
 }
 
 export type UuidNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -545,6 +562,13 @@ export type NestedEnumStudyPlanStatusWithAggregatesFilter<$PrismaModel = never> 
   _max?: Prisma.NestedEnumStudyPlanStatusFilter<$PrismaModel>
 }
 
+export type NestedEnumDailyTaskSourceFilter<$PrismaModel = never> = {
+  equals?: $Enums.DailyTaskSource | Prisma.EnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.DailyTaskSource[] | Prisma.ListEnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DailyTaskSource[] | Prisma.ListEnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDailyTaskSourceFilter<$PrismaModel> | $Enums.DailyTaskSource
+}
+
 export type NestedUuidNullableFilter<$PrismaModel = never> = {
   equals?: string | Prisma.StringFieldRefInput<$PrismaModel> | null
   in?: string[] | Prisma.ListStringFieldRefInput<$PrismaModel> | null
@@ -561,6 +585,16 @@ export type NestedEnumDailyTaskStatusFilter<$PrismaModel = never> = {
   in?: $Enums.DailyTaskStatus[] | Prisma.ListEnumDailyTaskStatusFieldRefInput<$PrismaModel>
   notIn?: $Enums.DailyTaskStatus[] | Prisma.ListEnumDailyTaskStatusFieldRefInput<$PrismaModel>
   not?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel> | $Enums.DailyTaskStatus
+}
+
+export type NestedEnumDailyTaskSourceWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DailyTaskSource | Prisma.EnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  in?: $Enums.DailyTaskSource[] | Prisma.ListEnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  notIn?: $Enums.DailyTaskSource[] | Prisma.ListEnumDailyTaskSourceFieldRefInput<$PrismaModel>
+  not?: Prisma.NestedEnumDailyTaskSourceWithAggregatesFilter<$PrismaModel> | $Enums.DailyTaskSource
+  _count?: Prisma.NestedIntFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDailyTaskSourceFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDailyTaskSourceFilter<$PrismaModel>
 }
 
 export type NestedUuidNullableWithAggregatesFilter<$PrismaModel = never> = {

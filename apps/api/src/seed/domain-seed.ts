@@ -151,6 +151,8 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
       create: {
         id: developmentSeedIds.mathTask,
         studentProfileId: studentProfile.id,
+        createdByUserId: developmentSeedIds.student,
+        source: 'PERSONAL',
         studyPlanId: developmentSeedIds.studyPlan,
         subjectId: developmentSeedIds.mathSubject,
         title: 'Review algebra fundamentals',
@@ -176,6 +178,8 @@ export const seedDomainData = async (prisma: PrismaClient): Promise<void> => {
       create: {
         id: developmentSeedIds.scienceTask,
         studentProfileId: studentProfile.id,
+        createdByUserId: developmentSeedIds.student,
+        source: 'PERSONAL',
         studyPlanId: developmentSeedIds.studyPlan,
         subjectId: developmentSeedIds.scienceSubject,
         title: 'Read motion chapter',

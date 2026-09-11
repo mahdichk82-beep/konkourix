@@ -54,6 +54,14 @@ export const DailyTaskStatus = {
 export type DailyTaskStatus = (typeof DailyTaskStatus)[keyof typeof DailyTaskStatus]
 
 
+export const DailyTaskSource = {
+  PERSONAL: 'PERSONAL',
+  COUNSELOR: 'COUNSELOR'
+} as const
+
+export type DailyTaskSource = (typeof DailyTaskSource)[keyof typeof DailyTaskSource]
+
+
 export const StudentGoalStatus = {
   ACTIVE: 'ACTIVE',
   COMPLETED: 'COMPLETED',

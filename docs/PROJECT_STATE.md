@@ -474,6 +474,33 @@ Milestone verification:
 
 Deferred counselor capabilities include planning, task creation, reports, analytics, messaging, and private notes. They require separately authorized milestones.
 
+### Phase 2 Milestone 5B — Task Provenance Foundation
+
+**Status: COMPLETE**
+
+- `DailyTask.studentProfileId` remains the student ownership boundary. Required immutable provenance now records `source` as `PERSONAL` or `COUNSELOR` and `createdByUserId` as a foreign key to the creating `User` without adding a parallel task model or counselor-specific ownership field.
+- The additive `20260911025617_add_task_provenance_foundation` migration first adds nullable provenance columns, backfills existing tasks as `PERSONAL` with the owning StudentProfile user's ID, aborts if any row remains unmapped, and only then makes both fields required. The migration was applied successfully to the local development database; all 8 migrations are up to date.
+- Before migration, a read-only integrity query confirmed that every existing DailyTask had a valid StudentProfile/User path; the current local database contained no DailyTask rows. Post-migration inspection confirmed both required columns, the creator foreign key with restricted creator deletion, and the creator index.
+- Student task creation derives `source: PERSONAL`, `createdByUserId`, and `studentProfileId` exclusively from authenticated server identity. Existing strict create/update schemas reject client-supplied provenance or ownership fields, and the update service never forwards them.
+- Task list/get/create/update responses expose only the safe `source` label. Raw creator identity remains internal and is omitted from responses. The Student Web planning client accepts the additive response field without displaying a creator/source indicator, and Counselor Web is unchanged.
+- Deterministic development task seeds set provenance only when rows are created; their update path cannot rewrite immutable provenance. Existing StudySession relationships and behavior are unchanged.
+- Focused regression tests cover server-assigned personal provenance, authenticated creator assignment, forged source/creator/owner rejection, update immutability, creator-response redaction, seed immutability, and all prior task ownership, role, pagination, filtering, completion timestamp, and StudySession behavior.
+
+Milestone verification:
+
+- API tests: **101/101 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 8 migrations found and the database is up to date
+- Schema changed: **YES; required immutable DailyTask provenance only**
+- Migration added and run: **YES; local development database only**
+
+Counselor task creation, counselor planning, per-source task permissions, revision handling, and audit history remain deferred. This milestone provides provenance storage only and adds no counselor task route or UI.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -504,7 +531,7 @@ The following capabilities are present and covered by the current API baseline:
 - Student and counselor profile APIs
 - Student-counselor relationship foundation
 - Counselor-only read access to actively assigned student lists and basic profiles
-- Student subjects, topics, study plans, and daily tasks with optional validated topic assignment
+- Student subjects, topics, study plans, and daily tasks with optional validated topic assignment and server-owned provenance
 - Study Sessions and Student Goals
 - Backend role and ownership enforcement foundations; student resources are resolved from the authenticated user's StudentProfile
 
@@ -523,8 +550,10 @@ Commit `5fffa805d99e1fc870410c3b5115b2924059399f` records four verified repairs:
 
 - Persistent storage: PostgreSQL
 - ORM and migration system: Prisma
-- Known migrations: 7
+- Known migrations: 8
 - Migration status at this checkpoint: applied and up to date
+- Task Provenance migration: `20260911025617_add_task_provenance_foundation`
+- Task Provenance migration state: committed and applied locally
 - Task Topic migration: `20260910220542_connect_tasks_to_topics`
 - Task Topic migration state: committed and applied locally
 - Student Topic migration: `20260910184152_add_student_topic_foundation`
@@ -650,4 +679,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 4 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin counselor planning/task creation, reports, analytics, messaging, notes, weekly planning, drag-and-drop/manual ordering, search, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 5B is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin counselor planning/task creation, task permissions, revisions, audit history, reports, analytics, messaging, notes, weekly planning, drag-and-drop/manual ordering, search, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.

@@ -281,6 +281,53 @@ test('student core completes tasks with a completion timestamp and protects owne
   )
 })
 
+test('student task provenance is server-assigned, immutable, and creator-safe in responses', async () => {
+  const store = createStore()
+  const services = createStudentCoreServices(store, () => timestamp)
+  const forgedCreateInput = {
+    title: 'Personal task',
+    description: null,
+    scheduledFor: '2026-09-03',
+    estimatedMinutes: 30,
+    status: 'PENDING',
+    studyPlanId: null,
+    subjectId: null,
+    topicId: null,
+    source: 'COUNSELOR',
+    createdByUserId: 'another-user',
+    studentProfileId: 'another-profile',
+  } as unknown as Parameters<typeof services.tasks.create>[1]
+
+  const task = await services.tasks.create(student, forgedCreateInput)
+
+  assert.equal(task.source, 'PERSONAL')
+  assert.equal('createdByUserId' in task, false)
+  assert.equal(store.tasks[0]?.studentProfileId, profile.id)
+  assert.equal(store.tasks[0]?.createdByUserId, student.id)
+  assert.equal(store.tasks[0]?.source, 'PERSONAL')
+
+  const fetched = await services.tasks.get(student, task.id)
+  const listed = await services.tasks.list(student)
+  assert.equal(fetched.source, 'PERSONAL')
+  assert.equal('createdByUserId' in fetched, false)
+  assert.equal(listed.items[0]?.source, 'PERSONAL')
+  assert.equal('createdByUserId' in (listed.items[0] ?? {}), false)
+
+  const forgedUpdateInput = {
+    status: 'COMPLETED',
+    source: 'COUNSELOR',
+    createdByUserId: 'another-user',
+    studentProfileId: 'another-profile',
+  } as unknown as Parameters<typeof services.tasks.update>[2]
+  const updated = await services.tasks.update(student, task.id, forgedUpdateInput)
+
+  assert.equal(updated.source, 'PERSONAL')
+  assert.equal('createdByUserId' in updated, false)
+  assert.equal(store.tasks[0]?.studentProfileId, profile.id)
+  assert.equal(store.tasks[0]?.createdByUserId, student.id)
+  assert.equal(store.tasks[0]?.source, 'PERSONAL')
+})
+
 test('student core creates tasks with no topic or a valid owned subject topic', async () => {
   const store = createStore()
   store.subjects.push({
@@ -483,6 +530,8 @@ test('student core hides another student task from get and update operations', a
   store.tasks.push({
     id: 'foreign-task',
     studentProfileId: 'student-profile-2',
+    createdByUserId: 'student-user-2',
+    source: 'PERSONAL',
     studyPlanId: null,
     subjectId: null,
     topicId: null,
@@ -645,6 +694,8 @@ test('student core plan and task pages use lookahead rows without repeating the 
     ...['task-1', 'task-2', 'task-3'].map((id, index): DailyTaskRecord => ({
       id,
       studentProfileId: profile.id,
+      createdByUserId: student.id,
+      source: 'PERSONAL',
       studyPlanId: null,
       subjectId: null,
       topicId: null,

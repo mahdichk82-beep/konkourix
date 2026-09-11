@@ -153,6 +153,45 @@ test('student task route accepts an owned topic that belongs to the selected sub
   assert.equal(response.statusCode, 201)
   assert.equal(response.json().data.subjectId, subjectId)
   assert.equal(response.json().data.topicId, topicId)
+  assert.equal(response.json().data.source, 'PERSONAL')
+  assert.equal('createdByUserId' in response.json().data, false)
+  await app.close()
+})
+
+test('student task routes reject client-controlled provenance and ownership fields', async () => {
+  const app = createApp()
+  const controlledFields = [
+    { source: 'COUNSELOR' },
+    { createdByUserId: '00000000-0000-4000-8000-000000000499' },
+    { studentProfileId: '00000000-0000-4000-8000-000000000498' },
+  ]
+
+  for (const field of controlledFields) {
+    const response = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'POST',
+      payload: {
+        title: 'Forged task',
+        scheduledFor: '2026-09-03',
+        ...field,
+      },
+      url: '/api/v1/student/daily-tasks',
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(response.json().error.code, 'VALIDATION_ERROR')
+  }
+
+  for (const field of controlledFields) {
+    const response = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'PATCH',
+      payload: field,
+      url: '/api/v1/student/daily-tasks/00000000-0000-4000-8000-000000000497',
+    })
+    assert.equal(response.statusCode, 400)
+    assert.equal(response.json().error.code, 'VALIDATION_ERROR')
+  }
+
   await app.close()
 })
 
@@ -219,6 +258,8 @@ test('daily task date query is mapped to the scheduled date filter', async () =>
     {
       id: '00000000-0000-4000-8000-000000000101',
       studentProfileId: 'student-profile-1',
+      createdByUserId: user.id,
+      source: 'PERSONAL',
       studyPlanId: null,
       subjectId: null,
       topicId: null,
@@ -234,6 +275,8 @@ test('daily task date query is mapped to the scheduled date filter', async () =>
     {
       id: '00000000-0000-4000-8000-000000000102',
       studentProfileId: 'student-profile-1',
+      createdByUserId: user.id,
+      source: 'PERSONAL',
       studyPlanId: null,
       subjectId: null,
       topicId: null,
@@ -277,6 +320,8 @@ test('daily task date query is mapped to the scheduled date filter', async () =>
 
   assert.equal(unfiltered.statusCode, 200)
   assert.equal(unfiltered.json().data.items.length, 2)
+  assert.equal(unfiltered.json().data.items[0].source, 'PERSONAL')
+  assert.equal('createdByUserId' in unfiltered.json().data.items[0], false)
   assert.equal(receivedQueries[0]?.scheduledFor, undefined)
   assert.equal(matching.json().data.items.length, 1)
   assert.equal(matching.json().data.items[0].id, tasks[0]?.id)

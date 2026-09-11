@@ -33,11 +33,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sessions AuthSession[]
-  studentProfile StudentProfile?
-  counselorProfile CounselorProfile?
-  studentRelationships StudentCounselor[] @relation("StudentCounselorStudent")
+  sessions               AuthSession[]
+  studentProfile         StudentProfile?
+  counselorProfile       CounselorProfile?
+  studentRelationships   StudentCounselor[] @relation("StudentCounselorStudent")
   counselorRelationships StudentCounselor[] @relation("StudentCounselorCounselor")
+  createdDailyTasks      DailyTask[]        @relation("DailyTaskCreator")
 
   @@map("users")
 }
@@ -137,6 +138,11 @@ enum DailyTaskStatus {
   SKIPPED
 }
 
+enum DailyTaskSource {
+  PERSONAL
+  COUNSELOR
+}
+
 model StudySubject {
   id               String    @id @default(uuid()) @db.Uuid
   studentProfileId String    @db.Uuid
@@ -196,6 +202,8 @@ model StudyPlan {
 model DailyTask {
   id               String          @id @default(uuid()) @db.Uuid
   studentProfileId String          @db.Uuid
+  createdByUserId  String          @db.Uuid
+  source           DailyTaskSource
   studyPlanId      String?         @db.Uuid
   subjectId        String?         @db.Uuid
   topicId          String?         @db.Uuid
@@ -209,6 +217,7 @@ model DailyTask {
   updatedAt        DateTime        @updatedAt
 
   studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  createdBy      User           @relation("DailyTaskCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
   studyPlan      StudyPlan?     @relation(fields: [studyPlanId], references: [id], onDelete: SetNull)
   subject        StudySubject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
   topic          Topic?         @relation(fields: [topicId], references: [id], onDelete: SetNull)
@@ -216,6 +225,7 @@ model DailyTask {
 
   @@index([studentProfileId, scheduledFor])
   @@index([studentProfileId, status, scheduledFor])
+  @@index([createdByUserId])
   @@index([studyPlanId])
   @@index([subjectId])
   @@index([topicId])

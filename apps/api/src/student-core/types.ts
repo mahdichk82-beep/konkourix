@@ -7,6 +7,7 @@ export type DomainStudent = {
 export type StudentProfileRef = { id: string; userId: string }
 export type StudyPlanStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'
 export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'SKIPPED'
+export type DailyTaskSource = 'PERSONAL' | 'COUNSELOR'
 
 export type StudySubjectRecord = {
   id: string
@@ -43,6 +44,8 @@ export type StudyPlanRecord = {
 export type DailyTaskRecord = {
   id: string
   studentProfileId: string
+  createdByUserId: string
+  source: DailyTaskSource
   studyPlanId: string | null
   subjectId: string | null
   topicId: string | null
@@ -55,6 +58,8 @@ export type DailyTaskRecord = {
   createdAt: Date
   updatedAt: Date
 }
+
+export type DailyTaskView = Omit<DailyTaskRecord, 'createdByUserId'>
 
 export type PageQuery = { cursor?: string; limit?: number }
 export type Page<T> = { items: T[]; nextCursor: string | null }

@@ -1,6 +1,7 @@
 import { authClient } from '../auth/auth-client'
 
 export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'SKIPPED'
+export type DailyTaskSource = 'PERSONAL' | 'COUNSELOR'
 
 export type StudySubject = {
   archivedAt: string | null
@@ -22,6 +23,7 @@ export type DailyTask = {
   estimatedMinutes: number | null
   id: string
   scheduledFor: string
+  source: DailyTaskSource
   status: DailyTaskStatus
   subjectId: string | null
   topicId: string | null
