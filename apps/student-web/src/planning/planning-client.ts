@@ -31,6 +31,18 @@ export type DailyTask = {
   updatedAt: string
 }
 
+export type StudySession = {
+  createdAt: string
+  dailyTaskId: string | null
+  durationMinutes: number
+  endedAt: string
+  id: string
+  notes: string | null
+  startedAt: string
+  subjectId: string | null
+  updatedAt: string
+}
+
 type Page<T> = {
   items: T[]
   nextCursor: string | null
@@ -57,6 +69,12 @@ export type UpdateTaskInput = {
   status?: DailyTaskStatus
   subjectId?: string | null
   topicId?: string | null
+}
+
+export type CreateTaskSessionInput = {
+  endedAt: string
+  notes: string | null
+  startedAt: string
 }
 
 const withQuery = (
@@ -113,6 +131,29 @@ class PlanningClient {
       body: JSON.stringify(input),
       method: 'POST',
     })
+  }
+
+  listTaskSessions(taskId: string, cursor?: string): Promise<Page<StudySession>> {
+    return authClient.authorizedRequest<Page<StudySession>>(
+      withQuery('/student/study-sessions', {
+        cursor,
+        dailyTaskId: taskId,
+        limit: 100,
+      }),
+    )
+  }
+
+  createTaskSession(
+    taskId: string,
+    input: CreateTaskSessionInput,
+  ): Promise<StudySession> {
+    return authClient.authorizedRequest<StudySession>(
+      `/student/daily-tasks/${encodeURIComponent(taskId)}/sessions`,
+      {
+        body: JSON.stringify(input),
+        method: 'POST',
+      },
+    )
   }
 
   updateTask(id: string, input: UpdateTaskInput): Promise<DailyTask> {

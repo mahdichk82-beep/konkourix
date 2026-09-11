@@ -36,6 +36,16 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
           scheduledFor: timestamp,
           source: 'PERSONAL',
           status: 'PENDING',
+          studySessions: [
+            {
+              endedAt: new Date('2026-09-11T09:30:00.000Z'),
+              startedAt: new Date('2026-09-11T09:00:00.000Z'),
+            },
+            {
+              endedAt: new Date('2026-09-11T10:45:00.000Z'),
+              startedAt: new Date('2026-09-11T10:00:00.000Z'),
+            },
+          ],
           studentProfileId: ids.student,
           studyPlanId: null,
           subjectId: null,
@@ -82,6 +92,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
       scheduledFor: true,
       source: true,
       status: true,
+      studySessions: { select: { endedAt: true, startedAt: true } },
       studentProfileId: true,
       studyPlanId: true,
       subjectId: true,
@@ -94,6 +105,8 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
     where: { studentProfileId: ids.student },
   }])
   assert.equal(result.items[0]?.source, 'PERSONAL')
+  assert.equal(result.items[0]?.recordedMinutes, 75)
+  assert.equal(result.items[0]?.studySessionCount, 2)
   assert.equal('createdByUserId' in (result.items[0] ?? {}), false)
 })
 

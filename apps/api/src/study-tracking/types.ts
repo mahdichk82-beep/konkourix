@@ -37,6 +37,11 @@ export type StudentGoalRecord = {
 }
 
 export type TrackingPageQuery = { cursor?: string; limit?: number }
-export type SessionListQuery = TrackingPageQuery & { from?: Date; to?: Date; subjectId?: string }
+export type SessionListQuery = TrackingPageQuery & {
+  dailyTaskId?: string
+  from?: Date
+  to?: Date
+  subjectId?: string
+}
 export type GoalListQuery = TrackingPageQuery & { status?: StudentGoalStatus; subjectId?: string }
 export type TrackingPage<T> = { items: T[]; nextCursor: string | null }

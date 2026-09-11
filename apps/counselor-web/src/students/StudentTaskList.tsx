@@ -152,6 +152,11 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                   <span>{formatScheduledFor(task.scheduledFor)}</span>
                   <span>{sourceLabels[task.source]}</span>
                   <span>{completionLabel(task)}</span>
+                  <span>
+                    {task.studySessionCount > 0
+                      ? `${task.recordedMinutes.toLocaleString('fa-IR')} دقیقه مطالعه در ${task.studySessionCount.toLocaleString('fa-IR')} جلسه`
+                      : 'مطالعه‌ای ثبت نشده'}
+                  </span>
                   {task.estimatedMinutes !== null && (
                     <span>{task.estimatedMinutes.toLocaleString('fa-IR')} دقیقه</span>
                   )}

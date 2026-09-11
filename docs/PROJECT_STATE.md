@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 7, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 8, not a claim of overall product completion.
 
 ## Project
 
@@ -12,9 +12,9 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 7 — Counselor Task Visibility Foundation**.
+The project has completed **Phase 2 Milestone 8 — Task Execution Feedback Foundation**.
 
-Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today planning, student-owned subject/topic management, optional task-topic assignment, read-only counselor access to assigned student profiles and tasks, and counselor task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
+Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today planning, student-owned subject/topic management, optional task-topic assignment, task-linked study execution feedback, read-only counselor access to assigned student profiles and tasks, and counselor task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
@@ -64,6 +64,11 @@ Study Tracking recovery checkpoint:
 
 - HEAD: `0b6457970ccbd2f126c9f292c434e886645ec436`
 - Message: `feat: add counselor task creation`
+
+## Phase 2 Milestone 8 Starting Checkpoint
+
+- HEAD: `196c84b4bd79a72fd2a330b19d9bf2d3ed6a09ea`
+- Message: `feat: add counselor task visibility`
 
 ## Verified Baseline
 
@@ -568,6 +573,36 @@ Milestone verification:
 
 Counselor task editing, task revisions, approval workflows, conflict handling, reports, analytics, weekly planning, notifications, and messaging remain deferred and require separately authorized milestones.
 
+### Phase 2 Milestone 8 — Task Execution Feedback Foundation
+
+**Status: COMPLETE**
+
+- Existing `DailyTask` and `StudySession` remain the separate canonical planned-work and actual-effort models. No execution, activity, timer, analytics, or history table was introduced.
+- `POST /api/v1/student/daily-tasks/:taskId/sessions` creates a completed StudySession interval for an authenticated student's owned task. The server derives `studentProfileId`, `dailyTaskId`, and nullable `subjectId` from authenticated ownership and the task; the strict body accepts only start/end timestamps and optional notes.
+- Task-centric creation supports owned tasks without a subject. For tasks with a subject, the existing subject ownership and archive rules remain active. Foreign tasks share the existing task-not-found behavior.
+- Existing `GET /api/v1/student/study-sessions` now accepts an optional owned `dailyTaskId` filter. The query retains both student-profile and task predicates, enabling persistent per-task execution feedback without a parallel read model.
+- The existing duration calculation was extracted into one shared helper and remains the rounded difference between `endedAt` and `startedAt`. Both generic and task-centric session creation use the same parsing, ordering validation, persistence, and response transformation.
+- Recording a StudySession does not mutate DailyTask status. A task may remain `PENDING`, become `COMPLETED`, or become `SKIPPED` independently from actual recorded effort; no `IN_PROGRESS`, `STARTED`, or `PAUSED` state was added.
+- Student Web Today Planning now lets a student expand a task, load its persisted sessions, see total recorded minutes/session count, start a transient in-page study interval, and finish it into a persisted StudySession with optional notes. There is no live timer, Pomodoro, focus mode, or persisted running-session state.
+- Counselor Web's existing assigned-student task list now shows only the direct execution feedback needed for each task: recorded minutes and StudySession count. Active assignment checks and creator redaction remain unchanged, and no analytics, scoring, report, or mutation control was added.
+- Focused tests cover owned and subjectless task execution, foreign-task denial, student-only/anonymous authorization, forged ownership rejection, derived session ownership/relationships, task-filtered reads, unchanged duration calculation, Prisma ownership predicates, and counselor execution-summary visibility.
+- No Prisma schema, migration, dependency, lockfile, authentication, DailyTask lifecycle, or infrastructure change was required.
+
+Milestone verification:
+
+- API tests: **123/123 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 8 migrations found and the database is up to date
+- Schema changed: **NO**
+- Migration added or run: **NO**
+
+Timers, Pomodoro/focus mode, analytics, reports, mastery, weekly progress, streaks, gamification, notifications, messaging, and execution/task conflict handling remain deferred and require separately authorized milestones.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -601,7 +636,7 @@ The following capabilities are present and covered by the current API baseline:
 - Counselor-only creation of scheduled tasks for actively assigned students with server-owned provenance
 - Counselor-only read access to personal and counselor-created tasks owned by actively assigned students, without creator identity exposure
 - Student subjects, topics, study plans, and daily tasks with optional validated topic assignment and server-owned provenance
-- Study Sessions and Student Goals
+- Study Sessions, including task-linked execution recording and owned task filtering, and Student Goals
 - Backend role and ownership enforcement foundations; student resources are resolved from the authenticated user's StudentProfile
 
 Study Tracking recovery is committed in `8905e381fdcf820bc058a7acd81fc794c7cbfc08` and retained by the current checkpoint.
@@ -642,7 +677,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - It verifies authenticated access against the backend-protected student boundary before rendering protected content.
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing student profile fields, theme selection, password change, current logout, and logout-all.
-- Its planning page provides persistent today-task listing and creation with optional subject/topic assignment, completion/skipping, status and subject filters, cursor pagination, inline subject creation, and a safe counselor-source indicator through the existing authenticated backend contracts.
+- Its planning page provides persistent today-task listing and creation with optional subject/topic assignment, completion/skipping, status and subject filters, cursor pagination, inline subject creation, a safe counselor-source indicator, and task-linked StudySession recording/feedback through the existing authenticated backend contracts.
 - Its study page provides persistent student-owned subject listing/creation and topic listing/creation/rename/archive/restore through the authenticated backend contracts.
 - It remains an application foundation rather than a complete student product UI.
 
@@ -655,7 +690,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing counselor profile fields, theme selection, password change, current logout, and logout-all.
 - Its student area provides a persistent assigned-student list and read-only basic profile detail through counselor-scoped backend contracts, with localized loading, empty, error, and pagination states.
-- Assigned-student detail provides constrained task creation with active subject/topic selectors and a separate read-only, paginated view of personal and counselor-created tasks, their statuses, sources, and completion information. Counselor editing and broader planning remain absent.
+- Assigned-student detail provides constrained task creation with active subject/topic selectors and a separate read-only, paginated view of personal and counselor-created tasks, their statuses, sources, completion information, and direct StudySession count/recorded time. Counselor editing, analytics, and broader planning remain absent.
 - It remains an application foundation rather than a complete counselor product UI.
 
 Neither application shell should be described as a complete product merely because it builds.
@@ -749,4 +784,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 7 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin counselor task editing, full counselor planning, task permissions, revisions, approval workflows, conflict handling, audit history, reports, analytics, messaging, notes, notifications, weekly planning, drag-and-drop/manual ordering, search, richer task lifecycle/progress, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 8 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin timers, Pomodoro/focus mode, counselor task editing, full counselor planning, task permissions, revisions, approval workflows, conflict handling, audit history, reports, analytics, mastery, streaks, gamification, messaging, notifications, weekly planning, drag-and-drop/manual ordering, search, later product work, TLS, deployment execution, monitoring, or backup execution.

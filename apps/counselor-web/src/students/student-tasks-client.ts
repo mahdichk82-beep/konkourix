@@ -11,7 +11,7 @@ export type CounselorTaskTopic = {
   title: string
 }
 
-export type CounselorVisibleTask = {
+type CounselorTask = {
   completedAt: string | null
   createdAt: string
   description: string | null
@@ -28,7 +28,12 @@ export type CounselorVisibleTask = {
   updatedAt: string
 }
 
-export type CounselorCreatedTask = CounselorVisibleTask & {
+export type CounselorVisibleTask = CounselorTask & {
+  recordedMinutes: number
+  studySessionCount: number
+}
+
+export type CounselorCreatedTask = CounselorTask & {
   source: 'COUNSELOR'
   status: 'PENDING'
 }

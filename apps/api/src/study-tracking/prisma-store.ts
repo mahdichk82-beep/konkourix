@@ -21,6 +21,7 @@ export const createPrismaStudyTrackingStore = (prisma: PrismaClient): StudyTrack
       skip: query?.cursor ? 1 : undefined,
       take: query?.limit ? query.limit + 1 : undefined,
       where: {
+        dailyTaskId: query?.dailyTaskId,
         startedAt: query?.from || query?.to ? { gte: query.from, lte: query.to } : undefined,
         studentProfileId,
         subjectId: query?.subjectId,

@@ -11,6 +11,7 @@ import {
   type StudySubject,
   type StudyTopic,
 } from '../planning/planning-client'
+import { TaskExecutionPanel } from '../planning/TaskExecutionPanel'
 
 type StatusFilter = DailyTaskStatus | 'ALL'
 
@@ -622,6 +623,7 @@ export function TodayPlanningPage() {
                       )}
                     </div>
                     {task.description && <p className="task-description">{task.description}</p>}
+                    <TaskExecutionPanel taskId={task.id} taskTitle={task.title} />
                   </div>
                   {task.status === 'PENDING' && (
                     <div className="task-actions" aria-label={`اقدام‌های ${task.title}`}>

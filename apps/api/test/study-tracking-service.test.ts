@@ -19,8 +19,14 @@ const createStore = (): StudyTrackingStore & {
     goals: [] as StudentGoalRecord[],
     async findStudentProfileByUserId(userId: string) { return userId === profile.userId ? profile : null },
     async findSubjectById(_profileId: string, id: string) { return id === subject.id ? subject : null },
-    async findTaskById(_profileId: string, id: string) { return id === task.id ? task : null },
-    async listSessions() { return store.sessions },
+    async findTaskById(profileId: string, id: string) {
+      return profileId === profile.id && id === task.id ? task : null
+    },
+    async listSessions(_profileId: string, query?: { dailyTaskId?: string }) {
+      return query?.dailyTaskId
+        ? store.sessions.filter((session) => session.dailyTaskId === query.dailyTaskId)
+        : store.sessions
+    },
     async findSessionById(_profileId: string, id: string) { return store.sessions.find((item) => item.id === id) ?? null },
     async createSession(input: Omit<StudySessionRecord, 'id' | 'createdAt' | 'updatedAt'>) {
       const record = { id: `session-${store.sessions.length + 1}`, ...input, createdAt: timestamp, updatedAt: timestamp }
@@ -88,6 +94,73 @@ test('study sessions reject a task linked to a different subject', async () => {
       notes: null,
     }),
     (error: unknown) => error instanceof ApiError && error.code === 'TASK_SUBJECT_MISMATCH',
+  )
+})
+
+test('task execution derives session ownership and relationships for an owned task', async () => {
+  const store = createStore()
+  const services = createStudyTrackingServices(store)
+
+  const session = await services.sessions.createForTask(student, task.id, {
+    startedAt: '2026-09-03T08:00:00.000Z',
+    endedAt: '2026-09-03T08:45:00.000Z',
+    notes: 'Task execution',
+  })
+
+  assert.equal(session.studentProfileId, profile.id)
+  assert.equal(session.dailyTaskId, task.id)
+  assert.equal(session.subjectId, subject.id)
+  assert.equal(session.durationMinutes, 45)
+  assert.equal(store.sessions.length, 1)
+})
+
+test('task execution supports owned subjectless tasks and rejects inaccessible tasks', async () => {
+  const store = createStore()
+  store.findTaskById = async (profileId, id) => (
+    profileId === profile.id && id === task.id
+      ? { ...task, subjectId: null }
+      : null
+  )
+  const services = createStudyTrackingServices(store)
+
+  const session = await services.sessions.createForTask(student, task.id, {
+    startedAt: '2026-09-03T08:00:00.000Z',
+    endedAt: '2026-09-03T09:00:00.000Z',
+    notes: null,
+  })
+  assert.equal(session.subjectId, null)
+
+  await assert.rejects(
+    services.sessions.createForTask(student, 'foreign-task', {
+      startedAt: '2026-09-03T08:00:00.000Z',
+      endedAt: '2026-09-03T09:00:00.000Z',
+      notes: null,
+    }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_NOT_FOUND',
+  )
+})
+
+test('task-specific session reads require an owned task and preserve duration calculation', async () => {
+  const store = createStore()
+  store.sessions.push({
+    createdAt: timestamp,
+    dailyTaskId: task.id,
+    endedAt: new Date('2026-09-03T09:30:00.000Z'),
+    id: 'session-existing',
+    notes: null,
+    startedAt: new Date('2026-09-03T09:00:00.000Z'),
+    studentProfileId: profile.id,
+    subjectId: subject.id,
+    updatedAt: timestamp,
+  })
+  const services = createStudyTrackingServices(store)
+
+  const result = await services.sessions.list(student, { dailyTaskId: task.id })
+  assert.equal(result.items[0]?.durationMinutes, 30)
+
+  await assert.rejects(
+    services.sessions.list(student, { dailyTaskId: 'foreign-task' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_NOT_FOUND',
   )
 })
 

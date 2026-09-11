@@ -9,7 +9,7 @@ import {
 import type {
   CounselorStudentSubject,
   CounselorStudentTopic,
-  CounselorTaskView,
+  CounselorVisibleTaskView,
   CreateCounselorTaskRecordInput,
 } from '../src/counselor-tasks/types.js'
 import { ApiError } from '../src/errors/api-error.js'
@@ -86,8 +86,12 @@ const assignments = new Map<string, string[]>([
   [ids.counselorB, [ids.studentB]],
 ])
 
-const createStore = (): CounselorTaskStore & { tasks: DailyTaskRecord[] } => {
+const createStore = (): CounselorTaskStore & {
+  sessionMinutesByTaskId: Map<string, number[]>
+  tasks: DailyTaskRecord[]
+} => {
   const store = {
+    sessionMinutesByTaskId: new Map<string, number[]>(),
     tasks: [] as DailyTaskRecord[],
     async listAssignedStudentTasks(
       counselorUserId: string,
@@ -97,9 +101,16 @@ const createStore = (): CounselorTaskStore & { tasks: DailyTaskRecord[] } => {
       if (!(assignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
         return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
       }
-      const tasks: CounselorTaskView[] = store.tasks
+      const tasks: CounselorVisibleTaskView[] = store.tasks
         .filter((task) => task.studentProfileId === studentProfileId)
-        .map(({ createdByUserId: _createdByUserId, ...task }) => task)
+        .map(({ createdByUserId: _createdByUserId, ...task }) => {
+          const sessionMinutes = store.sessionMinutesByTaskId.get(task.id) ?? []
+          return {
+            ...task,
+            recordedMinutes: sessionMinutes.reduce((total, minutes) => total + minutes, 0),
+            studySessionCount: sessionMinutes.length,
+          }
+        })
       const start = query.cursor
         ? Math.max(tasks.findIndex(({ id }) => id === query.cursor) + 1, 0)
         : 0
@@ -273,6 +284,10 @@ test('assigned counselor sees personal and counselor-created tasks without creat
       title: 'Other student task',
     }),
   )
+  store.sessionMinutesByTaskId.set(
+    '60000000-0000-4000-8000-000000000010',
+    [30, 45],
+  )
 
   const response = await listRequest(app, ids.studentA, 'counselor-a')
 
@@ -283,6 +298,8 @@ test('assigned counselor sees personal and counselor-created tasks without creat
   )
   assert.equal(response.json().data.items[0].completedAt, completedAt.toISOString())
   assert.equal(response.json().data.items[0].status, 'COMPLETED')
+  assert.equal(response.json().data.items[0].recordedMinutes, 75)
+  assert.equal(response.json().data.items[0].studySessionCount, 2)
   assert.equal(response.json().data.items[1].status, 'PENDING')
   assert.equal(
     response.json().data.items.every((task: Record<string, unknown>) => !('createdByUserId' in task)),

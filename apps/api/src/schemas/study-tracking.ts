@@ -15,6 +15,12 @@ export const createStudySessionSchema = z.object({
   notes: z.string().trim().max(4000).nullable().optional().default(null),
 }).strict()
 
+export const createTaskStudySessionSchema = z.object({
+  startedAt: dateTime,
+  endedAt: dateTime,
+  notes: z.string().trim().max(4000).nullable().optional().default(null),
+}).strict()
+
 export const updateStudySessionSchema = z.object({
   subjectId: z.string().uuid().optional(),
   dailyTaskId: z.string().uuid().nullable().optional(),
@@ -25,6 +31,7 @@ export const updateStudySessionSchema = z.object({
 
 export const listStudySessionsSchema = z.object({
   ...pagination,
+  dailyTaskId: z.string().uuid().optional(),
   from: dateTime.optional(),
   to: dateTime.optional(),
   subjectId: z.string().uuid().optional(),
@@ -52,3 +59,4 @@ export const listStudentGoalsSchema = z.object({
 }).strict()
 
 export const trackingIdParamSchema = z.object({ id: z.string().uuid() }).strict()
+export const taskSessionParamSchema = z.object({ taskId: z.string().uuid() }).strict()

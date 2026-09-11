@@ -1,4 +1,5 @@
 import { ApiError } from '../errors/api-error.js'
+import { calculateStudySessionDurationMinutes } from './duration.js'
 import type { StudyTrackingStore } from './store.js'
 import type {
   GoalListQuery,
@@ -45,7 +46,7 @@ const parseGoalDate = (value: string): Date => {
 
 const toSessionView = (record: StudySessionRecord): StudySessionView => ({
   ...record,
-  durationMinutes: Math.round((record.endedAt.getTime() - record.startedAt.getTime()) / 60_000),
+  durationMinutes: calculateStudySessionDurationMinutes(record.startedAt, record.endedAt),
 })
 
 const conflict = (error: unknown, code: string, message: string): never => {
@@ -53,10 +54,46 @@ const conflict = (error: unknown, code: string, message: string): never => {
   throw error
 }
 
+type CreateSessionInput = {
+  dailyTaskId: string | null
+  endedAt: string
+  notes?: string | null
+  startedAt: string
+  subjectId: string | null
+}
+
+const createSession = async (
+  store: StudyTrackingStore,
+  profileId: string,
+  input: CreateSessionInput,
+): Promise<StudySessionView> => {
+  const startedAt = parseDateTime(input.startedAt)
+  const endedAt = parseDateTime(input.endedAt)
+  if (endedAt <= startedAt) {
+    throw new ApiError(400, 'SESSION_TIME_INVALID', 'Study session must end after it starts')
+  }
+  try {
+    const record = await store.createSession({
+      dailyTaskId: input.dailyTaskId,
+      endedAt,
+      notes: input.notes ?? null,
+      startedAt,
+      studentProfileId: profileId,
+      subjectId: input.subjectId,
+    })
+    return toSessionView(record)
+  } catch (error) {
+    return conflict(error, 'SESSION_CONFLICT', 'Study session could not be created')
+  }
+}
+
 export const createStudyTrackingServices = (store: StudyTrackingStore, now = () => new Date()) => {
   const sessions = {
     async list(actor: StudyTrackingActor, query?: SessionListQuery): Promise<TrackingPage<StudySessionView>> {
       const profile = await requireProfile(store, actor)
+      if (query?.dailyTaskId && !await store.findTaskById(profile.id, query.dailyTaskId)) {
+        throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+      }
       const records = await store.listSessions(profile.id, query)
       return page(records.map(toSessionView), query)
     },
@@ -77,15 +114,28 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
         if (!task) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
         if (task.subjectId && task.subjectId !== input.subjectId) throw new ApiError(400, 'TASK_SUBJECT_MISMATCH', 'Task subject does not match session subject')
       }
-      const startedAt = parseDateTime(input.startedAt)
-      const endedAt = parseDateTime(input.endedAt)
-      if (endedAt <= startedAt) throw new ApiError(400, 'SESSION_TIME_INVALID', 'Study session must end after it starts')
-      try {
-        const record = await store.createSession({ studentProfileId: profile.id, subjectId: input.subjectId, dailyTaskId, startedAt, endedAt, notes: input.notes ?? null })
-        return toSessionView(record)
-      } catch (error) {
-        return conflict(error, 'SESSION_CONFLICT', 'Study session could not be created')
+      return createSession(store, profile.id, { ...input, dailyTaskId })
+    },
+    async createForTask(
+      actor: StudyTrackingActor,
+      taskId: string,
+      input: { startedAt: string; endedAt: string; notes?: string | null },
+    ): Promise<StudySessionView> {
+      const profile = await requireProfile(store, actor)
+      const task = await store.findTaskById(profile.id, taskId)
+      if (!task) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+      if (task.subjectId) {
+        const subject = await store.findSubjectById(profile.id, task.subjectId)
+        if (!subject) throw new ApiError(404, 'SUBJECT_NOT_FOUND', 'Study subject not found')
+        if (subject.archivedAt) {
+          throw new ApiError(409, 'SUBJECT_ARCHIVED', 'Archived subjects cannot be used for new sessions')
+        }
       }
+      return createSession(store, profile.id, {
+        ...input,
+        dailyTaskId: task.id,
+        subjectId: task.subjectId,
+      })
     },
     async update(actor: StudyTrackingActor, id: string, input: { subjectId?: string; dailyTaskId?: string | null; startedAt?: string; endedAt?: string; notes?: string | null }): Promise<StudySessionView> {
       const profile = await requireProfile(store, actor)

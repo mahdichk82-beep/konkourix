@@ -8,6 +8,7 @@ import type {
   CounselorTaskPage,
   CounselorTaskPageQuery,
   CounselorTaskView,
+  CounselorVisibleTaskView,
   CreateCounselorTaskInput,
   CreateCounselorTaskResult,
 } from './types.js'
@@ -68,7 +69,7 @@ export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
     actor: CounselorTaskActor,
     studentProfileId: string,
     query: CounselorTaskPageQuery,
-  ): Promise<CounselorTaskPage<CounselorTaskView>> {
+  ): Promise<CounselorTaskPage<CounselorVisibleTaskView>> {
     ensureCounselor(actor)
     const result = await store.listAssignedStudentTasks(actor.id, studentProfileId, query)
     if (!result.ok) {

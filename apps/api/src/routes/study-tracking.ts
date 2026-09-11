@@ -7,9 +7,11 @@ import { authenticateRequest } from '../plugins/authentication.js'
 import {
   createStudentGoalSchema,
   createStudySessionSchema,
+  createTaskStudySessionSchema,
   listStudentGoalsSchema,
   listStudySessionsSchema,
   trackingIdParamSchema,
+  taskSessionParamSchema,
   updateStudentGoalSchema,
   updateStudySessionSchema,
 } from '../schemas/study-tracking.js'
@@ -58,6 +60,17 @@ export const registerStudyTrackingRoutes = (
     return reply.status(201).send(
       successResponse(
         await options.studyTracking.sessions.create(request.user!, input),
+        request.context.requestId,
+      ),
+    )
+  })
+
+  app.post('/student/daily-tasks/:taskId/sessions', studentOnly, async (request, reply) => {
+    const { taskId } = parseInput(taskSessionParamSchema.safeParse(request.params))
+    const input = parseInput(createTaskStudySessionSchema.safeParse(request.body))
+    return reply.status(201).send(
+      successResponse(
+        await options.studyTracking.sessions.createForTask(request.user!, taskId, input),
         request.context.requestId,
       ),
     )

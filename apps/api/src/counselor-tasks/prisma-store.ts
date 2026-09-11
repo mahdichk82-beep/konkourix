@@ -1,4 +1,5 @@
 import type { PrismaClient } from '../generated/prisma/client.js'
+import { calculateStudySessionDurationMinutes } from '../study-tracking/duration.js'
 import type { CounselorTaskStore } from './store.js'
 
 const assignedStudentWhere = (counselorUserId: string, studentProfileId: string) => ({
@@ -33,6 +34,7 @@ export const createPrismaCounselorTaskStore = (
           scheduledFor: true,
           source: true,
           status: true,
+          studySessions: { select: { endedAt: true, startedAt: true } },
           studentProfileId: true,
           studyPlanId: true,
           subjectId: true,
@@ -44,7 +46,20 @@ export const createPrismaCounselorTaskStore = (
         take: (query.limit ?? 50) + 1,
         where: { studentProfileId },
       })
-      return { ok: true, value: tasks }
+      return {
+        ok: true,
+        value: tasks.map(({ studySessions, ...task }) => ({
+          ...task,
+          recordedMinutes: studySessions.reduce(
+            (total, session) => total + calculateStudySessionDurationMinutes(
+              session.startedAt,
+              session.endedAt,
+            ),
+            0,
+          ),
+          studySessionCount: studySessions.length,
+        })),
+      }
     })
   },
 
