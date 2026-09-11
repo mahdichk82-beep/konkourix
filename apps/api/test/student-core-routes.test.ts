@@ -332,6 +332,42 @@ test('daily task date query is mapped to the scheduled date filter', async () =>
   await app.close()
 })
 
+test('student task list includes counselor-created tasks without exposing creator identity', async () => {
+  const counselorTask: DailyTaskRecord = {
+    id: '00000000-0000-4000-8000-000000000103',
+    studentProfileId: 'student-profile-1',
+    createdByUserId: counselor.id,
+    source: 'COUNSELOR',
+    studyPlanId: null,
+    subjectId: null,
+    topicId: null,
+    title: 'Counselor assignment',
+    description: null,
+    scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+    estimatedMinutes: 30,
+    status: 'PENDING',
+    completedAt: null,
+    createdAt: new Date('2026-09-03T00:00:00.000Z'),
+    updatedAt: new Date('2026-09-03T00:00:00.000Z'),
+  }
+  const counselorTaskStore: StudentCoreStore = {
+    ...store,
+    listTasks: async () => [counselorTask],
+  }
+  const app = createApp(counselorTaskStore)
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'GET',
+    url: '/api/v1/student/daily-tasks?date=2026-09-03',
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().data.items[0].id, counselorTask.id)
+  assert.equal(response.json().data.items[0].source, 'COUNSELOR')
+  assert.equal('createdByUserId' in response.json().data.items[0], false)
+  await app.close()
+})
+
 test('daily task filters retain authenticated profile scope', async () => {
   const received: Array<{
     profileId: string

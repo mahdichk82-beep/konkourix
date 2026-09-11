@@ -1,6 +1,8 @@
 import { buildApp } from './app.js'
 import { createAuthService } from './auth/auth-service.js'
 import { createPrismaAuthStore } from './auth/prisma-auth-store.js'
+import { createPrismaCounselorTaskStore } from './counselor-tasks/prisma-store.js'
+import { createCounselorTaskServices } from './counselor-tasks/services.js'
 import { createDomainService } from './domain/domain-service.js'
 import { createPrismaDomainStore } from './domain/prisma-domain-store.js'
 import { createPrismaStudentCoreStore } from './student-core/prisma-store.js'
@@ -25,6 +27,7 @@ const app = buildApp({
     },
     store: createPrismaAuthStore(prisma),
   }),
+  counselorTasks: createCounselorTaskServices(createPrismaCounselorTaskStore(prisma)),
   domain: createDomainService(createPrismaDomainStore(prisma)),
   studentCore: createStudentCoreServices(createPrismaStudentCoreStore(prisma)),
   studyTracking: createStudyTrackingServices(createPrismaStudyTrackingStore(prisma)),

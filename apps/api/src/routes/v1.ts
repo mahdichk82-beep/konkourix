@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify'
 import type { AuthService } from '../auth/auth-service.js'
+import type { CounselorTaskServices } from '../counselor-tasks/services.js'
 import type { DomainService } from '../domain/domain-service.js'
 import type { StudentCoreServices } from '../student-core/services.js'
 import type { StudyTrackingServices } from '../study-tracking/services.js'
@@ -14,9 +15,11 @@ import { registerStudentCoreRoutes } from './student-core.js'
 import { registerStudyTrackingRoutes } from './study-tracking.js'
 import { registerRoleBoundaryRoutes } from './role-boundaries.js'
 import { registerCounselorStudentRoutes } from './counselor-students.js'
+import { registerCounselorTaskRoutes } from './counselor-tasks.js'
 
 type V1RouteOptions = {
   auth?: AuthService
+  counselorTasks?: CounselorTaskServices
   domain?: DomainService
   studentCore?: StudentCoreServices
   studyTracking?: StudyTrackingServices
@@ -41,6 +44,13 @@ export const registerV1Routes: FastifyPluginAsync<V1RouteOptions> = async (
       refreshTokenTtlSeconds: options.refreshTokenTtlSeconds ?? 2_592_000,
     })
     registerRoleBoundaryRoutes(app, { auth: options.auth })
+
+    if (options.counselorTasks) {
+      registerCounselorTaskRoutes(app, {
+        auth: options.auth,
+        counselorTasks: options.counselorTasks,
+      })
+    }
 
     if (options.domain) {
       registerDomainProfileRoutes(app, {

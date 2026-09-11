@@ -36,7 +36,7 @@ function AuthenticatedCounselorApp({ navigate, path }: { navigate(path: string, 
   const studentDetailMatch = path.match(/^\/students\/([0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i)
   const studentId = studentDetailMatch?.[1] ?? null
   const meta = studentId
-    ? { title: 'پروفایل دانش‌آموز', description: 'نمایش امن اطلاعات پایه دانش‌آموز تخصیص‌یافته' }
+    ? { title: 'پروفایل دانش‌آموز', description: 'اطلاعات پایه و ایجاد وظیفه برای دانش‌آموز تخصیص‌یافته' }
     : routeMeta[path] ?? { title: 'صفحه پیدا نشد', description: 'این مسیر در پنل مشاور تعریف نشده است.' }
   const signOut = async () => {
     try {

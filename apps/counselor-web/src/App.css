@@ -99,6 +99,18 @@
 .student-profile-card__heading h2 { margin: 0.15rem 0 0.6rem; }
 .student-profile-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .student-profile-card__note { margin: 0; padding: 1rem; border-inline-start: 3px solid var(--accent); color: var(--text-muted); background: var(--surface-muted); line-height: 1.8; }
+.student-task-card { display: grid; gap: 1rem; }
+.student-task-card .content-state { min-height: 180px; }
+.student-task-card__intro { margin: -0.35rem 0 0.25rem; color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; }
+.student-task-form { display: grid; gap: 1rem; }
+.student-task-form__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.student-task-form label { display: grid; gap: 0.5rem; color: var(--text); font-size: 0.88rem; font-weight: 700; }
+.student-task-form input, .student-task-form select, .student-task-form textarea { width: 100%; padding: 0.85rem 0.95rem; border: 1px solid var(--border); border-radius: 12px; color: var(--text); background: var(--surface-muted); outline: none; resize: vertical; }
+.student-task-form input:focus, .student-task-form select:focus, .student-task-form textarea:focus { border-color: var(--accent); }
+.student-task-form input[type='date'], .student-task-form input[type='number'] { direction: ltr; text-align: right; }
+.student-task-form select:disabled { opacity: 0.65; cursor: not-allowed; }
+.student-task-form__hint { margin: 0; padding: 0.8rem; border-radius: 10px; color: var(--text-muted); background: var(--surface-muted); font-size: 0.84rem; line-height: 1.7; }
+.student-task-form__actions { display: flex; justify-content: flex-start; }
 
 .auth-layout { min-height: 100svh; display: grid; grid-template-columns: minmax(320px, 0.9fr) minmax(420px, 1.1fr); }
 .brand-panel { padding: clamp(3rem, 7vw, 7rem); display: flex; flex-direction: column; justify-content: center; color: #fff; background: radial-gradient(circle at 20% 10%, #6178c9 0, transparent 32%), linear-gradient(145deg, #2a396f, #151c3c); }
@@ -143,4 +155,6 @@
   .student-card__heading .student-status { grid-column: 1 / -1; justify-self: start; }
   .student-card__facts { grid-template-columns: 1fr; }
   .students-inline-error { align-items: stretch; flex-direction: column; }
+  .student-task-form__grid { grid-template-columns: 1fr; }
+  .student-task-form__actions .button { width: 100%; }
 }

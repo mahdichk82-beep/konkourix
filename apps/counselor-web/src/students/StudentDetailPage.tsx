@@ -7,6 +7,7 @@ import {
   studentsClient,
   type CounselorStudent,
 } from './students-client'
+import { StudentTaskForm } from './StudentTaskForm'
 
 type StudentDetailPageProps = {
   navigate(path: string): void
@@ -109,9 +110,10 @@ export function StudentDetailPage({ navigate, studentId }: StudentDetailPageProp
           <div><dt>وضعیت حساب</dt><dd>{statusLabel(student.status)}</dd></div>
         </dl>
         <p className="student-profile-card__note">
-          این صفحه فقط اطلاعات پایه پروفایل را نمایش می‌دهد و امکان ویرایش، برنامه‌ریزی یا مشاهده گزارش‌ها را ندارد.
+          اطلاعات پایه این پرونده فقط خواندنی است. در این مرحله تنها ایجاد وظیفه جدید برای دانش‌آموز فعال شده است.
         </p>
       </Card>
+      <StudentTaskForm studentId={student.id} />
     </div>
   )
 }
