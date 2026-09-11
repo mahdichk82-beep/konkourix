@@ -63,10 +63,10 @@ export const updateTaskSchema = z.object({
   topicId: z.string().uuid().nullable().optional(),
   title: z.string().trim().min(1).max(200).optional(),
   description: optionalText(2000),
-  scheduledFor: dateOnly.optional(),
   estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional(),
   status: z.enum(['PENDING', 'COMPLETED', 'SKIPPED']).optional(),
 }).strict().refine((value) => Object.keys(value).length > 0, 'At least one field is required')
+export const rescheduleTaskSchema = z.object({ scheduledFor: dateOnly }).strict()
 
 export const uuidParamSchema = z.object({ id: z.string().uuid() }).strict()
 export const subjectIdParamSchema = z.object({ subjectId: z.string().uuid() }).strict()

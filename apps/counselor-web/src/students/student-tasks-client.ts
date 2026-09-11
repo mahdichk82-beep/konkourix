@@ -122,4 +122,21 @@ export const studentTasksClient = {
       },
     )
   },
+
+  reschedule(
+    studentProfileId: string,
+    taskId: string,
+    scheduledFor: string,
+  ): Promise<CounselorTask> {
+    return authClient.authorizedRequest<CounselorTask>(
+      resourcePath(
+        studentProfileId,
+        `/tasks/${encodeURIComponent(taskId)}/schedule`,
+      ),
+      {
+        body: JSON.stringify({ scheduledFor }),
+        method: 'PATCH',
+      },
+    )
+  },
 }

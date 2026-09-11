@@ -12,6 +12,7 @@ import type {
   CounselorVisibleTaskView,
   CreateCounselorTaskInput,
   CreateCounselorTaskResult,
+  RescheduleCounselorTaskResult,
 } from './types.js'
 
 const ensureCounselor = (actor: CounselorTaskActor): void => {
@@ -62,6 +63,21 @@ const throwCreateFailure = (
       throw new ApiError(409, 'TOPIC_SUBJECT_MISMATCH', 'Topic does not belong to the selected subject')
     case 'TOPIC_ARCHIVED':
       throw new ApiError(409, 'TOPIC_ARCHIVED', 'Archived topics cannot be assigned to tasks')
+  }
+}
+
+const throwRescheduleFailure = (
+  result: Exclude<RescheduleCounselorTaskResult, { ok: true }>,
+): never => {
+  switch (result.reason) {
+    case 'STUDENT_NOT_FOUND':
+      throw new ApiError(404, 'STUDENT_NOT_FOUND', 'Student not found')
+    case 'TASK_NOT_FOUND':
+      throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+    case 'TASK_SOURCE_FORBIDDEN':
+      throw new ApiError(403, 'TASK_RESCHEDULE_FORBIDDEN', 'Personal student tasks cannot be rescheduled by counselors')
+    case 'TASK_EXECUTED':
+      throw new ApiError(409, 'TASK_ALREADY_EXECUTED', 'Tasks with recorded study sessions cannot be rescheduled')
   }
 }
 
@@ -166,6 +182,26 @@ export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
     })
 
     if (!result.ok) return throwCreateFailure(result)
+    return toTaskView(result.value)
+  },
+
+  async reschedule(
+    actor: CounselorTaskActor,
+    studentProfileId: string,
+    taskId: string,
+    input: { scheduledFor: string },
+  ): Promise<CounselorTaskView> {
+    ensureCounselor(actor)
+    if (!validDate(input.scheduledFor)) {
+      throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
+    }
+    const result = await store.rescheduleAssignedStudentTask(
+      actor.id,
+      studentProfileId,
+      taskId,
+      dateOnly(input.scheduledFor),
+    )
+    if (!result.ok) return throwRescheduleFailure(result)
     return toTaskView(result.value)
   },
 })

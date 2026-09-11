@@ -237,6 +237,87 @@ test('Prisma counselor task creation validates assignment and relations atomical
   assert.equal('createdByUserId' in result, false)
 })
 
+test('Prisma counselor rescheduling atomically rechecks assignment, ownership, source, and sessions', async () => {
+  const profileQueries: unknown[] = []
+  const taskFindQueries: unknown[] = []
+  const taskUpdateQueries: unknown[] = []
+  const task = {
+    completedAt: null,
+    createdAt: timestamp,
+    createdByUserId: ids.counselor,
+    description: null,
+    estimatedMinutes: 30,
+    id: ids.task,
+    scheduledFor: timestamp,
+    source: 'COUNSELOR' as const,
+    status: 'PENDING' as const,
+    studentProfileId: ids.student,
+    studyPlanId: null,
+    subjectId: null,
+    title: 'Counselor task',
+    topicId: null,
+    updatedAt: timestamp,
+  }
+  const transaction = {
+    studentProfile: {
+      async findFirst(query: unknown) {
+        profileQueries.push(query)
+        return { id: ids.student }
+      },
+    },
+    dailyTask: {
+      async findFirst(query: unknown) {
+        taskFindQueries.push(query)
+        return task
+      },
+      async updateMany(query: unknown) {
+        taskUpdateQueries.push(query)
+        return { count: 1 }
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+  const store = createPrismaCounselorTaskStore(prisma)
+  const scheduledFor = new Date('2026-09-15T00:00:00.000Z')
+
+  const result = await store.rescheduleAssignedStudentTask(
+    ids.counselor,
+    ids.student,
+    ids.task,
+    scheduledFor,
+  )
+
+  assert.equal(result.ok, true)
+  assert.deepEqual(profileQueries, [{
+    select: { id: true },
+    where: {
+      id: ids.student,
+      user: {
+        studentRelationships: {
+          some: { counselorId: ids.counselor, status: 'ACTIVE' },
+        },
+      },
+    },
+  }])
+  assert.deepEqual(taskFindQueries, [
+    { where: { id: ids.task, studentProfileId: ids.student } },
+    { where: { id: ids.task, studentProfileId: ids.student } },
+  ])
+  assert.deepEqual(taskUpdateQueries, [{
+    data: { scheduledFor },
+    where: {
+      id: ids.task,
+      source: 'COUNSELOR',
+      studentProfileId: ids.student,
+      studySessions: { none: {} },
+    },
+  }])
+})
+
 test('Prisma counselor task creation stops before insert when assignment is absent', async () => {
   let createCalled = false
   const transaction = {

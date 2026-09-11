@@ -157,4 +157,46 @@ export const createPrismaCounselorTaskStore = (
       return { ok: true, value: task }
     })
   },
+
+  async rescheduleAssignedStudentTask(
+    counselorUserId,
+    studentProfileId,
+    taskId,
+    scheduledFor,
+  ) {
+    return prisma.$transaction(async (transaction) => {
+      const student = await transaction.studentProfile.findFirst({
+        select: { id: true },
+        where: assignedStudentWhere(counselorUserId, studentProfileId),
+      })
+      if (!student) return { ok: false, reason: 'STUDENT_NOT_FOUND' as const }
+
+      const current = await transaction.dailyTask.findFirst({
+        where: { id: taskId, studentProfileId },
+      })
+      if (!current) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+      if (current.source !== 'COUNSELOR') {
+        return { ok: false, reason: 'TASK_SOURCE_FORBIDDEN' as const }
+      }
+
+      const updated = await transaction.dailyTask.updateMany({
+        data: { scheduledFor },
+        where: {
+          id: taskId,
+          source: 'COUNSELOR',
+          studentProfileId,
+          studySessions: { none: {} },
+        },
+      })
+      if (updated.count !== 1) {
+        return { ok: false, reason: 'TASK_EXECUTED' as const }
+      }
+
+      const task = await transaction.dailyTask.findFirst({
+        where: { id: taskId, studentProfileId },
+      })
+      if (!task) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+      return { ok: true, value: task }
+    })
+  },
 })

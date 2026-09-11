@@ -87,10 +87,12 @@ const assignments = new Map<string, string[]>([
 ])
 
 const createStore = (): CounselorTaskStore & {
+  activeAssignments: Map<string, string[]>
   sessionMinutesByTaskId: Map<string, number[]>
   tasks: DailyTaskRecord[]
 } => {
   const store = {
+    activeAssignments: new Map([...assignments].map(([key, value]) => [key, [...value]])),
     sessionMinutesByTaskId: new Map<string, number[]>(),
     tasks: [] as DailyTaskRecord[],
     async listAssignedStudentTasks(
@@ -98,7 +100,7 @@ const createStore = (): CounselorTaskStore & {
       studentProfileId: string,
       query: { cursor?: string; limit?: number; scheduledFrom?: Date; scheduledTo?: Date },
     ) {
-      if (!(assignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
+      if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
         return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
       }
       const tasks: CounselorVisibleTaskView[] = store.tasks
@@ -128,7 +130,7 @@ const createStore = (): CounselorTaskStore & {
       studentProfileId: string,
       query: { cursor?: string; limit?: number },
     ) {
-      if (!(assignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
+      if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
         return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
       }
       const subjects = subjectFixtures
@@ -148,7 +150,7 @@ const createStore = (): CounselorTaskStore & {
       subjectId: string,
       query: { cursor?: string; limit?: number },
     ) {
-      if (!(assignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
+      if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
         return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
       }
       const subject = subjectFixtures.find((candidate) =>
@@ -173,7 +175,7 @@ const createStore = (): CounselorTaskStore & {
       studentProfileId: string,
       input: CreateCounselorTaskRecordInput,
     ) {
-      if (!(assignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
+      if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
         return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
       }
       if (input.subjectId) {
@@ -209,6 +211,29 @@ const createStore = (): CounselorTaskStore & {
       }
       store.tasks.push(record)
       return { ok: true as const, value: record }
+    },
+    async rescheduleAssignedStudentTask(
+      counselorUserId: string,
+      studentProfileId: string,
+      taskId: string,
+      scheduledFor: Date,
+    ) {
+      if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
+        return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
+      }
+      const task = store.tasks.find((candidate) =>
+        candidate.id === taskId && candidate.studentProfileId === studentProfileId,
+      )
+      if (!task) return { ok: false as const, reason: 'TASK_NOT_FOUND' as const }
+      if (task.source !== 'COUNSELOR') {
+        return { ok: false as const, reason: 'TASK_SOURCE_FORBIDDEN' as const }
+      }
+      if ((store.sessionMinutesByTaskId.get(taskId) ?? []).length > 0) {
+        return { ok: false as const, reason: 'TASK_EXECUTED' as const }
+      }
+      task.scheduledFor = scheduledFor
+      task.updatedAt = timestamp
+      return { ok: true as const, value: task }
     },
   }
   return store
@@ -246,6 +271,19 @@ const listRequest = (
   headers: token ? { authorization: `Bearer ${token}` } : undefined,
   method: 'GET',
   url: `/api/v1/counselor/students/${studentProfileId}/tasks${query}`,
+})
+
+const scheduleRequest = (
+  app: ReturnType<typeof createApp>['app'],
+  token: string,
+  studentProfileId: string,
+  taskId: string,
+  payload: Record<string, unknown>,
+) => app.inject({
+  headers: { authorization: `Bearer ${token}` },
+  method: 'PATCH',
+  payload,
+  url: `/api/v1/counselor/students/${studentProfileId}/tasks/${taskId}/schedule`,
 })
 
 const taskRecord = (
@@ -432,6 +470,114 @@ test('assigned counselor creates a pending counselor task with server-owned prov
   assert.equal(store.tasks[0]?.source, 'COUNSELOR')
   assert.equal(store.tasks[0]?.status, 'PENDING')
   assert.equal(store.tasks[0]?.completedAt, null)
+  await app.close()
+})
+
+test('assigned counselor reschedules a counselor task without changing ownership or provenance', async () => {
+  const { app, store } = createApp()
+  const task = taskRecord('60000000-0000-4000-8000-000000000030', {
+    createdByUserId: ids.counselorA,
+    source: 'COUNSELOR',
+  })
+  store.tasks.push(task)
+  const original = {
+    createdByUserId: task.createdByUserId,
+    source: task.source,
+    studentProfileId: task.studentProfileId,
+  }
+
+  const response = await scheduleRequest(
+    app,
+    'counselor-a',
+    ids.studentA,
+    task.id,
+    { scheduledFor: '2026-09-15' },
+  )
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().data.scheduledFor, '2026-09-15T00:00:00.000Z')
+  assert.equal('createdByUserId' in response.json().data, false)
+  assert.deepEqual(
+    {
+      createdByUserId: store.tasks[0]?.createdByUserId,
+      source: store.tasks[0]?.source,
+      studentProfileId: store.tasks[0]?.studentProfileId,
+    },
+    original,
+  )
+  await app.close()
+})
+
+test('counselor rescheduling rejects personal, executed, foreign, and inactive-assignment tasks', async () => {
+  const { app, store } = createApp()
+  const personal = taskRecord('60000000-0000-4000-8000-000000000031')
+  const executed = taskRecord('60000000-0000-4000-8000-000000000032', {
+    createdByUserId: ids.counselorA,
+    source: 'COUNSELOR',
+  })
+  const foreign = taskRecord('60000000-0000-4000-8000-000000000033', {
+    createdByUserId: ids.counselorB,
+    source: 'COUNSELOR',
+    studentProfileId: ids.studentB,
+  })
+  store.tasks.push(personal, executed, foreign)
+  store.sessionMinutesByTaskId.set(executed.id, [25])
+
+  const personalResponse = await scheduleRequest(
+    app, 'counselor-a', ids.studentA, personal.id, { scheduledFor: '2026-09-15' },
+  )
+  assert.equal(personalResponse.statusCode, 403)
+  assert.equal(personalResponse.json().error.code, 'TASK_RESCHEDULE_FORBIDDEN')
+
+  const executedResponse = await scheduleRequest(
+    app, 'counselor-a', ids.studentA, executed.id, { scheduledFor: '2026-09-15' },
+  )
+  assert.equal(executedResponse.statusCode, 409)
+  assert.equal(executedResponse.json().error.code, 'TASK_ALREADY_EXECUTED')
+
+  const foreignResponse = await scheduleRequest(
+    app, 'counselor-a', ids.studentB, foreign.id, { scheduledFor: '2026-09-15' },
+  )
+  assert.equal(foreignResponse.statusCode, 404)
+  assert.equal(foreignResponse.json().error.code, 'STUDENT_NOT_FOUND')
+
+  store.activeAssignments.set(ids.counselorA, [])
+  const endedAssignment = await scheduleRequest(
+    app, 'counselor-a', ids.studentA, executed.id, { scheduledFor: '2026-09-15' },
+  )
+  assert.equal(endedAssignment.statusCode, 404)
+  assert.equal(endedAssignment.json().error.code, 'STUDENT_NOT_FOUND')
+  await app.close()
+})
+
+test('counselor schedule input rejects ownership, provenance, lifecycle, and content fields', async () => {
+  const { app, store } = createApp()
+  const task = taskRecord('60000000-0000-4000-8000-000000000034', {
+    createdByUserId: ids.counselorA,
+    source: 'COUNSELOR',
+  })
+  store.tasks.push(task)
+  const controlledFields = [
+    { studentProfileId: ids.studentB },
+    { owner: ids.studentUser },
+    { source: 'PERSONAL' },
+    { createdByUserId: ids.studentUser },
+    { status: 'COMPLETED' },
+    { completedAt: '2026-09-15T10:00:00.000Z' },
+    { title: 'Changed content' },
+  ]
+
+  for (const field of controlledFields) {
+    const response = await scheduleRequest(
+      app,
+      'counselor-a',
+      ids.studentA,
+      task.id,
+      { scheduledFor: '2026-09-15', ...field },
+    )
+    assert.equal(response.statusCode, 400)
+    assert.equal(response.json().error.code, 'VALIDATION_ERROR')
+  }
+  assert.equal(task.scheduledFor.toISOString(), '2026-09-12T00:00:00.000Z')
   await app.close()
 })
 

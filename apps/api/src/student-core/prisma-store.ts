@@ -134,6 +134,37 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
     if (result.count !== 1) return null
     return prisma.dailyTask.findFirst({ where: { id, studentProfileId } })
   },
+
+  async reschedulePersonalTask(studentProfileId, id, scheduledFor) {
+    return prisma.$transaction(async (transaction) => {
+      const current = await transaction.dailyTask.findFirst({
+        where: { id, studentProfileId },
+      })
+      if (!current) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+      if (current.source !== 'PERSONAL') {
+        return { ok: false, reason: 'TASK_SOURCE_FORBIDDEN' as const }
+      }
+
+      const updated = await transaction.dailyTask.updateMany({
+        data: { scheduledFor },
+        where: {
+          id,
+          source: 'PERSONAL',
+          studentProfileId,
+          studySessions: { none: {} },
+        },
+      })
+      if (updated.count !== 1) {
+        return { ok: false, reason: 'TASK_EXECUTED' as const }
+      }
+
+      const task = await transaction.dailyTask.findFirst({
+        where: { id, studentProfileId },
+      })
+      if (!task) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+      return { ok: true, value: task }
+    })
+  },
 })
 
 export type { DailyTaskStatus, StudyPlanStatus }

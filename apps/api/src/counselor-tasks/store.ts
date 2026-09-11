@@ -7,6 +7,7 @@ import type {
   CounselorTaskStoreQuery,
   CreateCounselorTaskRecordInput,
   CreateCounselorTaskResult,
+  RescheduleCounselorTaskResult,
 } from './types.js'
 
 export interface CounselorTaskStore {
@@ -31,4 +32,10 @@ export interface CounselorTaskStore {
     studentProfileId: string,
     input: CreateCounselorTaskRecordInput,
   ): Promise<CreateCounselorTaskResult>
+  rescheduleAssignedStudentTask(
+    counselorUserId: string,
+    studentProfileId: string,
+    taskId: string,
+    scheduledFor: Date,
+  ): Promise<RescheduleCounselorTaskResult>
 }

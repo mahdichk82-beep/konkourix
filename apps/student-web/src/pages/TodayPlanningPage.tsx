@@ -38,6 +38,8 @@ const planningErrorMessage = (error: unknown): string => {
     SUBJECT_CONFLICT: 'درسی با این نام از قبل وجود دارد.',
     SUBJECT_NOT_FOUND: 'درس انتخاب‌شده دیگر در دسترس نیست.',
     TASK_NOT_FOUND: 'این کار دیگر در دسترس نیست. فهرست را تازه‌سازی کنید.',
+    TASK_ALREADY_EXECUTED: 'برای این کار سابقه مطالعه ثبت شده است و تاریخ آن قابل تغییر نیست.',
+    TASK_RESCHEDULE_FORBIDDEN: 'تغییر تاریخ کار تعیین‌شده توسط مشاور برای دانش‌آموز مجاز نیست.',
     TOPIC_ARCHIVED: 'این مبحث بایگانی شده و برای کار جدید قابل استفاده نیست.',
     TOPIC_NOT_FOUND: 'مبحث انتخاب‌شده دیگر در دسترس نیست.',
     TOPIC_SUBJECT_MISMATCH: 'مبحث انتخاب‌شده به این درس تعلق ندارد.',
@@ -117,6 +119,8 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [actionError, setActionError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
   const [updatingTaskIds, setUpdatingTaskIds] = useState<Set<string>>(new Set())
+  const [reschedulingTaskIds, setReschedulingTaskIds] = useState<Set<string>>(new Set())
+  const [scheduleDrafts, setScheduleDrafts] = useState<Record<string, string>>({})
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -277,6 +281,33 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       setActionError(planningErrorMessage(error))
     } finally {
       setUpdatingTaskIds((current) => {
+        const next = new Set(current)
+        next.delete(task.id)
+        return next
+      })
+    }
+  }
+
+  const handleScheduleUpdate = async (task: DailyTask) => {
+    const scheduledFor = scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)
+    if (!scheduledFor || scheduledFor === task.scheduledFor.slice(0, 10)) return
+    setActionError(null)
+    setReschedulingTaskIds((current) => new Set(current).add(task.id))
+
+    try {
+      const updated = await planningClient.rescheduleTask(task.id, scheduledFor)
+      setTasks((current) => updated.scheduledFor.slice(0, 10) === todayKey
+        ? current.map((item) => item.id === updated.id ? updated : item)
+        : current.filter((item) => item.id !== updated.id))
+      setScheduleDrafts((current) => {
+        const next = { ...current }
+        delete next[task.id]
+        return next
+      })
+    } catch (error) {
+      setActionError(planningErrorMessage(error))
+    } finally {
+      setReschedulingTaskIds((current) => {
         const next = new Set(current)
         next.delete(task.id)
         return next
@@ -628,6 +659,38 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       )}
                     </div>
                     {task.description && <p className="task-description">{task.description}</p>}
+                    {task.source === 'PERSONAL' && (
+                      <form
+                        className="task-schedule"
+                        onSubmit={(event) => {
+                          event.preventDefault()
+                          void handleScheduleUpdate(task)
+                        }}
+                      >
+                        <label htmlFor={`task-schedule-${task.id}`}>
+                          تغییر تاریخ
+                          <input
+                            id={`task-schedule-${task.id}`}
+                            onChange={(event) => setScheduleDrafts((current) => ({
+                              ...current,
+                              [task.id]: event.target.value,
+                            }))}
+                            type="date"
+                            value={scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)}
+                          />
+                        </label>
+                        <Button
+                          disabled={
+                            reschedulingTaskIds.has(task.id)
+                            || (scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)) === task.scheduledFor.slice(0, 10)
+                          }
+                          type="submit"
+                          variant="secondary"
+                        >
+                          {reschedulingTaskIds.has(task.id) ? 'در حال جابه‌جایی…' : 'ثبت تاریخ جدید'}
+                        </Button>
+                      </form>
+                    )}
                     <TaskExecutionPanel taskId={task.id} taskTitle={task.title} />
                   </div>
                   {task.status === 'PENDING' && (

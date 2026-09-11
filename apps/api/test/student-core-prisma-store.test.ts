@@ -106,6 +106,68 @@ test('Prisma task reads and updates always include student ownership', async () 
   ])
 })
 
+test('Prisma student rescheduling atomically requires ownership, personal source, and no sessions', async () => {
+  const findQueries: unknown[] = []
+  const updateQueries: unknown[] = []
+  const task = {
+    completedAt: null,
+    createdAt: new Date('2026-09-03T00:00:00.000Z'),
+    createdByUserId: 'student-user-1',
+    description: null,
+    estimatedMinutes: 30,
+    id: 'task-1',
+    scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+    source: 'PERSONAL' as const,
+    status: 'PENDING' as const,
+    studentProfileId: 'student-profile-1',
+    studyPlanId: null,
+    subjectId: null,
+    title: 'Task',
+    topicId: null,
+    updatedAt: new Date('2026-09-03T00:00:00.000Z'),
+  }
+  const transaction = {
+    dailyTask: {
+      async findFirst(query: unknown) {
+        findQueries.push(query)
+        return task
+      },
+      async updateMany(query: unknown) {
+        updateQueries.push(query)
+        return { count: 1 }
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+  const store = createPrismaStudentCoreStore(prisma)
+  const scheduledFor = new Date('2026-09-04T00:00:00.000Z')
+
+  const result = await store.reschedulePersonalTask(
+    'student-profile-1',
+    'task-1',
+    scheduledFor,
+  )
+
+  assert.equal(result.ok, true)
+  assert.deepEqual(findQueries, [
+    { where: { id: 'task-1', studentProfileId: 'student-profile-1' } },
+    { where: { id: 'task-1', studentProfileId: 'student-profile-1' } },
+  ])
+  assert.deepEqual(updateQueries, [{
+    data: { scheduledFor },
+    where: {
+      id: 'task-1',
+      source: 'PERSONAL',
+      studentProfileId: 'student-profile-1',
+      studySessions: { none: {} },
+    },
+  }])
+})
+
 test('Prisma topic lists, reads, and updates always include subject ownership', async () => {
   const listQueries: unknown[] = []
   const findQueries: unknown[] = []

@@ -61,5 +61,12 @@ export type DailyTaskRecord = {
 
 export type DailyTaskView = Omit<DailyTaskRecord, 'createdByUserId'>
 
+export type RescheduleStudentTaskResult =
+  | { ok: true; value: DailyTaskRecord }
+  | {
+      ok: false
+      reason: 'TASK_NOT_FOUND' | 'TASK_SOURCE_FORBIDDEN' | 'TASK_EXECUTED'
+    }
+
 export type PageQuery = { cursor?: string; limit?: number }
 export type Page<T> = { items: T[]; nextCursor: string | null }

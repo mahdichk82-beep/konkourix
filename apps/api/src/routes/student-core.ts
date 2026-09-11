@@ -14,6 +14,7 @@ import {
   listSubjectsSchema,
   listTasksSchema,
   listTopicsSchema,
+  rescheduleTaskSchema,
   subjectIdParamSchema,
   updatePlanSchema,
   updateSubjectSchema,
@@ -190,6 +191,17 @@ export const registerStudentCoreRoutes = (
         request.user!,
         parseId(request.params),
         parseBody(updateTaskSchema.safeParse(request.body)),
+      ),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/daily-tasks/:id/schedule', studentOnly, async (request) =>
+    successResponse(
+      await options.studentCore.tasks.reschedule(
+        request.user!,
+        parseId(request.params),
+        parseBody(rescheduleTaskSchema.safeParse(request.body)),
       ),
       request.context.requestId,
     ),

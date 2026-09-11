@@ -173,6 +173,16 @@ class PlanningClient {
   updateTaskStatus(id: string, status: DailyTaskStatus): Promise<DailyTask> {
     return this.updateTask(id, { status })
   }
+
+  rescheduleTask(id: string, scheduledFor: string): Promise<DailyTask> {
+    return authClient.authorizedRequest<DailyTask>(
+      `/student/daily-tasks/${encodeURIComponent(id)}/schedule`,
+      {
+        body: JSON.stringify({ scheduledFor }),
+        method: 'PATCH',
+      },
+    )
+  }
 }
 
 export const planningClient = new PlanningClient()

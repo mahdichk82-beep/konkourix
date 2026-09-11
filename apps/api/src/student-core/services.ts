@@ -60,6 +60,15 @@ const requireTaskTopicConsistency = async (
   }
 }
 
+const plannedTaskFields = [
+  'studyPlanId',
+  'subjectId',
+  'topicId',
+  'title',
+  'description',
+  'estimatedMinutes',
+] as const
+
 export const createStudentCoreServices = (store: StudentCoreStore, now = () => new Date()) => {
   const subjects = {
     async list(actor: DomainStudent, query?: PageQuery): Promise<Page<StudySubjectRecord>> {
@@ -259,11 +268,16 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
       })
       return toTaskView(result)
     },
-    async update(actor: DomainStudent, id: string, input: { studyPlanId?: string | null; subjectId?: string | null; topicId?: string | null; title?: string; description?: string | null; scheduledFor?: string; estimatedMinutes?: number | null; status?: DailyTaskStatus }) {
+    async update(actor: DomainStudent, id: string, input: { studyPlanId?: string | null; subjectId?: string | null; topicId?: string | null; title?: string; description?: string | null; estimatedMinutes?: number | null; status?: DailyTaskStatus }) {
       const profile = await requireProfile(store, actor)
       const current = await store.findTaskById(profile.id, id)
       if (!current) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
-      if (input.scheduledFor !== undefined && !validDate(input.scheduledFor)) throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
+      if (
+        current.source === 'COUNSELOR'
+        && plannedTaskFields.some((field) => input[field] !== undefined)
+      ) {
+        throw new ApiError(403, 'TASK_UPDATE_FORBIDDEN', 'Counselor-created task content cannot be changed by students')
+      }
       if (input.studyPlanId && !await store.findPlanById(profile.id, input.studyPlanId)) throw new ApiError(404, 'PLAN_NOT_FOUND', 'Study plan not found')
       if (input.subjectId) {
         const subject = await store.findSubjectById(profile.id, input.subjectId)
@@ -284,13 +298,34 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         ...(input.topicId === undefined ? {} : { topicId: input.topicId }),
         ...(input.title === undefined ? {} : { title: input.title.trim() }),
         ...(input.description === undefined ? {} : { description: input.description }),
-        ...(input.scheduledFor === undefined ? {} : { scheduledFor: dateOnly(input.scheduledFor) }),
         ...(input.estimatedMinutes === undefined ? {} : { estimatedMinutes: input.estimatedMinutes }),
         ...(input.status === undefined ? {} : { status: input.status }),
         ...(input.status === undefined ? {} : { completedAt: input.status === 'COMPLETED' ? now() : null }),
       })
       if (!result) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
       return toTaskView(result)
+    },
+    async reschedule(actor: DomainStudent, id: string, input: { scheduledFor: string }) {
+      const profile = await requireProfile(store, actor)
+      if (!validDate(input.scheduledFor)) {
+        throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
+      }
+      const result = await store.reschedulePersonalTask(
+        profile.id,
+        id,
+        dateOnly(input.scheduledFor),
+      )
+      if (!result.ok) {
+        switch (result.reason) {
+          case 'TASK_NOT_FOUND':
+            throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+          case 'TASK_SOURCE_FORBIDDEN':
+            throw new ApiError(403, 'TASK_RESCHEDULE_FORBIDDEN', 'Counselor-created tasks cannot be rescheduled by students')
+          case 'TASK_EXECUTED':
+            throw new ApiError(409, 'TASK_ALREADY_EXECUTED', 'Tasks with recorded study sessions cannot be rescheduled')
+        }
+      }
+      return toTaskView(result.value)
     },
   }
 

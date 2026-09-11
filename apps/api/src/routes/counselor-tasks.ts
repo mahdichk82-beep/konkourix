@@ -7,10 +7,12 @@ import { ApiError } from '../errors/api-error.js'
 import { authenticateRequest } from '../plugins/authentication.js'
 import {
   counselorStudentTaskParamSchema,
+  counselorStudentTaskScheduleParamSchema,
   counselorStudentTopicParamSchema,
   createCounselorTaskSchema,
   listCounselorTaskResourcesSchema,
   listCounselorTasksSchema,
+  rescheduleCounselorTaskSchema,
 } from '../schemas/counselor-tasks.js'
 
 type CounselorTaskRouteOptions = {
@@ -102,6 +104,26 @@ export const registerCounselorTaskRoutes = (
           await options.counselorTasks.create(request.user!, studentProfileId, input),
           request.context.requestId,
         ),
+      )
+    },
+  )
+
+  app.patch(
+    '/counselor/students/:studentProfileId/tasks/:taskId/schedule',
+    counselorOnly,
+    async (request) => {
+      const { studentProfileId, taskId } = parseInput(
+        counselorStudentTaskScheduleParamSchema.safeParse(request.params),
+      )
+      const input = parseInput(rescheduleCounselorTaskSchema.safeParse(request.body))
+      return successResponse(
+        await options.counselorTasks.reschedule(
+          request.user!,
+          studentProfileId,
+          taskId,
+          input,
+        ),
+        request.context.requestId,
       )
     },
   )

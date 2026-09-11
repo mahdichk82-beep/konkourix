@@ -59,6 +59,22 @@ const listError = (error: unknown) => {
   return 'دریافت وظایف دانش‌آموز ممکن نشد. دوباره تلاش کنید.'
 }
 
+const scheduleError = (error: unknown) => {
+  if (error instanceof AuthApiError) {
+    if (error.code === 'TASK_ALREADY_EXECUTED') {
+      return 'برای این کار سابقه مطالعه ثبت شده است و تاریخ آن قابل تغییر نیست.'
+    }
+    if (error.code === 'TASK_RESCHEDULE_FORBIDDEN') {
+      return 'مشاور فقط می‌تواند تاریخ کارهای تعیین‌شده توسط مشاور را تغییر دهد.'
+    }
+    if (error.code === 'STUDENT_NOT_FOUND') {
+      return 'تخصیص فعال این دانش‌آموز پیدا نشد یا دسترسی شما تغییر کرده است.'
+    }
+    if (error.code === 'TASK_NOT_FOUND') return 'این کار دیگر در دسترس نیست.'
+  }
+  return 'تغییر تاریخ کار ممکن نشد. دوباره تلاش کنید.'
+}
+
 export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps) {
   const [tasks, setTasks] = useState<CounselorVisibleTask[]>([])
   const [nextCursor, setNextCursor] = useState<string | null>(null)
@@ -66,6 +82,9 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [retryKey, setRetryKey] = useState(0)
+  const [scheduleDrafts, setScheduleDrafts] = useState<Record<string, string>>({})
+  const [schedulingTaskId, setSchedulingTaskId] = useState<string | null>(null)
+  const [scheduleActionError, setScheduleActionError] = useState<string | null>(null)
 
   useEffect(() => {
     let active = true
@@ -111,11 +130,37 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
     }
   }
 
+  const reschedule = async (task: CounselorVisibleTask) => {
+    const scheduledFor = scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)
+    if (!scheduledFor || scheduledFor === task.scheduledFor.slice(0, 10)) return
+    setSchedulingTaskId(task.id)
+    setScheduleActionError(null)
+    try {
+      const updated = await studentTasksClient.reschedule(studentId, task.id, scheduledFor)
+      setTasks((current) => current.map((candidate) =>
+        candidate.id === updated.id
+          ? { ...candidate, ...updated }
+          : candidate,
+      ))
+      setScheduleDrafts((current) => {
+        const next = { ...current }
+        delete next[task.id]
+        return next
+      })
+    } catch (updateError) {
+      setScheduleActionError(scheduleError(updateError))
+    } finally {
+      setSchedulingTaskId(null)
+    }
+  }
+
   return (
     <Card className="student-task-list-card" title="وظایف و وضعیت اجرا">
       <p className="student-task-card__intro">
-        وظایف شخصی و وظایف تعیین‌شده توسط مشاور در این بخش فقط برای مشاهده نمایش داده می‌شوند.
+        وظایف دانش‌آموز در این بخش نمایش داده می‌شوند. فقط تاریخ کارهای تعیین‌شده توسط مشاور و فاقد سابقه مطالعه قابل تغییر است.
       </p>
+
+      {scheduleActionError && <p className="form-error" role="alert">{scheduleActionError}</p>}
 
       {loading ? (
         <ContentState
@@ -161,6 +206,41 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                     <span>{task.estimatedMinutes.toLocaleString('fa-IR')} دقیقه</span>
                   )}
                 </div>
+                {task.source === 'COUNSELOR' && (
+                  <form
+                    className="counselor-task__schedule"
+                    onSubmit={(event) => {
+                      event.preventDefault()
+                      void reschedule(task)
+                    }}
+                  >
+                    <label htmlFor={`counselor-task-schedule-${task.id}`}>
+                      تغییر تاریخ
+                      <input
+                        disabled={task.studySessionCount > 0}
+                        id={`counselor-task-schedule-${task.id}`}
+                        onChange={(event) => setScheduleDrafts((current) => ({
+                          ...current,
+                          [task.id]: event.target.value,
+                        }))}
+                        type="date"
+                        value={scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)}
+                      />
+                    </label>
+                    <Button
+                      disabled={
+                        task.studySessionCount > 0
+                        || schedulingTaskId === task.id
+                        || (scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)) === task.scheduledFor.slice(0, 10)
+                      }
+                      type="submit"
+                      variant="secondary"
+                    >
+                      {schedulingTaskId === task.id ? 'در حال جابه‌جایی…' : 'ثبت تاریخ جدید'}
+                    </Button>
+                    {task.studySessionCount > 0 && <small>به‌دلیل ثبت مطالعه، تاریخ این کار قفل است.</small>}
+                  </form>
+                )}
               </article>
             ))}
           </div>

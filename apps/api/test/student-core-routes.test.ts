@@ -52,6 +52,7 @@ const store: StudentCoreStore = {
   findTaskById: async () => null,
   createTask: async (input) => ({ id: 'task-1', ...input, createdAt: new Date('2026-09-03T00:00:00.000Z'), updatedAt: new Date('2026-09-03T00:00:00.000Z') }),
   updateTask: async () => null,
+  reschedulePersonalTask: async () => ({ ok: false, reason: 'TASK_NOT_FOUND' }),
 }
 
 const createApp = (
@@ -192,6 +193,79 @@ test('student task routes reject client-controlled provenance and ownership fiel
     assert.equal(response.json().error.code, 'VALIDATION_ERROR')
   }
 
+  await app.close()
+})
+
+test('student task schedule route accepts only a date and returns creator-safe data', async () => {
+  const taskId = '00000000-0000-4000-8000-000000000497'
+  const task: DailyTaskRecord = {
+    id: taskId,
+    studentProfileId: 'student-profile-1',
+    createdByUserId: user.id,
+    source: 'PERSONAL',
+    studyPlanId: null,
+    subjectId: null,
+    topicId: null,
+    title: 'Move me',
+    description: null,
+    scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+    estimatedMinutes: 30,
+    status: 'PENDING',
+    completedAt: null,
+    createdAt: new Date('2026-09-03T00:00:00.000Z'),
+    updatedAt: new Date('2026-09-03T00:00:00.000Z'),
+  }
+  let calls = 0
+  const scheduleStore: StudentCoreStore = {
+    ...store,
+    async reschedulePersonalTask(profileId, id, scheduledFor) {
+      calls += 1
+      assert.equal(profileId, 'student-profile-1')
+      assert.equal(id, taskId)
+      task.scheduledFor = scheduledFor
+      return { ok: true, value: task }
+    },
+  }
+  const app = createApp(scheduleStore)
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { scheduledFor: '2026-09-04' },
+    url: `/api/v1/student/daily-tasks/${taskId}/schedule`,
+  })
+  assert.equal(response.statusCode, 200)
+  assert.equal(response.json().data.scheduledFor, '2026-09-04T00:00:00.000Z')
+  assert.equal('createdByUserId' in response.json().data, false)
+
+  const controlledFields = [
+    { studentProfileId: '00000000-0000-4000-8000-000000000498' },
+    { owner: user.id },
+    { source: 'PERSONAL' },
+    { createdByUserId: user.id },
+    { status: 'COMPLETED' },
+    { completedAt: '2026-09-05T10:00:00.000Z' },
+    { title: 'Changed content' },
+  ]
+  for (const field of controlledFields) {
+    const forged = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'PATCH',
+      payload: { scheduledFor: '2026-09-05', ...field },
+      url: `/api/v1/student/daily-tasks/${taskId}/schedule`,
+    })
+    assert.equal(forged.statusCode, 400)
+    assert.equal(forged.json().error.code, 'VALIDATION_ERROR')
+  }
+  assert.equal(calls, 1)
+
+  const genericUpdate = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { scheduledFor: '2026-09-05' },
+    url: `/api/v1/student/daily-tasks/${taskId}`,
+  })
+  assert.equal(genericUpdate.statusCode, 400)
+  assert.equal(genericUpdate.json().error.code, 'VALIDATION_ERROR')
   await app.close()
 })
 

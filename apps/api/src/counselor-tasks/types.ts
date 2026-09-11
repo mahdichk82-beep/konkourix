@@ -78,6 +78,17 @@ export type CreateCounselorTaskResult =
         | 'TOPIC_ARCHIVED'
     }
 
+export type RescheduleCounselorTaskResult =
+  | { ok: true; value: DailyTaskRecord }
+  | {
+      ok: false
+      reason:
+        | 'STUDENT_NOT_FOUND'
+        | 'TASK_NOT_FOUND'
+        | 'TASK_SOURCE_FORBIDDEN'
+        | 'TASK_EXECUTED'
+    }
+
 export type CounselorTaskView = DailyTaskView
 
 export type CounselorVisibleTaskView = CounselorTaskView & {

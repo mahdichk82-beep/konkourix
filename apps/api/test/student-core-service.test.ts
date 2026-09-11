@@ -20,12 +20,14 @@ const profile = { id: 'student-profile-1', userId: student.id }
 const timestamp = new Date('2026-09-03T00:00:00.000Z')
 
 const createStore = (): StudentCoreStore & {
+  executedTaskIds: Set<string>
   subjects: StudySubjectRecord[]
   topics: TopicRecord[]
   plans: StudyPlanRecord[]
   tasks: DailyTaskRecord[]
 } => {
   const store = {
+    executedTaskIds: new Set<string>(),
     subjects: [] as StudySubjectRecord[],
     topics: [] as TopicRecord[],
     plans: [] as StudyPlanRecord[],
@@ -94,11 +96,24 @@ const createStore = (): StudentCoreStore & {
       store.tasks.push(record)
       return record
     },
-    async updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'scheduledFor' | 'estimatedMinutes' | 'status' | 'completedAt'>>) {
+    async updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'estimatedMinutes' | 'status' | 'completedAt'>>) {
       const task = store.tasks.find((item) => item.id === id && item.studentProfileId === profileId)
       if (!task) return null
       Object.assign(task, input, { updatedAt: timestamp })
       return task
+    },
+    async reschedulePersonalTask(profileId: string, id: string, scheduledFor: Date) {
+      const task = store.tasks.find((item) => item.id === id && item.studentProfileId === profileId)
+      if (!task) return { ok: false as const, reason: 'TASK_NOT_FOUND' as const }
+      if (task.source !== 'PERSONAL') {
+        return { ok: false as const, reason: 'TASK_SOURCE_FORBIDDEN' as const }
+      }
+      if (store.executedTaskIds.has(id)) {
+        return { ok: false as const, reason: 'TASK_EXECUTED' as const }
+      }
+      task.scheduledFor = scheduledFor
+      task.updatedAt = timestamp
+      return { ok: true as const, value: task }
     },
   }
   return store
@@ -326,6 +341,84 @@ test('student task provenance is server-assigned, immutable, and creator-safe in
   assert.equal(store.tasks[0]?.studentProfileId, profile.id)
   assert.equal(store.tasks[0]?.createdByUserId, student.id)
   assert.equal(store.tasks[0]?.source, 'PERSONAL')
+})
+
+test('student reschedules only an unexecuted owned personal task without changing provenance', async () => {
+  const store = createStore()
+  const services = createStudentCoreServices(store, () => timestamp)
+  const personal = await services.tasks.create(student, {
+    title: 'Personal task',
+    description: null,
+    scheduledFor: '2026-09-03',
+    estimatedMinutes: 30,
+    status: 'PENDING',
+    studyPlanId: null,
+    subjectId: null,
+    topicId: null,
+  })
+  const original = { ...store.tasks[0] }
+
+  const moved = await services.tasks.reschedule(student, personal.id, {
+    scheduledFor: '2026-09-04',
+  })
+  assert.equal(moved.scheduledFor.toISOString(), '2026-09-04T00:00:00.000Z')
+  assert.equal(store.tasks[0]?.studentProfileId, original.studentProfileId)
+  assert.equal(store.tasks[0]?.createdByUserId, original.createdByUserId)
+  assert.equal(store.tasks[0]?.source, original.source)
+  assert.equal('createdByUserId' in moved, false)
+
+  store.tasks.push({
+    ...original,
+    id: 'counselor-task',
+    createdByUserId: 'counselor-user',
+    source: 'COUNSELOR',
+  })
+  await assert.rejects(
+    services.tasks.reschedule(student, 'counselor-task', { scheduledFor: '2026-09-05' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_RESCHEDULE_FORBIDDEN',
+  )
+
+  store.executedTaskIds.add(personal.id)
+  await assert.rejects(
+    services.tasks.reschedule(student, personal.id, { scheduledFor: '2026-09-06' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_ALREADY_EXECUTED',
+  )
+  await assert.rejects(
+    services.tasks.reschedule(student, 'foreign-task', { scheduledFor: '2026-09-06' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_NOT_FOUND',
+  )
+})
+
+test('student cannot change counselor-created planned content but can update its status', async () => {
+  const store = createStore()
+  store.tasks.push({
+    id: 'counselor-task',
+    studentProfileId: profile.id,
+    createdByUserId: 'counselor-user',
+    source: 'COUNSELOR',
+    studyPlanId: null,
+    subjectId: null,
+    topicId: null,
+    title: 'Counselor plan',
+    description: null,
+    scheduledFor: timestamp,
+    estimatedMinutes: 30,
+    status: 'PENDING',
+    completedAt: null,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  })
+  const services = createStudentCoreServices(store, () => timestamp)
+
+  await assert.rejects(
+    services.tasks.update(student, 'counselor-task', { title: 'Changed by student' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'TASK_UPDATE_FORBIDDEN',
+  )
+  const completed = await services.tasks.update(student, 'counselor-task', {
+    status: 'COMPLETED',
+  })
+  assert.equal(completed.status, 'COMPLETED')
+  assert.equal(store.tasks[0]?.title, 'Counselor plan')
 })
 
 test('student core creates tasks with no topic or a valid owned subject topic', async () => {

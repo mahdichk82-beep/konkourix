@@ -10,6 +10,11 @@ export const counselorStudentTaskParamSchema = z.object({
   studentProfileId: z.string().uuid(),
 }).strict()
 
+export const counselorStudentTaskScheduleParamSchema = z.object({
+  studentProfileId: z.string().uuid(),
+  taskId: z.string().uuid(),
+}).strict()
+
 export const counselorStudentTopicParamSchema = z.object({
   studentProfileId: z.string().uuid(),
   subjectId: z.string().uuid(),
@@ -34,3 +39,5 @@ export const createCounselorTaskSchema = z.object({
   subjectId: z.string().uuid().nullable().optional().default(null),
   topicId: z.string().uuid().nullable().optional().default(null),
 }).strict()
+
+export const rescheduleCounselorTaskSchema = z.object({ scheduledFor: dateOnly }).strict()
