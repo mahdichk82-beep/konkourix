@@ -10,6 +10,7 @@ import {
   counselorStudentTopicParamSchema,
   createCounselorTaskSchema,
   listCounselorTaskResourcesSchema,
+  listCounselorTasksSchema,
 } from '../schemas/counselor-tasks.js'
 
 type CounselorTaskRouteOptions = {
@@ -39,9 +40,15 @@ export const registerCounselorTaskRoutes = (
       const { studentProfileId } = parseInput(
         counselorStudentTaskParamSchema.safeParse(request.params),
       )
-      const query = parseInput(listCounselorTaskResourcesSchema.safeParse(request.query))
+      const { from, to, ...query } = parseInput(
+        listCounselorTasksSchema.safeParse(request.query),
+      )
       return successResponse(
-        await options.counselorTasks.list(request.user!, studentProfileId, query),
+        await options.counselorTasks.list(request.user!, studentProfileId, {
+          ...query,
+          ...(from === undefined ? {} : { scheduledFrom: from }),
+          ...(to === undefined ? {} : { scheduledTo: to }),
+        }),
         request.context.requestId,
       )
     },

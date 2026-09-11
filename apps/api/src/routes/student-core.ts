@@ -155,11 +155,13 @@ export const registerStudentCoreRoutes = (
   )
 
   app.get('/student/daily-tasks', studentOnly, async (request) => {
-    const { date, ...query } = parseBody(listTasksSchema.safeParse(request.query))
+    const { date, from, to, ...query } = parseBody(listTasksSchema.safeParse(request.query))
     return successResponse(
       await options.studentCore.tasks.list(request.user!, {
         ...query,
         ...(date === undefined ? {} : { scheduledFor: date }),
+        ...(from === undefined ? {} : { scheduledFrom: from }),
+        ...(to === undefined ? {} : { scheduledTo: to }),
       }),
       request.context.requestId,
     )

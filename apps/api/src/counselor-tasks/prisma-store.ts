@@ -44,7 +44,12 @@ export const createPrismaCounselorTaskStore = (
         },
         skip: query.cursor ? 1 : undefined,
         take: (query.limit ?? 50) + 1,
-        where: { studentProfileId },
+        where: {
+          ...(query.scheduledFrom && query.scheduledTo
+            ? { scheduledFor: { gte: query.scheduledFrom, lte: query.scheduledTo } }
+            : {}),
+          studentProfileId,
+        },
       })
       return {
         ok: true,

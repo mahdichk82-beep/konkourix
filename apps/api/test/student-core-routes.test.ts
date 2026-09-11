@@ -368,6 +368,131 @@ test('student task list includes counselor-created tasks without exposing creato
   await app.close()
 })
 
+test('student weekly task range is date-bounded, owner-scoped, and creator-safe', async () => {
+  const timestamp = new Date('2026-09-12T00:00:00.000Z')
+  const weeklyTasks: DailyTaskRecord[] = [
+    {
+      id: '00000000-0000-4000-8000-000000000110',
+      studentProfileId: 'student-profile-1',
+      createdByUserId: user.id,
+      source: 'PERSONAL',
+      studyPlanId: null,
+      subjectId: null,
+      topicId: null,
+      title: 'First weekly task',
+      description: null,
+      scheduledFor: new Date('2026-09-12T00:00:00.000Z'),
+      estimatedMinutes: 30,
+      status: 'PENDING',
+      completedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000111',
+      studentProfileId: 'student-profile-1',
+      createdByUserId: counselor.id,
+      source: 'COUNSELOR',
+      studyPlanId: null,
+      subjectId: null,
+      topicId: null,
+      title: 'Last weekly task',
+      description: null,
+      scheduledFor: new Date('2026-09-18T00:00:00.000Z'),
+      estimatedMinutes: 45,
+      status: 'COMPLETED',
+      completedAt: timestamp,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000112',
+      studentProfileId: 'student-profile-1',
+      createdByUserId: user.id,
+      source: 'PERSONAL',
+      studyPlanId: null,
+      subjectId: null,
+      topicId: null,
+      title: 'Next week task',
+      description: null,
+      scheduledFor: new Date('2026-09-19T00:00:00.000Z'),
+      estimatedMinutes: null,
+      status: 'PENDING',
+      completedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+    {
+      id: '00000000-0000-4000-8000-000000000113',
+      studentProfileId: 'student-profile-2',
+      createdByUserId: 'other-student-user',
+      source: 'PERSONAL',
+      studyPlanId: null,
+      subjectId: null,
+      topicId: null,
+      title: 'Foreign weekly task',
+      description: null,
+      scheduledFor: new Date('2026-09-14T00:00:00.000Z'),
+      estimatedMinutes: null,
+      status: 'PENDING',
+      completedAt: null,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    },
+  ]
+  const received: Array<{
+    profileId: string
+    query: Parameters<StudentCoreStore['listTasks']>[1]
+  }> = []
+  const weeklyStore: StudentCoreStore = {
+    ...store,
+    async listTasks(profileId, query) {
+      received.push({ profileId, query })
+      return weeklyTasks.filter((task) =>
+        task.studentProfileId === profileId
+        && task.scheduledFor >= query!.scheduledFrom!
+        && task.scheduledFor <= query!.scheduledTo!,
+      )
+    },
+  }
+  const app = createApp(weeklyStore)
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'GET',
+    url: '/api/v1/student/daily-tasks?from=2026-09-12&to=2026-09-18&limit=100',
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(received[0]?.profileId, 'student-profile-1')
+  assert.equal(received[0]?.query?.scheduledFrom?.toISOString(), '2026-09-12T00:00:00.000Z')
+  assert.equal(received[0]?.query?.scheduledTo?.toISOString(), '2026-09-18T00:00:00.000Z')
+  assert.deepEqual(
+    response.json().data.items.map((task: { id: string }) => task.id),
+    weeklyTasks.slice(0, 2).map((task) => task.id),
+  )
+  assert.equal(
+    response.json().data.items.every((task: Record<string, unknown>) => !('createdByUserId' in task)),
+    true,
+  )
+
+  const incompleteRange = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'GET',
+    url: '/api/v1/student/daily-tasks?from=2026-09-12',
+  })
+  assert.equal(incompleteRange.statusCode, 400)
+  assert.equal(incompleteRange.json().error.code, 'VALIDATION_ERROR')
+
+  const reversedRange = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'GET',
+    url: '/api/v1/student/daily-tasks?from=2026-09-18&to=2026-09-12',
+  })
+  assert.equal(reversedRange.statusCode, 400)
+  assert.equal(reversedRange.json().error.code, 'TASK_DATE_RANGE_INVALID')
+  await app.close()
+})
+
 test('daily task filters retain authenticated profile scope', async () => {
   const received: Array<{
     profileId: string

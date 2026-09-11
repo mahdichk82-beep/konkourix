@@ -25,6 +25,16 @@ export type CounselorTaskPageQuery = {
   limit?: number
 }
 
+export type CounselorTaskListQuery = CounselorTaskPageQuery & {
+  scheduledFrom?: string
+  scheduledTo?: string
+}
+
+export type CounselorTaskStoreQuery = CounselorTaskPageQuery & {
+  scheduledFrom?: Date
+  scheduledTo?: Date
+}
+
 export type CounselorTaskPage<T> = {
   items: T[]
   nextCursor: string | null

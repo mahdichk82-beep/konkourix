@@ -96,13 +96,17 @@ const createStore = (): CounselorTaskStore & {
     async listAssignedStudentTasks(
       counselorUserId: string,
       studentProfileId: string,
-      query: { cursor?: string; limit?: number },
+      query: { cursor?: string; limit?: number; scheduledFrom?: Date; scheduledTo?: Date },
     ) {
       if (!(assignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
         return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
       }
       const tasks: CounselorVisibleTaskView[] = store.tasks
-        .filter((task) => task.studentProfileId === studentProfileId)
+        .filter((task) =>
+          task.studentProfileId === studentProfileId
+          && (!query.scheduledFrom || task.scheduledFor >= query.scheduledFrom)
+          && (!query.scheduledTo || task.scheduledFor <= query.scheduledTo),
+        )
         .map(({ createdByUserId: _createdByUserId, ...task }) => {
           const sessionMinutes = store.sessionMinutesByTaskId.get(task.id) ?? []
           return {
@@ -237,10 +241,11 @@ const listRequest = (
   app: ReturnType<typeof createApp>['app'],
   studentProfileId: string,
   token?: string,
+  query = '',
 ) => app.inject({
   headers: token ? { authorization: `Bearer ${token}` } : undefined,
   method: 'GET',
-  url: `/api/v1/counselor/students/${studentProfileId}/tasks`,
+  url: `/api/v1/counselor/students/${studentProfileId}/tasks${query}`,
 })
 
 const taskRecord = (
@@ -328,6 +333,77 @@ test('student and unauthenticated callers cannot list counselor-scoped tasks', a
   const unauthenticated = await listRequest(app, ids.studentA)
   assert.equal(unauthenticated.statusCode, 401)
   assert.equal(unauthenticated.json().error.code, 'TOKEN_MISSING')
+  await app.close()
+})
+
+test('assigned counselor sees only the selected student weekly task range', async () => {
+  const { app, store } = createApp()
+  store.tasks.push(
+    taskRecord('60000000-0000-4000-8000-000000000020', {
+      scheduledFor: new Date('2026-09-12T00:00:00.000Z'),
+      title: 'Week start',
+    }),
+    taskRecord('60000000-0000-4000-8000-000000000021', {
+      createdByUserId: ids.counselorA,
+      scheduledFor: new Date('2026-09-18T00:00:00.000Z'),
+      source: 'COUNSELOR',
+      title: 'Week end',
+    }),
+    taskRecord('60000000-0000-4000-8000-000000000022', {
+      scheduledFor: new Date('2026-09-19T00:00:00.000Z'),
+      title: 'Next week',
+    }),
+    taskRecord('60000000-0000-4000-8000-000000000023', {
+      scheduledFor: new Date('2026-09-14T00:00:00.000Z'),
+      studentProfileId: ids.studentB,
+      title: 'Other student',
+    }),
+  )
+
+  const response = await listRequest(
+    app,
+    ids.studentA,
+    'counselor-a',
+    '?from=2026-09-12&to=2026-09-18&limit=100',
+  )
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(
+    response.json().data.items.map((task: { title: string }) => task.title),
+    ['Week start', 'Week end'],
+  )
+  assert.equal(
+    response.json().data.items.every((task: Record<string, unknown>) => !('createdByUserId' in task)),
+    true,
+  )
+
+  for (const studentProfileId of [ids.studentUnassigned, ids.studentB]) {
+    const denied = await listRequest(
+      app,
+      studentProfileId,
+      'counselor-a',
+      '?from=2026-09-12&to=2026-09-18',
+    )
+    assert.equal(denied.statusCode, 404)
+    assert.equal(denied.json().error.code, 'STUDENT_NOT_FOUND')
+  }
+
+  const incompleteRange = await listRequest(
+    app,
+    ids.studentA,
+    'counselor-a',
+    '?from=2026-09-12',
+  )
+  assert.equal(incompleteRange.statusCode, 400)
+  assert.equal(incompleteRange.json().error.code, 'VALIDATION_ERROR')
+
+  const reversedRange = await listRequest(
+    app,
+    ids.studentA,
+    'counselor-a',
+    '?from=2026-09-18&to=2026-09-12',
+  )
+  assert.equal(reversedRange.statusCode, 400)
+  assert.equal(reversedRange.json().error.code, 'TASK_DATE_RANGE_INVALID')
   await app.close()
 })
 

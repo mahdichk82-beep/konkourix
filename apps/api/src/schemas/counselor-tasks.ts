@@ -17,6 +17,15 @@ export const counselorStudentTopicParamSchema = z.object({
 
 export const listCounselorTaskResourcesSchema = z.object(pagination).strict()
 
+export const listCounselorTasksSchema = z.object({
+  ...pagination,
+  from: dateOnly.optional(),
+  to: dateOnly.optional(),
+}).strict().refine(
+  (value) => (value.from === undefined) === (value.to === undefined),
+  'Both range dates are required',
+)
+
 export const createCounselorTaskSchema = z.object({
   title: z.string().trim().min(1).max(200),
   description: z.string().trim().max(2000).nullable().optional(),

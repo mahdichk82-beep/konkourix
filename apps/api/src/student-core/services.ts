@@ -196,9 +196,40 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
   }
 
   const tasks = {
-    async list(actor: DomainStudent, query?: PageQuery & { scheduledFor?: string; status?: DailyTaskStatus; studyPlanId?: string; subjectId?: string }) {
+    async list(actor: DomainStudent, query?: PageQuery & { scheduledFor?: string; scheduledFrom?: string; scheduledTo?: string; status?: DailyTaskStatus; studyPlanId?: string; subjectId?: string }) {
       const profile = await requireProfile(store, actor)
-      const records = await store.listTasks(profile.id, { ...query, scheduledFor: query?.scheduledFor ? dateOnly(query.scheduledFor) : undefined })
+      if (query?.scheduledFor && !validDate(query.scheduledFor)) {
+        throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
+      }
+      if (query?.scheduledFrom && !validDate(query.scheduledFrom)) {
+        throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date range is invalid')
+      }
+      if (query?.scheduledTo && !validDate(query.scheduledTo)) {
+        throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date range is invalid')
+      }
+      if ((query?.scheduledFrom === undefined) !== (query?.scheduledTo === undefined)) {
+        throw new ApiError(400, 'TASK_DATE_RANGE_INVALID', 'Task date range is invalid')
+      }
+      if (query?.scheduledFor && (query.scheduledFrom || query.scheduledTo)) {
+        throw new ApiError(400, 'TASK_DATE_RANGE_INVALID', 'Task date cannot be combined with a range')
+      }
+      const scheduledFrom = query?.scheduledFrom ? dateOnly(query.scheduledFrom) : undefined
+      const scheduledTo = query?.scheduledTo ? dateOnly(query.scheduledTo) : undefined
+      if (scheduledFrom && scheduledTo && scheduledTo < scheduledFrom) {
+        throw new ApiError(400, 'TASK_DATE_RANGE_INVALID', 'Task date range is invalid')
+      }
+      const {
+        scheduledFor: scheduledForInput,
+        scheduledFrom: _scheduledFromInput,
+        scheduledTo: _scheduledToInput,
+        ...storeQuery
+      } = query ?? {}
+      const records = await store.listTasks(profile.id, {
+        ...storeQuery,
+        ...(scheduledForInput ? { scheduledFor: dateOnly(scheduledForInput) } : {}),
+        ...(scheduledFrom ? { scheduledFrom } : {}),
+        ...(scheduledTo ? { scheduledTo } : {}),
+      })
       return page(records.map(toTaskView), query)
     },
     async get(actor: DomainStudent, id: string) {

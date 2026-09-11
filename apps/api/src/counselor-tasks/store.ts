@@ -4,6 +4,7 @@ import type {
   AssignedTopicResult,
   CounselorStudentSubject,
   CounselorTaskPageQuery,
+  CounselorTaskStoreQuery,
   CreateCounselorTaskRecordInput,
   CreateCounselorTaskResult,
 } from './types.js'
@@ -12,7 +13,7 @@ export interface CounselorTaskStore {
   listAssignedStudentTasks(
     counselorUserId: string,
     studentProfileId: string,
-    query: CounselorTaskPageQuery,
+    query: CounselorTaskStoreQuery,
   ): Promise<AssignedTaskResult>
   listAssignedStudentSubjects(
     counselorUserId: string,

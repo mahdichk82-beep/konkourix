@@ -10,6 +10,7 @@ import { PlaceholderPage } from './pages/PlaceholderPage'
 import { SettingsPage } from './pages/SettingsPage'
 import { SubjectTopicsPage } from './pages/SubjectTopicsPage'
 import { TodayPlanningPage } from './pages/TodayPlanningPage'
+import { WeeklyPlanningPage } from './pages/WeeklyPlanningPage'
 import { useBrowserRouter } from './routing/useBrowserRouter'
 import { useTheme } from './theme/useTheme'
 import './App.css'
@@ -25,6 +26,7 @@ const navigation: NavigationItem[] = [
 const routeMeta: Record<string, { description: string; title: string }> = {
   '/': { title: 'داشبورد', description: 'نمای کلی مسیر مطالعه و برنامه روزانه' },
   '/planning': { title: 'برنامه امروز', description: 'ساخت و پیگیری کارهای شخصی امروز' },
+  '/planning/weekly': { title: 'برنامه هفتگی', description: 'نمای هفت‌روزه کارهای برنامه‌ریزی‌شده' },
   '/study': { title: 'درس‌ها و مباحث', description: 'ساخت و مدیریت ساختار شخصی مطالعه' },
   '/reports': { title: 'گزارش‌ها', description: 'ساختار آینده برای مرور روند و پیشرفت' },
   '/settings': { title: 'تنظیمات', description: 'ترجیحات پایه محیط دانش‌آموزی' },
@@ -47,7 +49,8 @@ function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, re
 
   let content
   if (path === '/') content = <DashboardPage user={user} />
-  else if (path === '/planning') content = <TodayPlanningPage />
+  else if (path === '/planning') content = <TodayPlanningPage navigate={navigate} />
+  else if (path === '/planning/weekly') content = <WeeklyPlanningPage navigate={navigate} />
   else if (path === '/study') content = <SubjectTopicsPage />
   else if (path === '/settings') content = <SettingsPage onThemeChange={setTheme} theme={theme} />
   else if (routeMeta[path]) content = <PlaceholderPage title={meta.title} description="این بخش فقط به‌عنوان مسیر و جایگاه قابلیت آینده ایجاد شده و هنوز داده یا عملیات واقعی ندارد." />
@@ -55,7 +58,7 @@ function AuthenticatedStudentApp({ navigate, path }: { navigate(path: string, re
 
   return (
     <AppShell
-      currentPath={path}
+      currentPath={path.startsWith('/planning') ? '/planning' : path}
       navigation={navigation}
       navigate={navigate}
       onLogout={signOut}

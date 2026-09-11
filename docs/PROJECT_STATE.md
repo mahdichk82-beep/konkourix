@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 8, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 9, not a claim of overall product completion.
 
 ## Project
 
@@ -12,9 +12,9 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 8 — Task Execution Feedback Foundation**.
+The project has completed **Phase 2 Milestone 9 — Weekly Planning Foundation**.
 
-Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today planning, student-owned subject/topic management, optional task-topic assignment, task-linked study execution feedback, read-only counselor access to assigned student profiles and tasks, and counselor task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
+Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today and weekly planning views, student-owned subject/topic management, optional task-topic assignment, task-linked study execution feedback, read-only counselor access to assigned student profiles and task distribution, and counselor task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
@@ -69,6 +69,11 @@ Study Tracking recovery checkpoint:
 
 - HEAD: `196c84b4bd79a72fd2a330b19d9bf2d3ed6a09ea`
 - Message: `feat: add counselor task visibility`
+
+## Phase 2 Milestone 9 Starting Checkpoint
+
+- HEAD: `61ba9be74c688baadcd63bc6cbb8986e7487d4cc`
+- Message: `feat: add task execution feedback`
 
 ## Verified Baseline
 
@@ -603,6 +608,35 @@ Milestone verification:
 
 Timers, Pomodoro/focus mode, analytics, reports, mastery, weekly progress, streaks, gamification, notifications, messaging, and execution/task conflict handling remain deferred and require separately authorized milestones.
 
+### Phase 2 Milestone 9 — Weekly Planning Foundation
+
+**Status: COMPLETE**
+
+- `DailyTask` remains the only scheduled-work entity. Weekly planning is an inclusive date-range read over `DailyTask.scheduledFor`; no weekly plan, weekly task, calendar, recurrence, scheduling, or analytics model was introduced.
+- Existing `GET /api/v1/student/daily-tasks` and `GET /api/v1/counselor/students/:studentProfileId/tasks` routes now accept paired `from` and `to` query dates. The existing single-day `date` filter remains unchanged and cannot be combined with a range.
+- Both range paths validate real `YYYY-MM-DD` values and reject incomplete or reversed ranges. Prisma queries keep the authenticated student's `studentProfileId` predicate or the counselor's active-assignment check plus target ownership predicate.
+- Task responses retain existing safe provenance exposure through `source` and continue to omit `createdByUserId`. The counselor path remains visibility-by-student ownership rather than visibility-by-creator.
+- Student Web adds `/planning/weekly`, a responsive Persian/RTL Saturday-to-Friday view with previous/next/current-week controls, seven day groups, task status, safe counselor-source labels, subject/topic labels when available, and simple task/minute workload totals. Today Planning links to the weekly view and otherwise keeps its existing creation and execution behavior.
+- Counselor Web assigned-student detail adds a read-only Saturday-to-Friday distribution with navigation, status, source, subject/topic labels when available, and simple task/minute totals. It adds no edit, delete, reschedule, or batch-planning controls.
+- Week boundaries use the browser's local calendar components with Saturday as day one. API range bounds are stored-date values converted to UTC midnight for inclusive PostgreSQL `date` comparisons; no timezone database, Persian-calendar storage, or recurring schedule engine was added.
+- Focused tests cover student-owned weekly ranges, cross-student exclusion, counselor assignment and cross-counselor denial, inclusive date bounds, invalid ranges, creator redaction, and Prisma ownership predicates while retaining all prior task/session authorization tests.
+- No Prisma schema, migration, dependency, lockfile, authentication, task lifecycle, StudySession, or infrastructure change was required.
+
+Milestone verification:
+
+- API tests: **126/126 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 8 migrations found and the database is up to date
+- Schema changed: **NO**
+- Migration added or run: **NO**
+
+Drag-and-drop, task rescheduling, recurring scheduling, automatic scheduling, workload optimization, AI planning, calendar sync, reminders, notifications, reports, and analytics remain deferred and require separately authorized milestones.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -635,7 +669,8 @@ The following capabilities are present and covered by the current API baseline:
 - Counselor-only read access to actively assigned student lists and basic profiles
 - Counselor-only creation of scheduled tasks for actively assigned students with server-owned provenance
 - Counselor-only read access to personal and counselor-created tasks owned by actively assigned students, without creator identity exposure
-- Student subjects, topics, study plans, and daily tasks with optional validated topic assignment and server-owned provenance
+- Student subjects, topics, study plans, and daily tasks with optional validated topic assignment, server-owned provenance, and owned date-range reads
+- Student and assigned-counselor weekly task distribution derived from DailyTask dates without duplicate storage
 - Study Sessions, including task-linked execution recording and owned task filtering, and Student Goals
 - Backend role and ownership enforcement foundations; student resources are resolved from the authenticated user's StudentProfile
 
@@ -677,7 +712,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - It verifies authenticated access against the backend-protected student boundary before rendering protected content.
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing student profile fields, theme selection, password change, current logout, and logout-all.
-- Its planning page provides persistent today-task listing and creation with optional subject/topic assignment, completion/skipping, status and subject filters, cursor pagination, inline subject creation, a safe counselor-source indicator, and task-linked StudySession recording/feedback through the existing authenticated backend contracts.
+- Its planning area provides persistent today-task listing and creation with optional subject/topic assignment, completion/skipping, status and subject filters, cursor pagination, inline subject creation, a safe counselor-source indicator, task-linked StudySession recording/feedback, and a separate read-only Saturday-to-Friday view derived from the same tasks.
 - Its study page provides persistent student-owned subject listing/creation and topic listing/creation/rename/archive/restore through the authenticated backend contracts.
 - It remains an application foundation rather than a complete student product UI.
 
@@ -690,7 +725,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing counselor profile fields, theme selection, password change, current logout, and logout-all.
 - Its student area provides a persistent assigned-student list and read-only basic profile detail through counselor-scoped backend contracts, with localized loading, empty, error, and pagination states.
-- Assigned-student detail provides constrained task creation with active subject/topic selectors and a separate read-only, paginated view of personal and counselor-created tasks, their statuses, sources, completion information, and direct StudySession count/recorded time. Counselor editing, analytics, and broader planning remain absent.
+- Assigned-student detail provides constrained task creation, a read-only paginated task view with direct execution feedback, and a read-only Saturday-to-Friday task distribution derived from the same assigned student's tasks. Counselor editing, rescheduling, batch planning, analytics, and reports remain absent.
 - It remains an application foundation rather than a complete counselor product UI.
 
 Neither application shell should be described as a complete product merely because it builds.
@@ -758,7 +793,7 @@ These items are not authorization to implement all remaining Phase 0 work in one
 - Full student product UI
 - Full counselor product UI
 - Advanced profile and account-recovery workflows
-- Complete task/planning UX beyond the current today-planning and subject/topic slices
+- Complete task/planning UX beyond the current today/weekly views and subject/topic slices
 - Test sessions
 - Focus sessions and timer
 - Habits and streaks
@@ -784,4 +819,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 8 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin timers, Pomodoro/focus mode, counselor task editing, full counselor planning, task permissions, revisions, approval workflows, conflict handling, audit history, reports, analytics, mastery, streaks, gamification, messaging, notifications, weekly planning, drag-and-drop/manual ordering, search, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 9 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin timers, Pomodoro/focus mode, counselor task editing, weekly editing, rescheduling, recurring tasks, automatic or AI planning, task permissions, revisions, approval workflows, conflict handling, audit history, reports, analytics, mastery, streaks, gamification, messaging, notifications, drag-and-drop/manual ordering, search, later product work, TLS, deployment execution, monitoring, or backup execution.

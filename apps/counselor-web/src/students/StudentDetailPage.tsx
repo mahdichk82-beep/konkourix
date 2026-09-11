@@ -9,6 +9,7 @@ import {
 } from './students-client'
 import { StudentTaskForm } from './StudentTaskForm'
 import { StudentTaskList } from './StudentTaskList'
+import { StudentWeeklyPlanning } from './StudentWeeklyPlanning'
 
 type StudentDetailPageProps = {
   navigate(path: string): void
@@ -115,6 +116,10 @@ export function StudentDetailPage({ navigate, studentId }: StudentDetailPageProp
           اطلاعات پایه پرونده و فهرست وظایف فقط خواندنی هستند. می‌توانید وضعیت اجرای برنامه دانش‌آموز را ببینید یا وظیفه جدیدی برای او ثبت کنید.
         </p>
       </Card>
+      <StudentWeeklyPlanning
+        refreshKey={taskRefreshKey}
+        studentId={student.id}
+      />
       <StudentTaskList key={student.id} refreshKey={taskRefreshKey} studentId={student.id} />
       <StudentTaskForm
         onTaskCreated={() => setTaskRefreshKey((value) => value + 1)}

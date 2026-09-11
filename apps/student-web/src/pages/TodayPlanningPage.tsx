@@ -92,7 +92,7 @@ const loadTopics = async (subjectId: string): Promise<StudyTopic[]> => {
   return topics.filter((topic) => topic.archivedAt === null)
 }
 
-export function TodayPlanningPage() {
+export function TodayPlanningPage({ navigate }: { navigate(path: string): void }) {
   const today = new Date()
   const todayKey = localDateKey(today)
   const todayLabel = new Intl.DateTimeFormat('fa-IR', {
@@ -370,13 +370,18 @@ export function TodayPlanningPage() {
           <h2>امروز چه کاری پیش رو داری؟</h2>
           <p>{todayLabel}</p>
         </div>
-        <Button onClick={() => {
-          setIsCreateOpen((current) => !current)
-          setFormError(null)
-          setFormSuccess(null)
-        }}>
-          {isCreateOpen ? 'بستن فرم' : 'افزودن کار امروز'}
-        </Button>
+        <div className="planning-hero__actions">
+          <Button onClick={() => navigate('/planning/weekly')} variant="secondary">
+            نمای هفتگی
+          </Button>
+          <Button onClick={() => {
+            setIsCreateOpen((current) => !current)
+            setFormError(null)
+            setFormSuccess(null)
+          }}>
+            {isCreateOpen ? 'بستن فرم' : 'افزودن کار امروز'}
+          </Button>
+        </div>
       </Card>
 
       {isCreateOpen && (

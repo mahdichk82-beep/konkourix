@@ -50,10 +50,12 @@ type Page<T> = {
 
 export type TaskListQuery = {
   cursor?: string
-  date: string
+  date?: string
+  from?: string
   limit?: number
   status?: DailyTaskStatus
   subjectId?: string
+  to?: string
 }
 
 export type CreateTaskInput = {
@@ -119,9 +121,11 @@ class PlanningClient {
       withQuery('/student/daily-tasks', {
         cursor: query.cursor,
         date: query.date,
+        from: query.from,
         limit: query.limit ?? 20,
         status: query.status,
         subjectId: query.subjectId,
+        to: query.to,
       }),
     )
   }

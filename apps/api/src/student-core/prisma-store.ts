@@ -105,7 +105,11 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
       skip: query?.cursor ? 1 : undefined,
       take: query?.limit ? query.limit + 1 : undefined,
       where: {
-        scheduledFor: query?.scheduledFor,
+        scheduledFor: query?.scheduledFor ?? (
+          query?.scheduledFrom || query?.scheduledTo
+            ? { gte: query.scheduledFrom, lte: query.scheduledTo }
+            : undefined
+        ),
         status: query?.status,
         studentProfileId,
         studyPlanId: query?.studyPlanId,

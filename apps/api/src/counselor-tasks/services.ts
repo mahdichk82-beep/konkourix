@@ -5,6 +5,7 @@ import type {
   CounselorStudentSubject,
   CounselorStudentTopic,
   CounselorTaskActor,
+  CounselorTaskListQuery,
   CounselorTaskPage,
   CounselorTaskPageQuery,
   CounselorTaskView,
@@ -68,10 +69,33 @@ export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
   async list(
     actor: CounselorTaskActor,
     studentProfileId: string,
-    query: CounselorTaskPageQuery,
+    query: CounselorTaskListQuery,
   ): Promise<CounselorTaskPage<CounselorVisibleTaskView>> {
     ensureCounselor(actor)
-    const result = await store.listAssignedStudentTasks(actor.id, studentProfileId, query)
+    if (query.scheduledFrom && !validDate(query.scheduledFrom)) {
+      throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date range is invalid')
+    }
+    if (query.scheduledTo && !validDate(query.scheduledTo)) {
+      throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date range is invalid')
+    }
+    if ((query.scheduledFrom === undefined) !== (query.scheduledTo === undefined)) {
+      throw new ApiError(400, 'TASK_DATE_RANGE_INVALID', 'Task date range is invalid')
+    }
+    const scheduledFrom = query.scheduledFrom ? dateOnly(query.scheduledFrom) : undefined
+    const scheduledTo = query.scheduledTo ? dateOnly(query.scheduledTo) : undefined
+    if (scheduledFrom && scheduledTo && scheduledTo < scheduledFrom) {
+      throw new ApiError(400, 'TASK_DATE_RANGE_INVALID', 'Task date range is invalid')
+    }
+    const {
+      scheduledFrom: _scheduledFromInput,
+      scheduledTo: _scheduledToInput,
+      ...storeQuery
+    } = query
+    const result = await store.listAssignedStudentTasks(actor.id, studentProfileId, {
+      ...storeQuery,
+      ...(scheduledFrom ? { scheduledFrom } : {}),
+      ...(scheduledTo ? { scheduledTo } : {}),
+    })
     if (!result.ok) {
       throw new ApiError(404, 'STUDENT_NOT_FOUND', 'Student not found')
     }

@@ -110,6 +110,43 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
   assert.equal('createdByUserId' in (result.items[0] ?? {}), false)
 })
 
+test('Prisma counselor weekly visibility keeps assignment and student ownership predicates', async () => {
+  const taskQueries: Array<{ where?: unknown }> = []
+  const transaction = {
+    studentProfile: {
+      async findFirst() {
+        return { id: ids.student }
+      },
+    },
+    dailyTask: {
+      async findMany(query: { where?: unknown }) {
+        taskQueries.push(query)
+        return []
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+  const services = createCounselorTaskServices(createPrismaCounselorTaskStore(prisma))
+
+  await services.list(
+    { id: ids.counselor, role: 'COUNSELOR', status: 'ACTIVE' },
+    ids.student,
+    { scheduledFrom: '2026-09-12', scheduledTo: '2026-09-18' },
+  )
+
+  assert.deepEqual(taskQueries[0]?.where, {
+    scheduledFor: {
+      gte: new Date('2026-09-12T00:00:00.000Z'),
+      lte: new Date('2026-09-18T00:00:00.000Z'),
+    },
+    studentProfileId: ids.student,
+  })
+})
+
 test('Prisma counselor task creation validates assignment and relations atomically', async () => {
   const profileQueries: unknown[] = []
   const subjectQueries: unknown[] = []

@@ -22,6 +22,8 @@ test('Prisma plan and task queries skip cursor rows and fetch one lookahead row'
   } as unknown as PrismaClient
   const store = createPrismaStudentCoreStore(prisma)
   const scheduledFor = new Date('2026-09-03T00:00:00.000Z')
+  const scheduledFrom = new Date('2026-09-12T00:00:00.000Z')
+  const scheduledTo = new Date('2026-09-18T00:00:00.000Z')
 
   await store.listPlans('student-profile-1', { cursor: 'plan-2', limit: 2, status: 'ACTIVE' })
   await store.listTasks('student-profile-1', {
@@ -32,6 +34,7 @@ test('Prisma plan and task queries skip cursor rows and fetch one lookahead row'
     studyPlanId: 'plan-1',
     subjectId: 'subject-1',
   })
+  await store.listTasks('student-profile-1', { scheduledFrom, scheduledTo })
 
   assert.deepEqual(planQueries[0], {
     cursor: { id: 'plan-2' },
@@ -51,6 +54,19 @@ test('Prisma plan and task queries skip cursor rows and fetch one lookahead row'
       studentProfileId: 'student-profile-1',
       studyPlanId: 'plan-1',
       subjectId: 'subject-1',
+    },
+  })
+  assert.deepEqual(taskQueries[1], {
+    cursor: undefined,
+    orderBy: [{ scheduledFor: 'desc' }, { createdAt: 'desc' }],
+    skip: undefined,
+    take: undefined,
+    where: {
+      scheduledFor: { gte: scheduledFrom, lte: scheduledTo },
+      status: undefined,
+      studentProfileId: 'student-profile-1',
+      studyPlanId: undefined,
+      subjectId: undefined,
     },
   })
 })

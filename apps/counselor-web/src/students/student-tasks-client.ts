@@ -55,9 +55,18 @@ export type CreateCounselorTaskInput = {
 const resourcePath = (studentProfileId: string, suffix: string) =>
   `/counselor/students/${encodeURIComponent(studentProfileId)}${suffix}`
 
-const withPage = (path: string, cursor?: string, limit = 100) => {
+const withPage = (
+  path: string,
+  cursor?: string,
+  limit = 100,
+  range?: { from: string; to: string },
+) => {
   const query = new URLSearchParams({ limit: String(limit) })
   if (cursor) query.set('cursor', cursor)
+  if (range) {
+    query.set('from', range.from)
+    query.set('to', range.to)
+  }
   return `${path}?${query.toString()}`
 }
 
@@ -78,9 +87,10 @@ export const studentTasksClient = {
   listTasks(
     studentProfileId: string,
     cursor?: string,
+    range?: { from: string; to: string },
   ): Promise<Page<CounselorVisibleTask>> {
     return authClient.authorizedRequest<Page<CounselorVisibleTask>>(
-      withPage(resourcePath(studentProfileId, '/tasks'), cursor, 20),
+      withPage(resourcePath(studentProfileId, '/tasks'), cursor, range ? 100 : 20, range),
     )
   },
 

@@ -39,10 +39,14 @@ export const updatePlanSchema = z.object({
 export const listTasksSchema = z.object({
   ...pagination,
   date: dateOnly.optional(),
+  from: dateOnly.optional(),
+  to: dateOnly.optional(),
   status: z.enum(['PENDING', 'COMPLETED', 'SKIPPED']).optional(),
   studyPlanId: z.string().uuid().optional(),
   subjectId: z.string().uuid().optional(),
 }).strict()
+  .refine((value) => !value.date || (!value.from && !value.to), 'Date cannot be combined with a range')
+  .refine((value) => (value.from === undefined) === (value.to === undefined), 'Both range dates are required')
 export const createTaskSchema = z.object({
   studyPlanId: z.string().uuid().nullable().optional().default(null),
   subjectId: z.string().uuid().nullable().optional().default(null),
