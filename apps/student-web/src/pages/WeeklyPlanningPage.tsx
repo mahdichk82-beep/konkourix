@@ -7,6 +7,7 @@ import { ContentState } from '../components/ui/ContentState'
 import {
   planningClient,
   type DailyTask,
+  type DailyTaskSkipReason,
   type DailyTaskStatus,
   type StudySubject,
   type StudyTopic,
@@ -33,6 +34,13 @@ const statusLabels: Record<DailyTaskStatus, string> = {
   COMPLETED: 'انجام‌شده',
   PENDING: 'در انتظار',
   SKIPPED: 'ردشده',
+}
+
+const skipReasonLabels: Record<DailyTaskSkipReason, string> = {
+  FORGOT: 'فراموش کردم',
+  NO_TIME: 'زمان کافی نداشتم',
+  OTHER: 'دلیل دیگر',
+  TOO_DIFFICULT: 'بیش از حد دشوار بود',
 }
 
 const lockLabels: Record<MovementLockReason, string> = {
@@ -399,6 +407,9 @@ export function WeeklyPlanningPage({ navigate }: WeeklyPlanningPageProps) {
                           )}
                           <div className="weekly-task__meta">
                             {task.estimatedMinutes !== null && <span>{task.estimatedMinutes.toLocaleString('fa-IR')} دقیقه</span>}
+                            {task.status === 'SKIPPED' && task.skipReason && (
+                              <span>دلیل: {skipReasonLabels[task.skipReason]}</span>
+                            )}
                             {taskLockReason
                               ? <span className="weekly-task__lock">{lockLabels[taskLockReason]}</span>
                               : <span>قابل جابه‌جایی</span>}

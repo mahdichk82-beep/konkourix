@@ -2,6 +2,7 @@ import { authClient } from '../auth/auth-client'
 
 export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'SKIPPED'
 export type DailyTaskSource = 'PERSONAL' | 'COUNSELOR'
+export type DailyTaskSkipReason = 'NO_TIME' | 'TOO_DIFFICULT' | 'FORGOT' | 'OTHER'
 
 export type StudySubject = {
   archivedAt: string | null
@@ -23,6 +24,8 @@ export type DailyTask = {
   estimatedMinutes: number | null
   id: string
   scheduledFor: string
+  skipReason: DailyTaskSkipReason | null
+  skippedAt: string | null
   source: DailyTaskSource
   status: DailyTaskStatus
   subjectId: string | null
@@ -68,6 +71,7 @@ export type CreateTaskInput = {
 }
 
 export type UpdateTaskInput = {
+  skipReason?: DailyTaskSkipReason | null
   status?: DailyTaskStatus
   subjectId?: string | null
   topicId?: string | null
@@ -180,8 +184,15 @@ class PlanningClient {
     )
   }
 
-  updateTaskStatus(id: string, status: DailyTaskStatus): Promise<DailyTask> {
-    return this.updateTask(id, { status })
+  updateTaskStatus(
+    id: string,
+    status: DailyTaskStatus,
+    skipReason?: DailyTaskSkipReason | null,
+  ): Promise<DailyTask> {
+    return this.updateTask(id, {
+      status,
+      ...(status === 'SKIPPED' ? { skipReason: skipReason ?? null } : {}),
+    })
   }
 
   rescheduleTask(id: string, scheduledFor: string): Promise<DailyTask> {

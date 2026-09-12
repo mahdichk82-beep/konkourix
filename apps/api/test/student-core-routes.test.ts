@@ -107,6 +107,86 @@ test('student task routes reject counselor users', async () => {
 
   assert.equal(response.statusCode, 403)
   assert.equal(response.json().error.code, 'ROLE_FORBIDDEN')
+  const lifecycleResponse = await app.inject({
+    headers: { authorization: 'Bearer counselor-access-token' },
+    method: 'PATCH',
+    payload: { status: 'SKIPPED', skipReason: 'NO_TIME' },
+    url: '/api/v1/student/daily-tasks/00000000-0000-4000-8000-000000000497',
+  })
+  assert.equal(lifecycleResponse.statusCode, 403)
+  assert.equal(lifecycleResponse.json().error.code, 'ROLE_FORBIDDEN')
+  await app.close()
+})
+
+test('student task lifecycle accepts skip reasons and rejects client-controlled metadata', async () => {
+  const taskId = '00000000-0000-4000-8000-000000000496'
+  const task: DailyTaskRecord = {
+    completedAt: null,
+    createdAt: new Date('2026-09-03T00:00:00.000Z'),
+    createdByUserId: user.id,
+    description: null,
+    estimatedMinutes: 30,
+    id: taskId,
+    scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+    skipReason: null,
+    skippedAt: null,
+    source: 'PERSONAL',
+    status: 'PENDING',
+    studentProfileId: 'student-profile-1',
+    studyPlanId: null,
+    subjectId: null,
+    title: 'Lifecycle task',
+    topicId: null,
+    updatedAt: new Date('2026-09-03T00:00:00.000Z'),
+  }
+  let updateCalls = 0
+  const lifecycleStore: StudentCoreStore = {
+    ...store,
+    findTaskById: async (profileId, id) =>
+      profileId === task.studentProfileId && id === task.id ? task : null,
+    async updateTask(profileId, id, input) {
+      updateCalls += 1
+      if (profileId !== task.studentProfileId || id !== task.id) return null
+      Object.assign(task, input)
+      return task
+    },
+  }
+  const app = createApp(lifecycleStore)
+
+  const skipped = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { status: 'SKIPPED', skipReason: 'FORGOT' },
+    url: `/api/v1/student/daily-tasks/${taskId}`,
+  })
+  assert.equal(skipped.statusCode, 200)
+  assert.equal(skipped.json().data.status, 'SKIPPED')
+  assert.equal(skipped.json().data.skipReason, 'FORGOT')
+  assert.equal(typeof skipped.json().data.skippedAt, 'string')
+  assert.equal(skipped.json().data.completedAt, null)
+  assert.equal('createdByUserId' in skipped.json().data, false)
+  assert.equal(task.studentProfileId, 'student-profile-1')
+  assert.equal(task.createdByUserId, user.id)
+  assert.equal(task.source, 'PERSONAL')
+
+  const invalidPayloads = [
+    { status: 'PENDING', skipReason: 'NO_TIME' },
+    { status: 'COMPLETED', skipReason: 'OTHER' },
+    { status: 'SKIPPED', skipReason: 'UNKNOWN' },
+    { status: 'SKIPPED', skippedAt: '2026-09-05T10:00:00.000Z' },
+    { status: 'SKIPPED', completedAt: '2026-09-05T10:00:00.000Z' },
+  ]
+  for (const payload of invalidPayloads) {
+    const invalid = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'PATCH',
+      payload,
+      url: `/api/v1/student/daily-tasks/${taskId}`,
+    })
+    assert.equal(invalid.statusCode, 400)
+    assert.equal(invalid.json().error.code, 'VALIDATION_ERROR')
+  }
+  assert.equal(updateCalls, 1)
   await app.close()
 })
 
@@ -212,6 +292,8 @@ test('student task schedule route accepts only a date and returns creator-safe d
     estimatedMinutes: 30,
     status: 'PENDING',
     completedAt: null,
+    skipReason: null,
+    skippedAt: null,
     createdAt: new Date('2026-09-03T00:00:00.000Z'),
     updatedAt: new Date('2026-09-03T00:00:00.000Z'),
   }

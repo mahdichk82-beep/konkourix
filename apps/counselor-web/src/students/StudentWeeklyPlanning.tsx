@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card'
 import { ContentState } from '../components/ui/ContentState'
 import {
   studentTasksClient,
+  type CounselorTaskSkipReason,
   type CounselorTaskSubject,
   type CounselorTaskTopic,
   type CounselorVisibleTask,
@@ -20,6 +21,13 @@ const statusLabels: Record<CounselorVisibleTask['status'], string> = {
   COMPLETED: 'انجام‌شده',
   PENDING: 'در انتظار',
   SKIPPED: 'ردشده',
+}
+
+const skipReasonLabels: Record<CounselorTaskSkipReason, string> = {
+  FORGOT: 'فراموش کرده',
+  NO_TIME: 'زمان کافی نداشته',
+  OTHER: 'دلیل دیگر',
+  TOO_DIFFICULT: 'بیش از حد دشوار بوده',
 }
 
 const weekFormatter = new Intl.DateTimeFormat('fa-IR', {
@@ -176,6 +184,13 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
                     <article className={`student-weekly-task student-weekly-task--${task.status.toLowerCase()}`} key={task.id}>
                       <h3>{task.title}</h3>
                       <span>{statusLabels[task.status]}</span>
+                      {task.status === 'SKIPPED' && (
+                        <small>
+                          {task.skipReason
+                            ? `دلیل رد کردن: ${skipReasonLabels[task.skipReason]}`
+                            : 'بدون ثبت دلیل رد کردن'}
+                        </small>
+                      )}
                       {(task.subjectId || task.topicId) && (
                         <p>
                           {task.subjectId ? subjectNames.get(task.subjectId) ?? 'درس ثبت‌شده' : ''}

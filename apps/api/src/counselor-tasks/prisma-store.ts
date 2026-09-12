@@ -32,6 +32,8 @@ export const createPrismaCounselorTaskStore = (
           estimatedMinutes: true,
           id: true,
           scheduledFor: true,
+          skipReason: true,
+          skippedAt: true,
           source: true,
           status: true,
           studySessions: { select: { endedAt: true, startedAt: true } },

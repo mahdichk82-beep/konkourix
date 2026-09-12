@@ -1403,6 +1403,8 @@ export const DailyTaskScalarFieldEnum = {
   estimatedMinutes: 'estimatedMinutes',
   status: 'status',
   completedAt: 'completedAt',
+  skipReason: 'skipReason',
+  skippedAt: 'skippedAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1595,6 +1597,20 @@ export type EnumDailyTaskStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
  */
 export type ListEnumDailyTaskStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DailyTaskStatus[]'>
     
+
+
+/**
+ * Reference to a field of type 'DailyTaskSkipReason'
+ */
+export type EnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DailyTaskSkipReason'>
+
+
+
+/**
+ * Reference to a field of type 'DailyTaskSkipReason[]'
+ */
+export type ListEnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DailyTaskSkipReason[]'>
+
 
 
 /**
@@ -1848,4 +1864,3 @@ export type PrismaAction =
  * `PrismaClient` proxy available in interactive transactions.
  */
 export type TransactionClient = Omit<DefaultPrismaClient, runtime.ITXClientDenyList>
-

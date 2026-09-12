@@ -172,6 +172,8 @@ export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
       description: input.description ?? null,
       estimatedMinutes: input.estimatedMinutes,
       scheduledFor: dateOnly(input.scheduledFor),
+      skipReason: null,
+      skippedAt: null,
       source: 'COUNSELOR',
       status: 'PENDING',
       studentProfileId,

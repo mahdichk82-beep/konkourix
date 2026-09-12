@@ -96,7 +96,7 @@ const createStore = (): StudentCoreStore & {
       store.tasks.push(record)
       return record
     },
-    async updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'estimatedMinutes' | 'status' | 'completedAt'>>) {
+    async updateTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'estimatedMinutes' | 'status' | 'completedAt' | 'skipReason' | 'skippedAt'>>) {
       const task = store.tasks.find((item) => item.id === id && item.studentProfileId === profileId)
       if (!task) return null
       Object.assign(task, input, { updatedAt: timestamp })
@@ -264,7 +264,7 @@ test('student core rejects plans whose end date precedes the start date', async 
   )
 })
 
-test('student core completes tasks with a completion timestamp and protects ownership', async () => {
+test('student lifecycle records skip metadata and preserves completion timestamp behavior', async () => {
   const store = createStore()
   const services = createStudentCoreServices(store, () => timestamp)
   const task = await services.tasks.create(student, {
@@ -281,14 +281,33 @@ test('student core completes tasks with a completion timestamp and protects owne
   const updated = await services.tasks.update(student, task.id, { status: 'COMPLETED' })
   assert.equal(updated.status, 'COMPLETED')
   assert.deepEqual(updated.completedAt, timestamp)
+  assert.equal(updated.skipReason, null)
+  assert.equal(updated.skippedAt, null)
 
-  const skipped = await services.tasks.update(student, task.id, { status: 'SKIPPED' })
+  const originalProvenance = {
+    createdByUserId: store.tasks[0]?.createdByUserId,
+    source: store.tasks[0]?.source,
+    studentProfileId: store.tasks[0]?.studentProfileId,
+  }
+  const skipped = await services.tasks.update(student, task.id, {
+    status: 'SKIPPED',
+    skipReason: 'NO_TIME',
+  })
   assert.equal(skipped.status, 'SKIPPED')
   assert.equal(skipped.completedAt, null)
+  assert.equal(skipped.skipReason, 'NO_TIME')
+  assert.deepEqual(skipped.skippedAt, timestamp)
+  assert.deepEqual({
+    createdByUserId: store.tasks[0]?.createdByUserId,
+    source: store.tasks[0]?.source,
+    studentProfileId: store.tasks[0]?.studentProfileId,
+  }, originalProvenance)
 
   const reopened = await services.tasks.update(student, task.id, { status: 'PENDING' })
   assert.equal(reopened.status, 'PENDING')
   assert.equal(reopened.completedAt, null)
+  assert.equal(reopened.skipReason, null)
+  assert.equal(reopened.skippedAt, null)
 
   await assert.rejects(
     services.tasks.get({ id: 'other-student', role: 'STUDENT', status: 'ACTIVE' }, task.id),
@@ -405,6 +424,8 @@ test('student cannot change counselor-created planned content but can update its
     estimatedMinutes: 30,
     status: 'PENDING',
     completedAt: null,
+    skipReason: null,
+    skippedAt: null,
     createdAt: timestamp,
     updatedAt: timestamp,
   })
@@ -418,6 +439,14 @@ test('student cannot change counselor-created planned content but can update its
     status: 'COMPLETED',
   })
   assert.equal(completed.status, 'COMPLETED')
+  assert.equal(store.tasks[0]?.title, 'Counselor plan')
+  const skipped = await services.tasks.update(student, 'counselor-task', {
+    status: 'SKIPPED',
+    skipReason: 'TOO_DIFFICULT',
+  })
+  assert.equal(skipped.skipReason, 'TOO_DIFFICULT')
+  assert.equal(store.tasks[0]?.createdByUserId, 'counselor-user')
+  assert.equal(store.tasks[0]?.source, 'COUNSELOR')
   assert.equal(store.tasks[0]?.title, 'Counselor plan')
 })
 
@@ -634,6 +663,8 @@ test('student core hides another student task from get and update operations', a
     estimatedMinutes: 20,
     status: 'PENDING',
     completedAt: null,
+    skipReason: null,
+    skippedAt: null,
     createdAt: timestamp,
     updatedAt: timestamp,
   })
@@ -644,7 +675,10 @@ test('student core hides another student task from get and update operations', a
     (error: unknown) => error instanceof ApiError && error.code === 'TASK_NOT_FOUND',
   )
   await assert.rejects(
-    services.tasks.update(student, 'foreign-task', { status: 'COMPLETED' }),
+    services.tasks.update(student, 'foreign-task', {
+      status: 'SKIPPED',
+      skipReason: 'FORGOT',
+    }),
     (error: unknown) => error instanceof ApiError && error.code === 'TASK_NOT_FOUND',
   )
   assert.equal(store.tasks[0]?.status, 'PENDING')
@@ -798,6 +832,8 @@ test('student core plan and task pages use lookahead rows without repeating the 
       estimatedMinutes: null,
       status: 'PENDING',
       completedAt: null,
+      skipReason: null,
+      skippedAt: null,
       createdAt: timestamp,
       updatedAt: timestamp,
     })),

@@ -5,6 +5,7 @@ import { Card } from '../components/ui/Card'
 import { ContentState } from '../components/ui/ContentState'
 import {
   studentTasksClient,
+  type CounselorTaskSkipReason,
   type CounselorVisibleTask,
 } from './student-tasks-client'
 
@@ -22,6 +23,13 @@ const statusLabels: Record<CounselorVisibleTask['status'], string> = {
 const sourceLabels: Record<CounselorVisibleTask['source'], string> = {
   COUNSELOR: 'تعیین‌شده توسط مشاور',
   PERSONAL: 'برنامه شخصی دانش‌آموز',
+}
+
+const skipReasonLabels: Record<CounselorTaskSkipReason, string> = {
+  FORGOT: 'فراموش کرده',
+  NO_TIME: 'زمان کافی نداشته',
+  OTHER: 'دلیل دیگر',
+  TOO_DIFFICULT: 'بیش از حد دشوار بوده',
 }
 
 const dateFormatter = new Intl.DateTimeFormat('fa-IR', {
@@ -48,7 +56,15 @@ const completionLabel = (task: CounselorVisibleTask) => {
     }
   }
   if (task.status === 'COMPLETED') return 'انجام‌شده'
-  if (task.status === 'SKIPPED') return 'بدون ثبت تکمیل'
+  if (task.status === 'SKIPPED') {
+    const skippedAt = task.skippedAt ? new Date(task.skippedAt) : null
+    const status = skippedAt && !Number.isNaN(skippedAt.getTime())
+      ? `ردشده در ${completionFormatter.format(skippedAt)}`
+      : 'ردشده'
+    return task.skipReason
+      ? `${status} · دلیل: ${skipReasonLabels[task.skipReason]}`
+      : `${status} · بدون ثبت دلیل`
+  }
   return 'در انتظار انجام'
 }
 

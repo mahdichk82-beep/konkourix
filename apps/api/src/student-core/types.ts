@@ -8,6 +8,7 @@ export type StudentProfileRef = { id: string; userId: string }
 export type StudyPlanStatus = 'DRAFT' | 'ACTIVE' | 'COMPLETED' | 'ARCHIVED'
 export type DailyTaskStatus = 'PENDING' | 'COMPLETED' | 'SKIPPED'
 export type DailyTaskSource = 'PERSONAL' | 'COUNSELOR'
+export type DailyTaskSkipReason = 'NO_TIME' | 'TOO_DIFFICULT' | 'FORGOT' | 'OTHER'
 
 export type StudySubjectRecord = {
   id: string
@@ -55,6 +56,8 @@ export type DailyTaskRecord = {
   estimatedMinutes: number | null
   status: DailyTaskStatus
   completedAt: Date | null
+  skipReason: DailyTaskSkipReason | null
+  skippedAt: Date | null
   createdAt: Date
   updatedAt: Date
 }

@@ -48,6 +48,8 @@ export type DailyTaskMinAggregateOutputType = {
   estimatedMinutes: number | null
   status: $Enums.DailyTaskStatus | null
   completedAt: Date | null
+  skipReason: $Enums.DailyTaskSkipReason | null
+  skippedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -66,6 +68,8 @@ export type DailyTaskMaxAggregateOutputType = {
   estimatedMinutes: number | null
   status: $Enums.DailyTaskStatus | null
   completedAt: Date | null
+  skipReason: $Enums.DailyTaskSkipReason | null
+  skippedAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -84,6 +88,8 @@ export type DailyTaskCountAggregateOutputType = {
   estimatedMinutes: number
   status: number
   completedAt: number
+  skipReason: number
+  skippedAt: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -112,6 +118,8 @@ export type DailyTaskMinAggregateInputType = {
   estimatedMinutes?: true
   status?: true
   completedAt?: true
+  skipReason?: true
+  skippedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -130,6 +138,8 @@ export type DailyTaskMaxAggregateInputType = {
   estimatedMinutes?: true
   status?: true
   completedAt?: true
+  skipReason?: true
+  skippedAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -148,6 +158,8 @@ export type DailyTaskCountAggregateInputType = {
   estimatedMinutes?: true
   status?: true
   completedAt?: true
+  skipReason?: true
+  skippedAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -253,6 +265,8 @@ export type DailyTaskGroupByOutputType = {
   estimatedMinutes: number | null
   status: $Enums.DailyTaskStatus
   completedAt: Date | null
+  skipReason: $Enums.DailyTaskSkipReason | null
+  skippedAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: DailyTaskCountAggregateOutputType | null
@@ -294,6 +308,8 @@ export type DailyTaskWhereInput = {
   estimatedMinutes?: Prisma.IntNullableFilter<"DailyTask"> | number | null
   status?: Prisma.EnumDailyTaskStatusFilter<"DailyTask"> | $Enums.DailyTaskStatus
   completedAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
+  skipReason?: Prisma.EnumDailyTaskSkipReasonNullableFilter<"DailyTask"> | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"DailyTask"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DailyTask"> | Date | string
   studentProfile?: Prisma.XOR<Prisma.StudentProfileScalarRelationFilter, Prisma.StudentProfileWhereInput>
@@ -318,6 +334,8 @@ export type DailyTaskOrderByWithRelationInput = {
   estimatedMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  skipReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  skippedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   studentProfile?: Prisma.StudentProfileOrderByWithRelationInput
@@ -345,6 +363,8 @@ export type DailyTaskWhereUniqueInput = Prisma.AtLeast<{
   estimatedMinutes?: Prisma.IntNullableFilter<"DailyTask"> | number | null
   status?: Prisma.EnumDailyTaskStatusFilter<"DailyTask"> | $Enums.DailyTaskStatus
   completedAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
+  skipReason?: Prisma.EnumDailyTaskSkipReasonNullableFilter<"DailyTask"> | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"DailyTask"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DailyTask"> | Date | string
   studentProfile?: Prisma.XOR<Prisma.StudentProfileScalarRelationFilter, Prisma.StudentProfileWhereInput>
@@ -369,6 +389,8 @@ export type DailyTaskOrderByWithAggregationInput = {
   estimatedMinutes?: Prisma.SortOrderInput | Prisma.SortOrder
   status?: Prisma.SortOrder
   completedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  skipReason?: Prisma.SortOrderInput | Prisma.SortOrder
+  skippedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.DailyTaskCountOrderByAggregateInput
@@ -395,6 +417,8 @@ export type DailyTaskScalarWhereWithAggregatesInput = {
   estimatedMinutes?: Prisma.IntNullableWithAggregatesFilter<"DailyTask"> | number | null
   status?: Prisma.EnumDailyTaskStatusWithAggregatesFilter<"DailyTask"> | $Enums.DailyTaskStatus
   completedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"DailyTask"> | Date | string | null
+  skipReason?: Prisma.EnumDailyTaskSkipReasonNullableWithAggregatesFilter<"DailyTask"> | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"DailyTask"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"DailyTask"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"DailyTask"> | Date | string
 }
@@ -408,6 +432,8 @@ export type DailyTaskCreateInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentProfile: Prisma.StudentProfileCreateNestedOneWithoutDailyTasksInput
@@ -432,6 +458,8 @@ export type DailyTaskUncheckedCreateInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutDailyTaskInput
@@ -446,6 +474,8 @@ export type DailyTaskUpdateInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentProfile?: Prisma.StudentProfileUpdateOneRequiredWithoutDailyTasksNestedInput
@@ -470,6 +500,8 @@ export type DailyTaskUncheckedUpdateInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutDailyTaskNestedInput
@@ -489,6 +521,8 @@ export type DailyTaskCreateManyInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -502,6 +536,8 @@ export type DailyTaskUpdateManyMutationInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -520,6 +556,8 @@ export type DailyTaskUncheckedUpdateManyInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -548,6 +586,8 @@ export type DailyTaskCountOrderByAggregateInput = {
   estimatedMinutes?: Prisma.SortOrder
   status?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
+  skipReason?: Prisma.SortOrder
+  skippedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -570,6 +610,8 @@ export type DailyTaskMaxOrderByAggregateInput = {
   estimatedMinutes?: Prisma.SortOrder
   status?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
+  skipReason?: Prisma.SortOrder
+  skippedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -588,6 +630,8 @@ export type DailyTaskMinOrderByAggregateInput = {
   estimatedMinutes?: Prisma.SortOrder
   status?: Prisma.SortOrder
   completedAt?: Prisma.SortOrder
+  skipReason?: Prisma.SortOrder
+  skippedAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -827,6 +871,10 @@ export type EnumDailyTaskStatusFieldUpdateOperationsInput = {
   set?: $Enums.DailyTaskStatus
 }
 
+export type NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput = {
+  set?: $Enums.DailyTaskSkipReason | null
+}
+
 export type DailyTaskCreateNestedOneWithoutStudySessionsInput = {
   create?: Prisma.XOR<Prisma.DailyTaskCreateWithoutStudySessionsInput, Prisma.DailyTaskUncheckedCreateWithoutStudySessionsInput>
   connectOrCreate?: Prisma.DailyTaskCreateOrConnectWithoutStudySessionsInput
@@ -852,6 +900,8 @@ export type DailyTaskCreateWithoutCreatedByInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentProfile: Prisma.StudentProfileCreateNestedOneWithoutDailyTasksInput
@@ -874,6 +924,8 @@ export type DailyTaskUncheckedCreateWithoutCreatedByInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutDailyTaskInput
@@ -922,6 +974,8 @@ export type DailyTaskScalarWhereInput = {
   estimatedMinutes?: Prisma.IntNullableFilter<"DailyTask"> | number | null
   status?: Prisma.EnumDailyTaskStatusFilter<"DailyTask"> | $Enums.DailyTaskStatus
   completedAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
+  skipReason?: Prisma.EnumDailyTaskSkipReasonNullableFilter<"DailyTask"> | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.DateTimeNullableFilter<"DailyTask"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"DailyTask"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"DailyTask"> | Date | string
 }
@@ -935,6 +989,8 @@ export type DailyTaskCreateWithoutStudentProfileInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   createdBy: Prisma.UserCreateNestedOneWithoutCreatedDailyTasksInput
@@ -957,6 +1013,8 @@ export type DailyTaskUncheckedCreateWithoutStudentProfileInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutDailyTaskInput
@@ -997,6 +1055,8 @@ export type DailyTaskCreateWithoutSubjectInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentProfile: Prisma.StudentProfileCreateNestedOneWithoutDailyTasksInput
@@ -1019,6 +1079,8 @@ export type DailyTaskUncheckedCreateWithoutSubjectInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutDailyTaskInput
@@ -1059,6 +1121,8 @@ export type DailyTaskCreateWithoutTopicInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentProfile: Prisma.StudentProfileCreateNestedOneWithoutDailyTasksInput
@@ -1081,6 +1145,8 @@ export type DailyTaskUncheckedCreateWithoutTopicInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutDailyTaskInput
@@ -1121,6 +1187,8 @@ export type DailyTaskCreateWithoutStudyPlanInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentProfile: Prisma.StudentProfileCreateNestedOneWithoutDailyTasksInput
@@ -1143,6 +1211,8 @@ export type DailyTaskUncheckedCreateWithoutStudyPlanInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutDailyTaskInput
@@ -1183,6 +1253,8 @@ export type DailyTaskCreateWithoutStudySessionsInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
   studentProfile: Prisma.StudentProfileCreateNestedOneWithoutDailyTasksInput
@@ -1206,6 +1278,8 @@ export type DailyTaskUncheckedCreateWithoutStudySessionsInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1235,6 +1309,8 @@ export type DailyTaskUpdateWithoutStudySessionsInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentProfile?: Prisma.StudentProfileUpdateOneRequiredWithoutDailyTasksNestedInput
@@ -1258,6 +1334,8 @@ export type DailyTaskUncheckedUpdateWithoutStudySessionsInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1275,6 +1353,8 @@ export type DailyTaskCreateManyCreatedByInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1288,6 +1368,8 @@ export type DailyTaskUpdateWithoutCreatedByInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentProfile?: Prisma.StudentProfileUpdateOneRequiredWithoutDailyTasksNestedInput
@@ -1310,6 +1392,8 @@ export type DailyTaskUncheckedUpdateWithoutCreatedByInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutDailyTaskNestedInput
@@ -1328,6 +1412,8 @@ export type DailyTaskUncheckedUpdateManyWithoutCreatedByInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1345,6 +1431,8 @@ export type DailyTaskCreateManyStudentProfileInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1358,6 +1446,8 @@ export type DailyTaskUpdateWithoutStudentProfileInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   createdBy?: Prisma.UserUpdateOneRequiredWithoutCreatedDailyTasksNestedInput
@@ -1380,6 +1470,8 @@ export type DailyTaskUncheckedUpdateWithoutStudentProfileInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutDailyTaskNestedInput
@@ -1398,6 +1490,8 @@ export type DailyTaskUncheckedUpdateManyWithoutStudentProfileInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1415,6 +1509,8 @@ export type DailyTaskCreateManySubjectInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1428,6 +1524,8 @@ export type DailyTaskUpdateWithoutSubjectInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentProfile?: Prisma.StudentProfileUpdateOneRequiredWithoutDailyTasksNestedInput
@@ -1450,6 +1548,8 @@ export type DailyTaskUncheckedUpdateWithoutSubjectInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutDailyTaskNestedInput
@@ -1468,6 +1568,8 @@ export type DailyTaskUncheckedUpdateManyWithoutSubjectInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1485,6 +1587,8 @@ export type DailyTaskCreateManyTopicInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1498,6 +1602,8 @@ export type DailyTaskUpdateWithoutTopicInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentProfile?: Prisma.StudentProfileUpdateOneRequiredWithoutDailyTasksNestedInput
@@ -1520,6 +1626,8 @@ export type DailyTaskUncheckedUpdateWithoutTopicInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutDailyTaskNestedInput
@@ -1538,6 +1646,8 @@ export type DailyTaskUncheckedUpdateManyWithoutTopicInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1555,6 +1665,8 @@ export type DailyTaskCreateManyStudyPlanInput = {
   estimatedMinutes?: number | null
   status?: $Enums.DailyTaskStatus
   completedAt?: Date | string | null
+  skipReason?: $Enums.DailyTaskSkipReason | null
+  skippedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -1568,6 +1680,8 @@ export type DailyTaskUpdateWithoutStudyPlanInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studentProfile?: Prisma.StudentProfileUpdateOneRequiredWithoutDailyTasksNestedInput
@@ -1590,6 +1704,8 @@ export type DailyTaskUncheckedUpdateWithoutStudyPlanInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutDailyTaskNestedInput
@@ -1608,6 +1724,8 @@ export type DailyTaskUncheckedUpdateManyWithoutStudyPlanInput = {
   estimatedMinutes?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   status?: Prisma.EnumDailyTaskStatusFieldUpdateOperationsInput | $Enums.DailyTaskStatus
   completedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  skipReason?: Prisma.NullableEnumDailyTaskSkipReasonFieldUpdateOperationsInput | $Enums.DailyTaskSkipReason | null
+  skippedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -1657,6 +1775,8 @@ export type DailyTaskSelect<ExtArgs extends runtime.Types.Extensions.InternalArg
   estimatedMinutes?: boolean
   status?: boolean
   completedAt?: boolean
+  skipReason?: boolean
+  skippedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
@@ -1682,6 +1802,8 @@ export type DailyTaskSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Ext
   estimatedMinutes?: boolean
   status?: boolean
   completedAt?: boolean
+  skipReason?: boolean
+  skippedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
@@ -1705,6 +1827,8 @@ export type DailyTaskSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Ext
   estimatedMinutes?: boolean
   status?: boolean
   completedAt?: boolean
+  skipReason?: boolean
+  skippedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
@@ -1728,11 +1852,13 @@ export type DailyTaskSelectScalar = {
   estimatedMinutes?: boolean
   status?: boolean
   completedAt?: boolean
+  skipReason?: boolean
+  skippedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type DailyTaskOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentProfileId" | "createdByUserId" | "source" | "studyPlanId" | "subjectId" | "topicId" | "title" | "description" | "scheduledFor" | "estimatedMinutes" | "status" | "completedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["dailyTask"]>
+export type DailyTaskOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentProfileId" | "createdByUserId" | "source" | "studyPlanId" | "subjectId" | "topicId" | "title" | "description" | "scheduledFor" | "estimatedMinutes" | "status" | "completedAt" | "skipReason" | "skippedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["dailyTask"]>
 export type DailyTaskInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
   createdBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
@@ -1781,6 +1907,8 @@ export type $DailyTaskPayload<ExtArgs extends runtime.Types.Extensions.InternalA
     estimatedMinutes: number | null
     status: $Enums.DailyTaskStatus
     completedAt: Date | null
+    skipReason: $Enums.DailyTaskSkipReason | null
+    skippedAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["dailyTask"]>
@@ -2225,6 +2353,8 @@ export interface DailyTaskFieldRefs {
   readonly estimatedMinutes: Prisma.FieldRef<"DailyTask", 'Int'>
   readonly status: Prisma.FieldRef<"DailyTask", 'DailyTaskStatus'>
   readonly completedAt: Prisma.FieldRef<"DailyTask", 'DateTime'>
+  readonly skipReason: Prisma.FieldRef<"DailyTask", 'DailyTaskSkipReason'>
+  readonly skippedAt: Prisma.FieldRef<"DailyTask", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"DailyTask", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"DailyTask", 'DateTime'>
 }

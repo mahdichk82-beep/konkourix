@@ -7,6 +7,7 @@ import { ContentState } from '../components/ui/ContentState'
 import {
   planningClient,
   type DailyTask,
+  type DailyTaskSkipReason,
   type DailyTaskStatus,
   type StudySubject,
   type StudyTopic,
@@ -19,6 +20,13 @@ const statusLabels: Record<DailyTaskStatus, string> = {
   COMPLETED: 'انجام‌شده',
   PENDING: 'در انتظار',
   SKIPPED: 'ردشده',
+}
+
+const skipReasonLabels: Record<DailyTaskSkipReason, string> = {
+  FORGOT: 'فراموش کردم',
+  NO_TIME: 'زمان کافی نداشتم',
+  OTHER: 'دلیل دیگر',
+  TOO_DIFFICULT: 'بیش از حد دشوار بود',
 }
 
 const localDateKey = (date: Date): string => {
@@ -121,6 +129,9 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [updatingTaskIds, setUpdatingTaskIds] = useState<Set<string>>(new Set())
   const [reschedulingTaskIds, setReschedulingTaskIds] = useState<Set<string>>(new Set())
   const [scheduleDrafts, setScheduleDrafts] = useState<Record<string, string>>({})
+  const [skipReasonDrafts, setSkipReasonDrafts] = useState<
+    Record<string, DailyTaskSkipReason | ''>
+  >({})
 
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [title, setTitle] = useState('')
@@ -265,17 +276,26 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     }
   }
 
-  const handleStatusUpdate = async (task: DailyTask, status: DailyTaskStatus) => {
+  const handleStatusUpdate = async (
+    task: DailyTask,
+    status: DailyTaskStatus,
+    skipReason?: DailyTaskSkipReason | null,
+  ) => {
     setActionError(null)
     setUpdatingTaskIds((current) => new Set(current).add(task.id))
 
     try {
-      const updated = await planningClient.updateTaskStatus(task.id, status)
+      const updated = await planningClient.updateTaskStatus(task.id, status, skipReason)
       setTasks((current) => {
         if (!taskMatchesFilters(updated)) {
           return current.filter((item) => item.id !== updated.id)
         }
         return current.map((item) => item.id === updated.id ? updated : item)
+      })
+      setSkipReasonDrafts((current) => {
+        const next = { ...current }
+        delete next[task.id]
+        return next
       })
     } catch (error) {
       setActionError(planningErrorMessage(error))
@@ -657,6 +677,11 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       {task.estimatedMinutes !== null && (
                         <span>{numberFormatter.format(task.estimatedMinutes)} دقیقه</span>
                       )}
+                      {task.status === 'SKIPPED' && task.skipReason && (
+                        <span className="task-skip-reason-display">
+                          دلیل رد کردن: {skipReasonLabels[task.skipReason]}
+                        </span>
+                      )}
                     </div>
                     {task.description && <p className="task-description">{task.description}</p>}
                     {task.source === 'PERSONAL' && (
@@ -701,9 +726,30 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       >
                         {isUpdating ? 'در حال ثبت…' : 'انجام شد'}
                       </Button>
+                      <label className="task-skip-reason" htmlFor={`task-skip-reason-${task.id}`}>
+                        دلیل رد کردن (اختیاری)
+                        <select
+                          disabled={isUpdating}
+                          id={`task-skip-reason-${task.id}`}
+                          onChange={(event) => setSkipReasonDrafts((current) => ({
+                            ...current,
+                            [task.id]: event.target.value as DailyTaskSkipReason | '',
+                          }))}
+                          value={skipReasonDrafts[task.id] ?? ''}
+                        >
+                          <option value="">بدون ثبت دلیل</option>
+                          {Object.entries(skipReasonLabels).map(([value, label]) => (
+                            <option key={value} value={value}>{label}</option>
+                          ))}
+                        </select>
+                      </label>
                       <Button
                         disabled={isUpdating}
-                        onClick={() => void handleStatusUpdate(task, 'SKIPPED')}
+                        onClick={() => void handleStatusUpdate(
+                          task,
+                          'SKIPPED',
+                          skipReasonDrafts[task.id] || null,
+                        )}
                         variant="ghost"
                       >
                         رد کردن

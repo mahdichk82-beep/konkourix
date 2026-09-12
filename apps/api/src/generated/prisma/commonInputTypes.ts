@@ -267,6 +267,13 @@ export type EnumDailyTaskStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel> | $Enums.DailyTaskStatus
 }
 
+export type EnumDailyTaskSkipReasonNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.DailyTaskSkipReason | Prisma.EnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.DailyTaskSkipReason[] | Prisma.ListEnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.DailyTaskSkipReason[] | Prisma.ListEnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDailyTaskSkipReasonNullableFilter<$PrismaModel> | $Enums.DailyTaskSkipReason | null
+}
+
 export type EnumDailyTaskSourceWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.DailyTaskSource | Prisma.EnumDailyTaskSourceFieldRefInput<$PrismaModel>
   in?: $Enums.DailyTaskSource[] | Prisma.ListEnumDailyTaskSourceFieldRefInput<$PrismaModel>
@@ -316,6 +323,16 @@ export type EnumDailyTaskStatusWithAggregatesFilter<$PrismaModel = never> = {
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel>
+}
+
+export type EnumDailyTaskSkipReasonNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DailyTaskSkipReason | Prisma.EnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.DailyTaskSkipReason[] | Prisma.ListEnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.DailyTaskSkipReason[] | Prisma.ListEnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDailyTaskSkipReasonNullableWithAggregatesFilter<$PrismaModel> | $Enums.DailyTaskSkipReason | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDailyTaskSkipReasonNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDailyTaskSkipReasonNullableFilter<$PrismaModel>
 }
 
 export type EnumStudentGoalStatusFilter<$PrismaModel = never> = {
@@ -587,6 +604,13 @@ export type NestedEnumDailyTaskStatusFilter<$PrismaModel = never> = {
   not?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel> | $Enums.DailyTaskStatus
 }
 
+export type NestedEnumDailyTaskSkipReasonNullableFilter<$PrismaModel = never> = {
+  equals?: $Enums.DailyTaskSkipReason | Prisma.EnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.DailyTaskSkipReason[] | Prisma.ListEnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.DailyTaskSkipReason[] | Prisma.ListEnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDailyTaskSkipReasonNullableFilter<$PrismaModel> | $Enums.DailyTaskSkipReason | null
+}
+
 export type NestedEnumDailyTaskSourceWithAggregatesFilter<$PrismaModel = never> = {
   equals?: $Enums.DailyTaskSource | Prisma.EnumDailyTaskSourceFieldRefInput<$PrismaModel>
   in?: $Enums.DailyTaskSource[] | Prisma.ListEnumDailyTaskSourceFieldRefInput<$PrismaModel>
@@ -646,6 +670,16 @@ export type NestedEnumDailyTaskStatusWithAggregatesFilter<$PrismaModel = never> 
   _count?: Prisma.NestedIntFilter<$PrismaModel>
   _min?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel>
   _max?: Prisma.NestedEnumDailyTaskStatusFilter<$PrismaModel>
+}
+
+export type NestedEnumDailyTaskSkipReasonNullableWithAggregatesFilter<$PrismaModel = never> = {
+  equals?: $Enums.DailyTaskSkipReason | Prisma.EnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  in?: $Enums.DailyTaskSkipReason[] | Prisma.ListEnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  notIn?: $Enums.DailyTaskSkipReason[] | Prisma.ListEnumDailyTaskSkipReasonFieldRefInput<$PrismaModel> | null
+  not?: Prisma.NestedEnumDailyTaskSkipReasonNullableWithAggregatesFilter<$PrismaModel> | $Enums.DailyTaskSkipReason | null
+  _count?: Prisma.NestedIntNullableFilter<$PrismaModel>
+  _min?: Prisma.NestedEnumDailyTaskSkipReasonNullableFilter<$PrismaModel>
+  _max?: Prisma.NestedEnumDailyTaskSkipReasonNullableFilter<$PrismaModel>
 }
 
 export type NestedEnumStudentGoalStatusFilter<$PrismaModel = never> = {

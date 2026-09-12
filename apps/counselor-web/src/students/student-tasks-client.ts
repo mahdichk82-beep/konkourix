@@ -11,6 +11,8 @@ export type CounselorTaskTopic = {
   title: string
 }
 
+export type CounselorTaskSkipReason = 'NO_TIME' | 'TOO_DIFFICULT' | 'FORGOT' | 'OTHER'
+
 type CounselorTask = {
   completedAt: string | null
   createdAt: string
@@ -18,6 +20,8 @@ type CounselorTask = {
   estimatedMinutes: number | null
   id: string
   scheduledFor: string
+  skipReason: CounselorTaskSkipReason | null
+  skippedAt: string | null
   source: 'PERSONAL' | 'COUNSELOR'
   status: 'PENDING' | 'COMPLETED' | 'SKIPPED'
   studentProfileId: string

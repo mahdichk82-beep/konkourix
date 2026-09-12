@@ -143,6 +143,7 @@
 .task-meta { margin-top: 0.65rem; display: flex; flex-wrap: wrap; gap: 0.45rem; color: var(--text-muted); font-size: 0.78rem; }
 .task-meta span { padding: 0.25rem 0.5rem; border-radius: 8px; background: var(--surface); }
 .task-meta .task-source--counselor { color: var(--accent-strong); background: var(--accent-soft); font-weight: 750; }
+.task-meta .task-skip-reason-display { color: var(--danger); background: var(--danger-soft); font-weight: 700; }
 .task-description { margin: 0.75rem 0 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.8; white-space: pre-wrap; }
 .task-schedule { margin-top: 0.8rem; display: flex; flex-wrap: wrap; align-items: end; gap: 0.55rem; }
 .task-schedule label { display: grid; gap: 0.4rem; color: var(--text-muted); font-size: 0.78rem; font-weight: 700; }
@@ -162,6 +163,9 @@
 .task-execution__active textarea:focus { border-color: var(--accent); }
 .task-execution__actions { display: flex; flex-wrap: wrap; gap: 0.55rem; }
 .task-actions { flex: 0 0 auto; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.55rem; }
+.task-skip-reason { min-width: 180px; display: grid; gap: 0.35rem; color: var(--text-muted); font-size: 0.75rem; font-weight: 700; }
+.task-skip-reason select { min-height: 44px; padding: 0.55rem 0.65rem; border: 1px solid var(--border); border-radius: 10px; color: var(--text); background: var(--surface); outline: none; }
+.task-skip-reason select:focus { border-color: var(--accent); }
 
 .weekly-planning-page { gap: 1.25rem; }
 .weekly-planning-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 1.25rem; box-shadow: none; }
@@ -246,6 +250,7 @@
   .planning-form__row, .planning-filters, .inline-subject__form { grid-template-columns: 1fr; }
   .planning-form__actions .button { width: 100%; }
   .task-actions { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .task-skip-reason { grid-column: 1 / -1; }
   .task-execution, .task-execution > .button, .task-execution__actions .button { width: 100%; }
   .task-execution__state--error { align-items: stretch; flex-direction: column; }
   .planning-alert { align-items: stretch; flex-direction: column; }

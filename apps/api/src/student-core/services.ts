@@ -2,6 +2,7 @@ import { ApiError } from '../errors/api-error.js'
 import type { StudentCoreStore } from './store.js'
 import type {
   DailyTaskRecord,
+  DailyTaskSkipReason,
   DailyTaskStatus,
   DailyTaskView,
   DomainStudent,
@@ -247,7 +248,7 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
       if (!result) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
       return toTaskView(result)
     },
-    async create(actor: DomainStudent, input: { studyPlanId: string | null; subjectId: string | null; topicId: string | null; title: string; description?: string | null; scheduledFor: string; estimatedMinutes: number | null; status: DailyTaskStatus }) {
+    async create(actor: DomainStudent, input: { studyPlanId: string | null; subjectId: string | null; topicId: string | null; title: string; description?: string | null; scheduledFor: string; estimatedMinutes: number | null; status: DailyTaskStatus; skipReason?: DailyTaskSkipReason | null }) {
       const profile = await requireProfile(store, actor)
       if (!validDate(input.scheduledFor)) throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
       if (input.studyPlanId && !await store.findPlanById(profile.id, input.studyPlanId)) throw new ApiError(404, 'PLAN_NOT_FOUND', 'Study plan not found')
@@ -264,11 +265,13 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         description: input.description ?? null,
         scheduledFor: dateOnly(input.scheduledFor),
         source: 'PERSONAL',
+        skipReason: input.status === 'SKIPPED' ? input.skipReason ?? null : null,
+        skippedAt: input.status === 'SKIPPED' ? now() : null,
         studentProfileId: profile.id,
       })
       return toTaskView(result)
     },
-    async update(actor: DomainStudent, id: string, input: { studyPlanId?: string | null; subjectId?: string | null; topicId?: string | null; title?: string; description?: string | null; estimatedMinutes?: number | null; status?: DailyTaskStatus }) {
+    async update(actor: DomainStudent, id: string, input: { studyPlanId?: string | null; subjectId?: string | null; topicId?: string | null; title?: string; description?: string | null; estimatedMinutes?: number | null; status?: DailyTaskStatus; skipReason?: DailyTaskSkipReason | null }) {
       const profile = await requireProfile(store, actor)
       const current = await store.findTaskById(profile.id, id)
       if (!current) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
@@ -292,6 +295,7 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
           input.topicId === undefined ? current.topicId : input.topicId,
         )
       }
+      const lifecycleAt = input.status === undefined ? null : now()
       const result = await store.updateTask(profile.id, id, {
         ...(input.studyPlanId === undefined ? {} : { studyPlanId: input.studyPlanId }),
         ...(input.subjectId === undefined ? {} : { subjectId: input.subjectId }),
@@ -300,7 +304,9 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         ...(input.description === undefined ? {} : { description: input.description }),
         ...(input.estimatedMinutes === undefined ? {} : { estimatedMinutes: input.estimatedMinutes }),
         ...(input.status === undefined ? {} : { status: input.status }),
-        ...(input.status === undefined ? {} : { completedAt: input.status === 'COMPLETED' ? now() : null }),
+        ...(input.status === undefined ? {} : { completedAt: input.status === 'COMPLETED' ? lifecycleAt : null }),
+        ...(input.status === undefined ? {} : { skipReason: input.status === 'SKIPPED' ? input.skipReason ?? null : null }),
+        ...(input.status === undefined ? {} : { skippedAt: input.status === 'SKIPPED' ? lifecycleAt : null }),
       })
       if (!result) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
       return toTaskView(result)

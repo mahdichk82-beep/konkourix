@@ -6,6 +6,7 @@ const pagination = {
   cursor: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 }
+const taskSkipReason = z.enum(['NO_TIME', 'TOO_DIFFICULT', 'FORGOT', 'OTHER'])
 
 export const listSubjectsSchema = z.object(pagination).strict()
 export const createSubjectSchema = z.object({ name: z.string().trim().min(1).max(200) }).strict()
@@ -56,7 +57,16 @@ export const createTaskSchema = z.object({
   scheduledFor: dateOnly,
   estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional().default(null),
   status: z.enum(['PENDING', 'COMPLETED', 'SKIPPED']).optional().default('PENDING'),
-}).strict()
+  skipReason: taskSkipReason.nullable().optional().default(null),
+}).strict().superRefine((value, context) => {
+  if (value.skipReason !== null && value.status !== 'SKIPPED') {
+    context.addIssue({
+      code: 'custom',
+      message: 'Skip reason requires SKIPPED status',
+      path: ['skipReason'],
+    })
+  }
+})
 export const updateTaskSchema = z.object({
   studyPlanId: z.string().uuid().nullable().optional(),
   subjectId: z.string().uuid().nullable().optional(),
@@ -65,7 +75,18 @@ export const updateTaskSchema = z.object({
   description: optionalText(2000),
   estimatedMinutes: z.number().int().min(1).max(1440).nullable().optional(),
   status: z.enum(['PENDING', 'COMPLETED', 'SKIPPED']).optional(),
-}).strict().refine((value) => Object.keys(value).length > 0, 'At least one field is required')
+  skipReason: taskSkipReason.nullable().optional(),
+}).strict()
+  .refine((value) => Object.keys(value).length > 0, 'At least one field is required')
+  .superRefine((value, context) => {
+    if (value.skipReason !== undefined && value.status !== 'SKIPPED') {
+      context.addIssue({
+        code: 'custom',
+        message: 'Skip reason requires SKIPPED status',
+        path: ['skipReason'],
+      })
+    }
+  })
 export const rescheduleTaskSchema = z.object({ scheduledFor: dateOnly }).strict()
 
 export const uuidParamSchema = z.object({ id: z.string().uuid() }).strict()

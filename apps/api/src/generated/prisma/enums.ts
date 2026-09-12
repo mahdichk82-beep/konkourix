@@ -62,6 +62,16 @@ export const DailyTaskSource = {
 export type DailyTaskSource = (typeof DailyTaskSource)[keyof typeof DailyTaskSource]
 
 
+export const DailyTaskSkipReason = {
+  NO_TIME: 'NO_TIME',
+  TOO_DIFFICULT: 'TOO_DIFFICULT',
+  FORGOT: 'FORGOT',
+  OTHER: 'OTHER'
+} as const
+
+export type DailyTaskSkipReason = (typeof DailyTaskSkipReason)[keyof typeof DailyTaskSkipReason]
+
+
 export const StudentGoalStatus = {
   ACTIVE: 'ACTIVE',
   COMPLETED: 'COMPLETED',
