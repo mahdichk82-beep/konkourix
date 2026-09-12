@@ -17,8 +17,9 @@
     "build:all": "pnpm run build && pnpm run build:student && pnpm run build:counselor",
     "lint": "pnpm --filter student-web lint && pnpm --filter counselor-web lint",
     "test": "pnpm --filter api test",
+    "test:student": "pnpm --filter student-web test",
     "typecheck": "pnpm --filter api typecheck",
-    "validate": "pnpm run test && pnpm run typecheck && pnpm run lint && pnpm run build:all && pnpm run db:validate",
+    "validate": "pnpm run test && pnpm run test:student && pnpm run typecheck && pnpm run lint && pnpm run build:all && pnpm run db:validate",
     "db:validate": "pnpm --filter api exec prisma validate --config ../../prisma.config.ts",
     "db:status": "pnpm --filter api exec prisma migrate status --config ../../prisma.config.ts",
     "db:seed": "pnpm --filter api seed"

@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 10, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 11, not a claim of overall product completion.
 
 ## Project
 
@@ -12,13 +12,13 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 10 — Task Rescheduling & Permission Foundation**.
+The project has completed **Phase 2 Milestone 11 — Weekly Drag & Drop Foundation**.
 
-Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, student today and weekly planning views, student-owned subject/topic management, optional task-topic assignment, task-linked study execution feedback, safe source-aware task rescheduling, read-only counselor access to assigned student profiles and task distribution, and counselor task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
+Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, interactive student weekly planning, student-owned subject/topic management, optional task-topic assignment, task-linked study execution feedback, safe source-aware task rescheduling, read-only counselor access to assigned student profiles and task distribution, and counselor task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
-- Audit and baseline re-verification date: **2026-09-11**
+- Audit and baseline re-verification date: **2026-09-12**
 
 ## Phase 1 Milestone 3 Starting Checkpoint
 
@@ -79,6 +79,11 @@ Study Tracking recovery checkpoint:
 
 - HEAD: `1d5afb64a8435c853c3f8367d5f931ad1fe1f6e9`
 - Message: `feat: add weekly planning foundation`
+
+## Phase 2 Milestone 11 Starting Checkpoint
+
+- HEAD: `7577ce6e9a203ce2979c4d933739c730d1d742c3`
+- Message: `feat: add task rescheduling permissions`
 
 ## Verified Baseline
 
@@ -674,6 +679,36 @@ Milestone verification:
 
 Drag-and-drop, weekly editing, bulk rescheduling, recurring tasks, automatic or AI scheduling, revisions, audit history, conflict resolution, analytics, and planning optimization remain deferred and require separately authorized milestones.
 
+### Phase 2 Milestone 11 — Weekly Drag & Drop Foundation
+
+**Status: COMPLETE**
+
+- Student Web `/planning/weekly` now supports moving eligible personal task cards between the existing Saturday-to-Friday day groups. Native browser drag-and-drop is supplemented by a task-first/day-second button flow for touch, keyboard, and narrow-screen use.
+- Weekly planning remains a view over `DailyTask.scheduledFor`. Movement persists through the existing `PATCH /api/v1/student/daily-tasks/:id/schedule` mutation; no parallel scheduling endpoint, weekly editor model, calendar engine, or ordering system was added.
+- The page reuses `GET /api/v1/student/study-sessions?dailyTaskId=...` with a one-item limit to determine whether each personal task has execution history. Counselor-source tasks and tasks with StudySessions are visibly locked. If the execution check fails, movement fails closed and the task remains temporarily locked.
+- The UI performs an optimistic day move while the schedule request is pending, disables competing navigation/movement, and exposes saving and success feedback. Any backend rejection restores the complete pre-move task snapshot and reports an error, so the weekly view never retains an unpersisted successful state.
+- Frontend eligibility is only a usability layer. The existing schedule mutation remains authoritative for authenticated student ownership, `PERSONAL` source, strict input, and absence of StudySessions. Existing counselor rescheduling permissions and active-assignment enforcement are unchanged.
+- Movement changes only the date in local UI state. Generic helpers retain all other task properties during optimistic movement and restore the original object on failure; the backend transaction continues to preserve owner, creator, source, content, status, completion, and execution history.
+- Responsive Persian/RTL styles add drop-zone highlighting, draggable/selected/saving card states, locked-task explanations, and light/dark-compatible feedback. Counselor Web remains read-only at the weekly level and was not changed.
+- Student Web unit tests cover personal/counselor/executed/unavailable eligibility and verify optimistic movement plus rollback preserve owner and creator provenance and source. The pre-existing API regression suite continues to cover forged ownership, student and counselor source boundaries, StudySession locks, inactive/cross-counselor assignments, and transactional provenance protection.
+- No Prisma schema, migration, dependency, lockfile, authentication, API route, task lifecycle, StudySession storage, or infrastructure change was required.
+
+Milestone verification:
+
+- API tests: **134/134 PASS**
+- Student Web unit tests: **2/2 PASS**
+- API type-check: **PASS**
+- API production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 8 migrations found and the database is up to date
+- Schema changed: **NO**
+- Migration added or run: **NO**
+
+Calendar engines, hourly scheduling, recurring planning, automatic or AI scheduling, bulk planning, drag history, undo, revisions, audit history, conflict handling, workload optimization, reports, and analytics remain deferred and require separately authorized milestones.
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -770,8 +805,8 @@ Neither application shell should be described as a complete product merely becau
 ## Development Workflow State
 
 - Existing root `dev`, `build`, `test`, and `typecheck` commands retain their API scope; explicit frontend and aggregate commands supplement them.
-- `pnpm validate` is the canonical all-workspace local verification gate.
-- Both frontend applications have independent lint and build scripts; their build commands include TypeScript project builds.
+- `pnpm validate` is the canonical all-workspace local verification gate and now includes the focused Student Web unit suite.
+- Both frontend applications have independent lint and build scripts; their build commands include TypeScript project builds. Student Web also exposes its focused unit-test script.
 - Local development uses API port 4000, Student Web port 5173, and Counselor Web port 5174 with explicit environment examples.
 - `.node-version` records Node.js 24.19.0, while root package metadata supports Node.js 24.x and pins pnpm 11.24.0.
 - Ordinary local development must remain Docker-independent and use Node.js processes with a locally available PostgreSQL instance.
@@ -856,4 +891,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 10 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin timers, Pomodoro/focus mode, counselor task content editing, weekly editing, bulk rescheduling, recurring tasks, automatic or AI planning, broader task permissions, revisions, approval workflows, conflict handling, audit history, reports, analytics, mastery, streaks, gamification, messaging, notifications, drag-and-drop/manual ordering, search, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 11 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin timers, Pomodoro/focus mode, counselor task content editing, full weekly editing, manual within-day ordering, bulk rescheduling, recurring tasks, calendar or hourly scheduling, automatic or AI planning, broader task permissions, revisions, approval workflows, conflict handling, audit or drag history, undo, reports, analytics, mastery, streaks, gamification, messaging, notifications, search, later product work, TLS, deployment execution, monitoring, or backup execution.

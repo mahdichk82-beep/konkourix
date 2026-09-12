@@ -147,6 +147,16 @@ class PlanningClient {
     )
   }
 
+  async hasTaskSessions(taskId: string): Promise<boolean> {
+    const page = await authClient.authorizedRequest<Page<StudySession>>(
+      withQuery('/student/study-sessions', {
+        dailyTaskId: taskId,
+        limit: 1,
+      }),
+    )
+    return page.items.length > 0
+  }
+
   createTaskSession(
     taskId: string,
     input: CreateTaskSessionInput,

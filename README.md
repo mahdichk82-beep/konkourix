@@ -53,6 +53,7 @@ The root `dev`, `build`, `test`, and `typecheck` commands retain their existing 
 | `pnpm build:counselor` | Build Counselor Web |
 | `pnpm build:all` | Build all three applications |
 | `pnpm test` | Run the API test suite |
+| `pnpm test:student` | Run the Student Web unit tests |
 | `pnpm typecheck` | Type-check the API |
 | `pnpm lint` | Lint both frontend applications |
 | `pnpm db:validate` | Validate the Prisma schema without running migrations |
