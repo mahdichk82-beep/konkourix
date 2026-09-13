@@ -214,12 +214,16 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                   <span>{sourceLabels[task.source]}</span>
                   <span>{completionLabel(task)}</span>
                   <span>
-                    {task.studySessionCount > 0
-                      ? `${task.recordedMinutes.toLocaleString('fa-IR')} دقیقه مطالعه در ${task.studySessionCount.toLocaleString('fa-IR')} جلسه`
-                      : 'مطالعه‌ای ثبت نشده'}
+                    {task.completedStudySessionCount > 0
+                      ? `${task.recordedMinutes.toLocaleString('fa-IR')} دقیقه مطالعه ثبت‌شده در ${task.completedStudySessionCount.toLocaleString('fa-IR')} جلسه پایان‌یافته`
+                      : 'مطالعه پایان‌یافته‌ای ثبت نشده'}
                   </span>
+                  {task.hasActiveStudySession && <span>مطالعه زنده اکنون در حال اجراست</span>}
                   {task.estimatedMinutes !== null && (
                     <span>{task.estimatedMinutes.toLocaleString('fa-IR')} دقیقه</span>
+                  )}
+                  {task.plannedTestCount > 0 && (
+                    <span>{task.plannedTestCount.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>
                   )}
                 </div>
                 {task.source === 'COUNSELOR' && (

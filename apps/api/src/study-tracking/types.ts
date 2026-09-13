@@ -6,7 +6,12 @@ export type StudyTrackingActor = {
 
 export type StudentProfileRef = { id: string; userId: string }
 export type StudySubjectRef = { id: string; studentProfileId: string; archivedAt: Date | null }
-export type DailyTaskRef = { id: string; studentProfileId: string; subjectId: string | null }
+export type DailyTaskRef = {
+  id: string
+  studentProfileId: string
+  subjectId: string | null
+  status: 'PENDING' | 'COMPLETED' | 'SKIPPED'
+}
 export type StudentGoalStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
 
 export type StudySessionRecord = {
@@ -15,13 +20,55 @@ export type StudySessionRecord = {
   subjectId: string | null
   dailyTaskId: string | null
   startedAt: Date
-  endedAt: Date
+  endedAt: Date | null
   notes: string | null
   createdAt: Date
   updatedAt: Date
 }
 
-export type StudySessionView = StudySessionRecord & { durationMinutes: number }
+export type StudySessionView = Omit<StudySessionRecord, 'studentProfileId'> & {
+  durationMinutes: number | null
+}
+
+export type StartStudySessionResult =
+  | { ok: true; value: StudySessionRecord; reused: boolean }
+  | {
+      ok: false
+      reason:
+        | 'TASK_NOT_FOUND'
+        | 'TASK_NOT_EXECUTABLE'
+        | 'SUBJECT_NOT_FOUND'
+        | 'SUBJECT_ARCHIVED'
+        | 'ACTIVE_STUDY_SESSION_EXISTS'
+    }
+
+export type SwitchStudySessionResult =
+  | {
+      ok: true
+      value: {
+        finishedSession: StudySessionRecord | null
+        activeSession: StudySessionRecord
+      }
+    }
+  | {
+      ok: false
+      reason:
+        | 'TASK_NOT_FOUND'
+        | 'TASK_NOT_EXECUTABLE'
+        | 'SUBJECT_NOT_FOUND'
+        | 'SUBJECT_ARCHIVED'
+        | 'SESSION_TIME_INVALID'
+        | 'LIVE_SESSION_CONFLICT'
+    }
+
+export type SwitchStudySessionView = {
+  finishedSession: StudySessionView | null
+  activeSession: StudySessionView
+}
+
+export type FinishStudySessionResult =
+  | { ok: true; value: StudySessionRecord }
+  | { ok: false; reason: 'SESSION_NOT_FOUND' | 'SESSION_ALREADY_FINISHED' | 'SESSION_TIME_INVALID' }
 
 export type StudentGoalRecord = {
   id: string

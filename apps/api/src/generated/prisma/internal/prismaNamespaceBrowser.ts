@@ -201,6 +201,7 @@ export const DailyTaskScalarFieldEnum = {
   description: 'description',
   scheduledFor: 'scheduledFor',
   estimatedMinutes: 'estimatedMinutes',
+  plannedTestCount: 'plannedTestCount',
   status: 'status',
   completedAt: 'completedAt',
   skipReason: 'skipReason',

@@ -5,6 +5,9 @@ import type {
   StudyPlanStatus,
 } from './types.js'
 
+const lockStudentProfileSql =
+  'SELECT "id" FROM "student_profiles" WHERE "id" = $1::uuid FOR UPDATE'
+
 export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreStore => ({
   async findStudentProfileByUserId(userId) {
     return prisma.studentProfile.findUnique({
@@ -133,6 +136,34 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
     })
     if (result.count !== 1) return null
     return prisma.dailyTask.findFirst({ where: { id, studentProfileId } })
+  },
+
+  async updateTerminalTask(studentProfileId, id, input) {
+    return prisma.$transaction(async (transaction) => {
+      await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+      const current = await transaction.dailyTask.findFirst({
+        select: { id: true },
+        where: { id, studentProfileId },
+      })
+      if (!current) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+
+      const updated = await transaction.dailyTask.updateMany({
+        data: input,
+        where: {
+          id,
+          studentProfileId,
+          studySessions: { none: { endedAt: null } },
+        },
+      })
+      if (updated.count !== 1) {
+        return { ok: false, reason: 'ACTIVE_STUDY_SESSION_EXISTS' as const }
+      }
+      const task = await transaction.dailyTask.findFirst({
+        where: { id, studentProfileId },
+      })
+      if (!task) return { ok: false, reason: 'TASK_NOT_FOUND' as const }
+      return { ok: true, value: task }
+    })
   },
 
   async reschedulePersonalTask(studentProfileId, id, scheduledFor) {

@@ -10,6 +10,9 @@ import type {
   CounselorTaskPageQuery,
   CounselorTaskView,
   CounselorVisibleTaskView,
+  CreateCounselorTaskBatchItemInput,
+  CreateCounselorTaskBatchResult,
+  CreateCounselorTaskBatchView,
   CreateCounselorTaskInput,
   CreateCounselorTaskResult,
   RescheduleCounselorTaskResult,
@@ -46,9 +49,13 @@ const page = <T extends { id: string }>(
 const toTaskView = ({ createdByUserId: _createdByUserId, ...task }: DailyTaskRecord): CounselorTaskView => task
 
 const throwCreateFailure = (
-  result: Exclude<CreateCounselorTaskResult, { ok: true }>,
+  result:
+    | Exclude<CreateCounselorTaskResult, { ok: true }>
+    | Exclude<CreateCounselorTaskBatchResult, { ok: true }>,
 ): never => {
   switch (result.reason) {
+    case 'COUNSELOR_PROFILE_NOT_FOUND':
+      throw new ApiError(403, 'COUNSELOR_PROFILE_REQUIRED', 'Counselor profile is required')
     case 'STUDENT_NOT_FOUND':
       throw new ApiError(404, 'STUDENT_NOT_FOUND', 'Student not found')
     case 'SUBJECT_NOT_FOUND':
@@ -171,6 +178,7 @@ export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
       createdByUserId: actor.id,
       description: input.description ?? null,
       estimatedMinutes: input.estimatedMinutes,
+      plannedTestCount: 0,
       scheduledFor: dateOnly(input.scheduledFor),
       skipReason: null,
       skippedAt: null,
@@ -185,6 +193,50 @@ export const createCounselorTaskServices = (store: CounselorTaskStore) => ({
 
     if (!result.ok) return throwCreateFailure(result)
     return toTaskView(result.value)
+  },
+
+  async createBatch(
+    actor: CounselorTaskActor,
+    studentProfileId: string,
+    input: { tasks: CreateCounselorTaskBatchItemInput[] },
+  ): Promise<CreateCounselorTaskBatchView> {
+    ensureCounselor(actor)
+    for (const task of input.tasks) {
+      if (!validDate(task.scheduledFor)) {
+        throw new ApiError(400, 'TASK_DATE_INVALID', 'Task date is invalid')
+      }
+      if (task.topicId && !task.subjectId) {
+        throw new ApiError(400, 'TOPIC_SUBJECT_REQUIRED', 'A topic requires its subject')
+      }
+    }
+
+    const result = await store.createAssignedStudentTasksBatch(
+      actor.id,
+      studentProfileId,
+      input.tasks.map((task) => ({
+        completedAt: null,
+        createdByUserId: actor.id,
+        description: task.description,
+        estimatedMinutes: task.plannedMinutes,
+        plannedTestCount: task.plannedTestCount,
+        scheduledFor: dateOnly(task.scheduledFor),
+        skipReason: null,
+        skippedAt: null,
+        source: 'COUNSELOR',
+        status: 'PENDING',
+        studentProfileId,
+        studyPlanId: null,
+        subjectId: task.subjectId,
+        title: task.title.trim(),
+        topicId: task.topicId,
+      })),
+    )
+
+    if (!result.ok) return throwCreateFailure(result)
+    return {
+      created: result.value.length,
+      tasks: result.value.map(toTaskView),
+    }
   },
 
   async reschedule(

@@ -9,10 +9,20 @@ import {
   type DailyTask,
   type DailyTaskSkipReason,
   type DailyTaskStatus,
+  type StudySession,
   type StudySubject,
   type StudyTopic,
 } from '../planning/planning-client'
 import { TaskExecutionPanel } from '../planning/TaskExecutionPanel'
+import {
+  activeSessionAfterFinish,
+  activeSessionAfterSwitch,
+  elapsedStudyMilliseconds,
+  executeActiveRestore,
+  executionErrorCodeMessage,
+  executionStartDecision,
+  formatElapsedStudyTime,
+} from '../planning/task-execution'
 
 type StatusFilter = DailyTaskStatus | 'ALL'
 
@@ -41,10 +51,14 @@ const planningErrorMessage = (error: unknown): string => {
     return 'خطای پیش‌بینی‌نشده‌ای رخ داد. دوباره تلاش کنید.'
   }
 
+  const executionMessage = executionErrorCodeMessage(error.code)
+  if (executionMessage) return executionMessage
+
   const messages: Record<string, string> = {
     SUBJECT_ARCHIVED: 'این درس بایگانی شده و برای کار جدید قابل استفاده نیست.',
     SUBJECT_CONFLICT: 'درسی با این نام از قبل وجود دارد.',
     SUBJECT_NOT_FOUND: 'درس انتخاب‌شده دیگر در دسترس نیست.',
+    TASK_ACTIVE_SESSION_EXISTS: 'ابتدا مطالعه فعال این کار را پایان دهید، سپس نتیجه کار را ثبت کنید.',
     TASK_NOT_FOUND: 'این کار دیگر در دسترس نیست. فهرست را تازه‌سازی کنید.',
     TASK_ALREADY_EXECUTED: 'برای این کار سابقه مطالعه ثبت شده است و تاریخ آن قابل تغییر نیست.',
     TASK_RESCHEDULE_FORBIDDEN: 'تغییر تاریخ کار تعیین‌شده توسط مشاور برای دانش‌آموز مجاز نیست.',
@@ -102,6 +116,43 @@ const loadTopics = async (subjectId: string): Promise<StudyTopic[]> => {
   return topics.filter((topic) => topic.archivedAt === null)
 }
 
+function ActiveStudyExecutionCard({
+  activeSession,
+  activeTaskTitle,
+  busy,
+  onFinish,
+}: {
+  activeSession: StudySession
+  activeTaskTitle: string | null
+  busy: boolean
+  onFinish(): Promise<void>
+}) {
+  const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now())
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setCurrentTimeMs(Date.now()), 1000)
+    return () => window.clearInterval(timer)
+  }, [activeSession.id])
+
+  const elapsed = formatElapsedStudyTime(
+    elapsedStudyMilliseconds(activeSession.startedAt, currentTimeMs),
+  )
+
+  return (
+    <Card className="active-study-card">
+      <div>
+        <p className="eyebrow">مطالعه فعال</p>
+        <h2>{activeTaskTitle ?? 'مطالعه فعلی'} در حال اجراست</h2>
+        <p>زمان سپری‌شده از شروع ثبت‌شده در سرور</p>
+      </div>
+      <strong className="active-study-card__timer" dir="ltr">{elapsed}</strong>
+      <Button disabled={busy} onClick={() => void onFinish()} variant="secondary">
+        {busy ? 'در حال ثبت…' : 'پایان مطالعه فعال'}
+      </Button>
+    </Card>
+  )
+}
+
 export function TodayPlanningPage({ navigate }: { navigate(path: string): void }) {
   const today = new Date()
   const todayKey = localDateKey(today)
@@ -148,6 +199,13 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [subjectName, setSubjectName] = useState('')
   const [isSubmittingSubject, setIsSubmittingSubject] = useState(false)
   const [subjectFormError, setSubjectFormError] = useState<string | null>(null)
+  const [activeSession, setActiveSession] = useState<StudySession | null>(null)
+  const [activeTaskTitle, setActiveTaskTitle] = useState<string | null>(null)
+  const [executionReady, setExecutionReady] = useState(false)
+  const [executionBusy, setExecutionBusy] = useState(false)
+  const [executionError, setExecutionError] = useState<string | null>(null)
+  const [executionRevision, setExecutionRevision] = useState(0)
+  const [switchTarget, setSwitchTarget] = useState<{ id: string; title: string } | null>(null)
 
   const currentQueryKey = `${todayKey}:${statusFilter}:${subjectFilter}`
   const currentQueryKeyRef = useRef(currentQueryKey)
@@ -164,6 +222,33 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       setSubjectError(planningErrorMessage(error))
     }
   }, [])
+
+  const restoreActiveExecution = useCallback(async () => {
+    setExecutionError(null)
+    try {
+      const session = await executeActiveRestore(
+        planningClient.getActiveStudySession.bind(planningClient),
+      )
+      setActiveSession(session)
+      setActiveTaskTitle(null)
+      if (session?.dailyTaskId) {
+        try {
+          const activeTask = await planningClient.getTask(session.dailyTaskId)
+          setActiveTaskTitle(activeTask.title)
+        } catch {
+          // The session remains authoritative even if its optional task label is unavailable.
+        }
+      }
+    } catch (error) {
+      setExecutionError(planningErrorMessage(error))
+    } finally {
+      setExecutionReady(true)
+    }
+  }, [])
+
+  useEffect(() => {
+    void Promise.resolve().then(restoreActiveExecution)
+  }, [restoreActiveExecution])
 
   useEffect(() => {
     if (!taskSubjectId) return
@@ -308,6 +393,79 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     }
   }
 
+  const handleExecutionStart = async (
+    taskId: string,
+    taskTitle: string,
+  ): Promise<'STARTED' | 'CONTINUED' | 'SWITCH_PENDING'> => {
+    const decision = executionStartDecision(taskId, activeSession)
+    if (decision === 'CONTINUE') return 'CONTINUED'
+    if (decision === 'SWITCH') {
+      setSwitchTarget({ id: taskId, title: taskTitle })
+      setExecutionError(null)
+      return 'SWITCH_PENDING'
+    }
+
+    setExecutionBusy(true)
+    setExecutionError(null)
+    try {
+      const session = await planningClient.startTask(taskId)
+      setActiveSession(session)
+      setActiveTaskTitle(taskTitle)
+      setExecutionRevision((current) => current + 1)
+      return 'STARTED'
+    } catch (error) {
+      if (error instanceof AuthApiError && error.code === 'ACTIVE_STUDY_SESSION_EXISTS') {
+        await restoreActiveExecution()
+      }
+      throw error
+    } finally {
+      setExecutionBusy(false)
+    }
+  }
+
+  const handleExecutionFinish = async (
+    sessionId: string,
+    notes: string | null,
+  ): Promise<StudySession> => {
+    setExecutionBusy(true)
+    setExecutionError(null)
+    try {
+      const session = await planningClient.finishStudySession(sessionId, notes)
+      setActiveSession((current) => activeSessionAfterFinish(current, session))
+      setActiveTaskTitle((current) => activeSession?.id === sessionId ? null : current)
+      setExecutionRevision((current) => current + 1)
+      return session
+    } catch (error) {
+      if (
+        error instanceof AuthApiError
+        && (error.code === 'SESSION_ALREADY_FINISHED' || error.code === 'SESSION_NOT_FOUND')
+      ) {
+        await restoreActiveExecution()
+      }
+      throw error
+    } finally {
+      setExecutionBusy(false)
+    }
+  }
+
+  const confirmExecutionSwitch = async () => {
+    if (!switchTarget || executionBusy) return
+    const target = switchTarget
+    setExecutionBusy(true)
+    setExecutionError(null)
+    try {
+      const result = await planningClient.switchTask(target.id)
+      setActiveSession(activeSessionAfterSwitch(result))
+      setActiveTaskTitle(target.title)
+      setSwitchTarget(null)
+      setExecutionRevision((current) => current + 1)
+    } catch (error) {
+      setExecutionError(planningErrorMessage(error))
+    } finally {
+      setExecutionBusy(false)
+    }
+  }
+
   const handleScheduleUpdate = async (task: DailyTask) => {
     const scheduledFor = scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)
     if (!scheduledFor || scheduledFor === task.scheduledFor.slice(0, 10)) return
@@ -434,6 +592,59 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
           </Button>
         </div>
       </Card>
+
+      {!executionReady && (
+        <p className="planning-alert" role="status">در حال بازیابی مطالعه فعال…</p>
+      )}
+
+      {executionError && (
+        <div className="planning-alert" role="alert">
+          <span>{executionError}</span>
+          <Button onClick={() => void restoreActiveExecution()} variant="ghost">تلاش دوباره</Button>
+        </div>
+      )}
+
+      {activeSession && (
+        <ActiveStudyExecutionCard
+          activeSession={activeSession}
+          activeTaskTitle={activeTaskTitle}
+          busy={executionBusy}
+          key={activeSession.id}
+          onFinish={async () => {
+            try {
+              await handleExecutionFinish(activeSession.id, null)
+            } catch (error) {
+              setExecutionError(planningErrorMessage(error))
+            }
+          }}
+        />
+      )}
+
+      {switchTarget && activeSession && (
+        <Card className="study-switch-card">
+          <div>
+            <p className="eyebrow">تغییر مطالعه</p>
+            <h2>{activeTaskTitle ?? 'مطالعه فعلی'} اکنون فعال است</h2>
+            <p>
+              برای شروع «{switchTarget.title}»، بازه فعلی پایان می‌یابد و یک جلسه تازه برای کار جدید آغاز می‌شود.
+            </p>
+          </div>
+          <div className="study-switch-card__actions">
+            <Button disabled={executionBusy} onClick={() => void confirmExecutionSwitch()}>
+              {executionBusy
+                ? 'در حال تغییر…'
+                : `پایان ${activeTaskTitle ?? 'مطالعه فعلی'} و شروع ${switchTarget.title}`}
+            </Button>
+            <Button
+              disabled={executionBusy}
+              onClick={() => setSwitchTarget(null)}
+              variant="ghost"
+            >
+              ادامه {activeTaskTitle ?? 'مطالعه فعلی'}
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {isCreateOpen && (
         <Card className="planning-create-card" title="کار شخصی تازه">
@@ -677,6 +888,9 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                       {task.estimatedMinutes !== null && (
                         <span>{numberFormatter.format(task.estimatedMinutes)} دقیقه</span>
                       )}
+                      {task.plannedTestCount > 0 && (
+                        <span>{numberFormatter.format(task.plannedTestCount)} تست برنامه‌ریزی‌شده</span>
+                      )}
                       {task.status === 'SKIPPED' && task.skipReason && (
                         <span className="task-skip-reason-display">
                           دلیل رد کردن: {skipReasonLabels[task.skipReason]}
@@ -716,7 +930,16 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
                         </Button>
                       </form>
                     )}
-                    <TaskExecutionPanel taskId={task.id} taskTitle={task.title} />
+                    <TaskExecutionPanel
+                      activeSession={activeSession}
+                      executionReady={executionReady && !executionBusy}
+                      executionRevision={executionRevision}
+                      onFinish={handleExecutionFinish}
+                      onStart={handleExecutionStart}
+                      taskId={task.id}
+                      taskStatus={task.status}
+                      taskTitle={task.title}
+                    />
                   </div>
                   {task.status === 'PENDING' && (
                     <div className="task-actions" aria-label={`اقدام‌های ${task.title}`}>

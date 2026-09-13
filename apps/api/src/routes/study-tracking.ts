@@ -8,8 +8,11 @@ import {
   createStudentGoalSchema,
   createStudySessionSchema,
   createTaskStudySessionSchema,
+  finishStudySessionSchema,
   listStudentGoalsSchema,
   listStudySessionsSchema,
+  startStudyTaskSchema,
+  switchStudyTaskSchema,
   trackingIdParamSchema,
   taskSessionParamSchema,
   updateStudentGoalSchema,
@@ -76,6 +79,38 @@ export const registerStudyTrackingRoutes = (
     )
   })
 
+  app.post('/student/tasks/:id/start', studentOnly, async (request, reply) => {
+    parseInput(startStudyTaskSchema.safeParse(request.body ?? {}))
+    return reply.status(201).send(
+      successResponse(
+        await options.studyTracking.sessions.startTask(
+          request.user!,
+          parseId(request.params),
+        ),
+        request.context.requestId,
+      ),
+    )
+  })
+
+  app.post('/student/tasks/:id/switch', studentOnly, async (request) => {
+    parseInput(switchStudyTaskSchema.safeParse(request.body ?? {}))
+    return successResponse(
+      await options.studyTracking.sessions.switchTask(
+        request.user!,
+        parseId(request.params),
+      ),
+      request.context.requestId,
+    )
+  })
+
+  // Keep this static route before /study-sessions/:id.
+  app.get('/student/study-sessions/active', studentOnly, async (request) =>
+    successResponse(
+      await options.studyTracking.sessions.active(request.user!),
+      request.context.requestId,
+    ),
+  )
+
   app.get('/student/study-sessions/:id', studentOnly, async (request) =>
     successResponse(
       await options.studyTracking.sessions.get(
@@ -92,6 +127,17 @@ export const registerStudyTrackingRoutes = (
         request.user!,
         parseId(request.params),
         parseInput(updateStudySessionSchema.safeParse(request.body)),
+      ),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/study-sessions/:id/finish', studentOnly, async (request) =>
+    successResponse(
+      await options.studyTracking.sessions.finish(
+        request.user!,
+        parseId(request.params),
+        parseInput(finishStudySessionSchema.safeParse(request.body ?? {})),
       ),
       request.context.requestId,
     ),

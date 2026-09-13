@@ -52,6 +52,7 @@ const store: StudentCoreStore = {
   findTaskById: async () => null,
   createTask: async (input) => ({ id: 'task-1', ...input, createdAt: new Date('2026-09-03T00:00:00.000Z'), updatedAt: new Date('2026-09-03T00:00:00.000Z') }),
   updateTask: async () => null,
+  updateTerminalTask: async () => ({ ok: false, reason: 'TASK_NOT_FOUND' }),
   reschedulePersonalTask: async () => ({ ok: false, reason: 'TASK_NOT_FOUND' }),
 }
 
@@ -150,6 +151,14 @@ test('student task lifecycle accepts skip reasons and rejects client-controlled 
       Object.assign(task, input)
       return task
     },
+    async updateTerminalTask(profileId, id, input) {
+      updateCalls += 1
+      if (profileId !== task.studentProfileId || id !== task.id) {
+        return { ok: false as const, reason: 'TASK_NOT_FOUND' as const }
+      }
+      Object.assign(task, input)
+      return { ok: true as const, value: task }
+    },
   }
   const app = createApp(lifecycleStore)
 
@@ -187,6 +196,53 @@ test('student task lifecycle accepts skip reasons and rejects client-controlled 
     assert.equal(invalid.json().error.code, 'VALIDATION_ERROR')
   }
   assert.equal(updateCalls, 1)
+  await app.close()
+})
+
+test('active execution conflict is returned safely for terminal task lifecycle requests', async () => {
+  const taskId = '00000000-0000-4000-8000-000000000498'
+  const activeStore: StudentCoreStore = {
+    ...store,
+    findTaskById: async () => ({
+      completedAt: null,
+      createdAt: new Date('2026-09-03T00:00:00.000Z'),
+      createdByUserId: user.id,
+      description: null,
+      estimatedMinutes: 30,
+      id: taskId,
+      plannedTestCount: 0,
+      scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+      skipReason: null,
+      skippedAt: null,
+      source: 'PERSONAL',
+      status: 'PENDING',
+      studentProfileId: 'student-profile-1',
+      studyPlanId: null,
+      subjectId: null,
+      title: 'Active task',
+      topicId: null,
+      updatedAt: new Date('2026-09-03T00:00:00.000Z'),
+    }),
+    updateTerminalTask: async () => ({
+      ok: false,
+      reason: 'ACTIVE_STUDY_SESSION_EXISTS',
+    }),
+  }
+  const app = createApp(activeStore)
+
+  for (const payload of [
+    { status: 'COMPLETED' },
+    { status: 'SKIPPED', skipReason: 'NO_TIME' },
+  ]) {
+    const response = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'PATCH',
+      payload,
+      url: `/api/v1/student/daily-tasks/${taskId}`,
+    })
+    assert.equal(response.statusCode, 409)
+    assert.equal(response.json().error.code, 'TASK_ACTIVE_SESSION_EXISTS')
+  }
   await app.close()
 })
 

@@ -21,6 +21,13 @@ export const createTaskStudySessionSchema = z.object({
   notes: z.string().trim().max(4000).nullable().optional().default(null),
 }).strict()
 
+export const startStudyTaskSchema = z.object({}).strict()
+export const switchStudyTaskSchema = z.object({}).strict()
+
+export const finishStudySessionSchema = z.object({
+  notes: z.string().trim().max(4000).nullable().optional(),
+}).strict()
+
 export const updateStudySessionSchema = z.object({
   subjectId: z.string().uuid().optional(),
   dailyTaskId: z.string().uuid().nullable().optional(),

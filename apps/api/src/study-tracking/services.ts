@@ -8,6 +8,7 @@ import type {
   StudySessionRecord,
   StudySessionView,
   StudyTrackingActor,
+  SwitchStudySessionView,
   TrackingPage,
   TrackingPageQuery,
 } from './types.js'
@@ -44,14 +45,62 @@ const parseGoalDate = (value: string): Date => {
   return parsed
 }
 
-const toSessionView = (record: StudySessionRecord): StudySessionView => ({
-  ...record,
-  durationMinutes: calculateStudySessionDurationMinutes(record.startedAt, record.endedAt),
-})
+const toSessionView = (record: StudySessionRecord): StudySessionView => {
+  const { studentProfileId: _studentProfileId, ...safeRecord } = record
+  return {
+    ...safeRecord,
+    durationMinutes: record.endedAt
+      ? calculateStudySessionDurationMinutes(record.startedAt, record.endedAt)
+      : null,
+  }
+}
 
 const conflict = (error: unknown, code: string, message: string): never => {
   if (typeof error === 'object' && error !== null && 'code' in error && error.code === 'P2002') throw new ApiError(409, code, message)
   throw error
+}
+
+const liveOperation = async <T>(operation: () => Promise<T>): Promise<T> => {
+  try {
+    return await operation()
+  } catch (error) {
+    if (
+      typeof error === 'object'
+      && error !== null
+      && 'code' in error
+      && (error.code === 'P2034' || error.code === '40P01')
+    ) {
+      throw new ApiError(409, 'LIVE_SESSION_CONFLICT', 'Live study state changed concurrently')
+    }
+    throw error
+  }
+}
+
+const throwLiveTaskFailure = (reason:
+  | 'TASK_NOT_FOUND'
+  | 'TASK_NOT_EXECUTABLE'
+  | 'SUBJECT_NOT_FOUND'
+  | 'SUBJECT_ARCHIVED'
+  | 'ACTIVE_STUDY_SESSION_EXISTS'
+  | 'SESSION_TIME_INVALID'
+  | 'LIVE_SESSION_CONFLICT'
+): never => {
+  switch (reason) {
+    case 'TASK_NOT_FOUND':
+      throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+    case 'TASK_NOT_EXECUTABLE':
+      throw new ApiError(409, 'TASK_NOT_EXECUTABLE', 'Only pending tasks can be started')
+    case 'SUBJECT_NOT_FOUND':
+      throw new ApiError(404, 'SUBJECT_NOT_FOUND', 'Study subject not found')
+    case 'SUBJECT_ARCHIVED':
+      throw new ApiError(409, 'SUBJECT_ARCHIVED', 'Archived subjects cannot be used for new sessions')
+    case 'ACTIVE_STUDY_SESSION_EXISTS':
+      throw new ApiError(409, 'ACTIVE_STUDY_SESSION_EXISTS', 'Another study session is active')
+    case 'SESSION_TIME_INVALID':
+      throw new ApiError(400, 'SESSION_TIME_INVALID', 'Study session must end after it starts')
+    case 'LIVE_SESSION_CONFLICT':
+      throw new ApiError(409, 'LIVE_SESSION_CONFLICT', 'Live study state changed concurrently')
+  }
 }
 
 type CreateSessionInput = {
@@ -97,6 +146,11 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
       const records = await store.listSessions(profile.id, query)
       return page(records.map(toSessionView), query)
     },
+    async active(actor: StudyTrackingActor): Promise<StudySessionView | null> {
+      const profile = await requireProfile(store, actor)
+      const record = await store.findActiveSession(profile.id)
+      return record ? toSessionView(record) : null
+    },
     async get(actor: StudyTrackingActor, id: string): Promise<StudySessionView> {
       const profile = await requireProfile(store, actor)
       const record = await store.findSessionById(profile.id, id)
@@ -137,10 +191,50 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
         subjectId: task.subjectId,
       })
     },
+    async startTask(actor: StudyTrackingActor, taskId: string): Promise<StudySessionView> {
+      const profile = await requireProfile(store, actor)
+      const result = await liveOperation(() =>
+        store.startTaskSession(profile.id, taskId, now()))
+      if (!result.ok) return throwLiveTaskFailure(result.reason)
+      return toSessionView(result.value)
+    },
+    async switchTask(actor: StudyTrackingActor, taskId: string): Promise<SwitchStudySessionView> {
+      const profile = await requireProfile(store, actor)
+      const result = await liveOperation(() =>
+        store.switchTaskSession(profile.id, taskId, now()))
+      if (!result.ok) return throwLiveTaskFailure(result.reason)
+      return {
+        activeSession: toSessionView(result.value.activeSession),
+        finishedSession: result.value.finishedSession
+          ? toSessionView(result.value.finishedSession)
+          : null,
+      }
+    },
+    async finish(
+      actor: StudyTrackingActor,
+      id: string,
+      input: { notes?: string | null },
+    ): Promise<StudySessionView> {
+      const profile = await requireProfile(store, actor)
+      const result = await store.finishSession(profile.id, id, now(), input.notes)
+      if (!result.ok) {
+        if (result.reason === 'SESSION_NOT_FOUND') {
+          throw new ApiError(404, 'SESSION_NOT_FOUND', 'Study session not found')
+        }
+        if (result.reason === 'SESSION_ALREADY_FINISHED') {
+          throw new ApiError(409, 'SESSION_ALREADY_FINISHED', 'Study session is already finished')
+        }
+        throw new ApiError(400, 'SESSION_TIME_INVALID', 'Study session must end after it starts')
+      }
+      return toSessionView(result.value)
+    },
     async update(actor: StudyTrackingActor, id: string, input: { subjectId?: string; dailyTaskId?: string | null; startedAt?: string; endedAt?: string; notes?: string | null }): Promise<StudySessionView> {
       const profile = await requireProfile(store, actor)
       const current = await store.findSessionById(profile.id, id)
       if (!current) throw new ApiError(404, 'SESSION_NOT_FOUND', 'Study session not found')
+      if (current.endedAt === null) {
+        throw new ApiError(409, 'SESSION_ACTIVE_UPDATE_FORBIDDEN', 'Active sessions must use the finish operation')
+      }
       const subjectId = input.subjectId ?? current.subjectId
       if (subjectId) {
         const subject = await store.findSubjectById(profile.id, subjectId)
@@ -155,7 +249,7 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
       }
       const startedAt = input.startedAt === undefined ? current.startedAt : parseDateTime(input.startedAt)
       const endedAt = input.endedAt === undefined ? current.endedAt : parseDateTime(input.endedAt)
-      if (endedAt <= startedAt) throw new ApiError(400, 'SESSION_TIME_INVALID', 'Study session must end after it starts')
+      if (endedAt && endedAt <= startedAt) throw new ApiError(400, 'SESSION_TIME_INVALID', 'Study session must end after it starts')
       const record = await store.updateSession(profile.id, id, {
         ...(input.subjectId === undefined ? {} : { subjectId }),
         ...(input.dailyTaskId === undefined ? {} : { dailyTaskId }),

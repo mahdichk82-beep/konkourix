@@ -212,6 +212,50 @@ const createStore = (): CounselorTaskStore & {
       store.tasks.push(record)
       return { ok: true as const, value: record }
     },
+    async createAssignedStudentTasksBatch(
+      counselorUserId: string,
+      studentProfileId: string,
+      inputs: CreateCounselorTaskRecordInput[],
+    ) {
+      if (!(store.activeAssignments.get(counselorUserId) ?? []).includes(studentProfileId)) {
+        return { ok: false as const, reason: 'STUDENT_NOT_FOUND' as const }
+      }
+      for (const input of inputs) {
+        if (input.subjectId) {
+          const subject = subjectFixtures.find((candidate) =>
+            candidate.id === input.subjectId && candidate.studentProfileId === studentProfileId,
+          )
+          if (!subject) return { ok: false as const, reason: 'SUBJECT_NOT_FOUND' as const }
+          if (subject.archived) return { ok: false as const, reason: 'SUBJECT_ARCHIVED' as const }
+        }
+        if (input.topicId) {
+          if (!input.subjectId) {
+            return { ok: false as const, reason: 'TOPIC_SUBJECT_REQUIRED' as const }
+          }
+          const ownedSubjectIds = new Set(
+            subjectFixtures
+              .filter(({ studentProfileId: owner }) => owner === studentProfileId)
+              .map(({ id }) => id),
+          )
+          const topic = topicFixtures.find((candidate) =>
+            candidate.id === input.topicId && ownedSubjectIds.has(candidate.subjectId),
+          )
+          if (!topic) return { ok: false as const, reason: 'TOPIC_NOT_FOUND' as const }
+          if (topic.subjectId !== input.subjectId) {
+            return { ok: false as const, reason: 'TOPIC_SUBJECT_MISMATCH' as const }
+          }
+          if (topic.archived) return { ok: false as const, reason: 'TOPIC_ARCHIVED' as const }
+        }
+      }
+      const records = inputs.map((input, index): DailyTaskRecord => ({
+        id: `61000000-0000-4000-8000-${String(store.tasks.length + index + 1).padStart(12, '0')}`,
+        ...input,
+        createdAt: timestamp,
+        updatedAt: timestamp,
+      }))
+      store.tasks.push(...records)
+      return { ok: true as const, value: records }
+    },
     async rescheduleAssignedStudentTask(
       counselorUserId: string,
       studentProfileId: string,
@@ -262,6 +306,18 @@ const createRequest = (
   url: `/api/v1/counselor/students/${studentProfileId}/tasks`,
 })
 
+const batchCreateRequest = (
+  app: ReturnType<typeof createApp>['app'],
+  token: string,
+  studentProfileId: string,
+  payload: Record<string, unknown>,
+) => app.inject({
+  headers: { authorization: `Bearer ${token}` },
+  method: 'POST',
+  payload,
+  url: `/api/v1/counselor/students/${studentProfileId}/tasks/batch`,
+})
+
 const listRequest = (
   app: ReturnType<typeof createApp>['app'],
   studentProfileId: string,
@@ -296,6 +352,7 @@ const taskRecord = (
   description: null,
   estimatedMinutes: null,
   id,
+  plannedTestCount: 0,
   scheduledFor: new Date('2026-09-12T00:00:00.000Z'),
   skipReason: null,
   skippedAt: null,
@@ -472,6 +529,166 @@ test('assigned counselor creates a pending counselor task with server-owned prov
   assert.equal(store.tasks[0]?.source, 'COUNSELOR')
   assert.equal(store.tasks[0]?.status, 'PENDING')
   assert.equal(store.tasks[0]?.completedAt, null)
+  await app.close()
+})
+
+test('assigned counselor creates multiple ordinary pending tasks with server provenance', async () => {
+  const { app, store } = createApp()
+  const response = await batchCreateRequest(app, 'counselor-a', ids.studentA, {
+    tasks: [
+      {
+        title: 'مطالعه زیست فصل ۳',
+        description: 'مرور کامل فصل',
+        scheduledFor: '2026-09-15',
+        plannedMinutes: 90,
+        plannedTestCount: 12,
+        subjectId: ids.subjectA,
+        topicId: ids.topicA,
+      },
+      {
+        title: 'مرور آزاد',
+        scheduledFor: '2026-09-16',
+        plannedMinutes: 0,
+        plannedTestCount: 0,
+      },
+    ],
+  })
+
+  assert.equal(response.statusCode, 201)
+  assert.equal(response.json().data.created, 2)
+  assert.equal(response.json().data.tasks.length, 2)
+  assert.deepEqual(
+    response.json().data.tasks.map((task: Record<string, unknown>) => ({
+      completedAt: task.completedAt,
+      plannedTestCount: task.plannedTestCount,
+      skipReason: task.skipReason,
+      skippedAt: task.skippedAt,
+      source: task.source,
+      status: task.status,
+    })),
+    [
+      {
+        completedAt: null,
+        plannedTestCount: 12,
+        skipReason: null,
+        skippedAt: null,
+        source: 'COUNSELOR',
+        status: 'PENDING',
+      },
+      {
+        completedAt: null,
+        plannedTestCount: 0,
+        skipReason: null,
+        skippedAt: null,
+        source: 'COUNSELOR',
+        status: 'PENDING',
+      },
+    ],
+  )
+  assert.equal(
+    response.json().data.tasks.every((task: Record<string, unknown>) => !('createdByUserId' in task)),
+    true,
+  )
+  assert.equal(store.tasks.every((task) => task.createdByUserId === ids.counselorA), true)
+  assert.equal(store.tasks.every((task) => task.studentProfileId === ids.studentA), true)
+  assert.equal(store.tasks[0]?.estimatedMinutes, 90)
+  await app.close()
+})
+
+test('batch task creation rejects non-counselors and missing authentication', async () => {
+  const { app, store } = createApp()
+  const payload = { tasks: [{ title: 'Blocked', scheduledFor: '2026-09-15' }] }
+  const student = await batchCreateRequest(app, 'student', ids.studentA, payload)
+  assert.equal(student.statusCode, 403)
+  assert.equal(student.json().error.code, 'ROLE_FORBIDDEN')
+
+  const anonymous = await app.inject({
+    method: 'POST',
+    payload,
+    url: `/api/v1/counselor/students/${ids.studentA}/tasks/batch`,
+  })
+  assert.equal(anonymous.statusCode, 401)
+  assert.equal(anonymous.json().error.code, 'TOKEN_MISSING')
+  assert.equal(store.tasks.length, 0)
+  await app.close()
+})
+
+test('batch task creation rejects unassigned students and forged server fields', async () => {
+  const { app, store } = createApp()
+  const unassigned = await batchCreateRequest(app, 'counselor-a', ids.studentUnassigned, {
+    tasks: [{ title: 'Blocked', scheduledFor: '2026-09-15' }],
+  })
+  assert.equal(unassigned.statusCode, 404)
+  assert.equal(unassigned.json().error.code, 'STUDENT_NOT_FOUND')
+
+  for (const forgedField of [
+    { createdByUserId: ids.studentUser },
+    { source: 'PERSONAL' },
+    { studentProfileId: ids.studentB },
+    { status: 'COMPLETED' },
+  ]) {
+    const forged = await batchCreateRequest(app, 'counselor-a', ids.studentA, {
+      tasks: [{
+        title: 'Forged',
+        scheduledFor: '2026-09-15',
+        ...forgedField,
+      }],
+    })
+    assert.equal(forged.statusCode, 400)
+    assert.equal(forged.json().error.code, 'VALIDATION_ERROR')
+  }
+  assert.equal(store.tasks.length, 0)
+  await app.close()
+})
+
+test('batch task creation rejects invalid subject and topic relationships atomically', async () => {
+  const { app, store } = createApp()
+  const invalidSubject = await batchCreateRequest(app, 'counselor-a', ids.studentA, {
+    tasks: [
+      { title: 'Valid first row', scheduledFor: '2026-09-15' },
+      { title: 'Foreign subject', scheduledFor: '2026-09-16', subjectId: ids.subjectB },
+    ],
+  })
+  assert.equal(invalidSubject.statusCode, 404)
+  assert.equal(invalidSubject.json().error.code, 'SUBJECT_NOT_FOUND')
+  assert.equal(store.tasks.length, 0)
+
+  const mismatchedTopic = await batchCreateRequest(app, 'counselor-a', ids.studentA, {
+    tasks: [{
+      title: 'Mismatched topic',
+      scheduledFor: '2026-09-15',
+      subjectId: ids.subjectA,
+      topicId: ids.topicB,
+    }],
+  })
+  assert.equal(mismatchedTopic.statusCode, 404)
+  assert.equal(mismatchedTopic.json().error.code, 'TOPIC_NOT_FOUND')
+  assert.equal(store.tasks.length, 0)
+  await app.close()
+})
+
+test('batch task schema rejects empty batches and invalid planning counts', async () => {
+  const { app, store } = createApp()
+  for (const { payload, errorCode } of [
+    { payload: { tasks: [] }, errorCode: 'VALIDATION_ERROR' },
+    {
+      payload: { tasks: [{ title: 'Invalid minutes', scheduledFor: '2026-09-15', plannedMinutes: -1 }] },
+      errorCode: 'VALIDATION_ERROR',
+    },
+    {
+      payload: { tasks: [{ title: 'Invalid tests', scheduledFor: '2026-09-15', plannedTestCount: -1 }] },
+      errorCode: 'VALIDATION_ERROR',
+    },
+    {
+      payload: { tasks: [{ title: 'Invalid date', scheduledFor: '2026-02-30' }] },
+      errorCode: 'TASK_DATE_INVALID',
+    },
+  ]) {
+    const response = await batchCreateRequest(app, 'counselor-a', ids.studentA, payload)
+    assert.equal(response.statusCode, 400)
+    assert.equal(response.json().error.code, errorCode)
+  }
+  assert.equal(store.tasks.length, 0)
   await app.close()
 })
 

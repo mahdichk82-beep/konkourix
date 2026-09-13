@@ -137,6 +137,7 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
     (total, task) => total + (task.estimatedMinutes ?? 0),
     0,
   )
+  const plannedTests = tasks.reduce((total, task) => total + task.plannedTestCount, 0)
 
   return (
     <Card className="student-weekly-card" title="توزیع هفتگی وظایف">
@@ -168,6 +169,7 @@ export function StudentWeeklyPlanning({ refreshKey, studentId }: StudentWeeklyPl
           <div className="student-weekly-summary">
             <span>{tasks.length.toLocaleString('fa-IR')} وظیفه</span>
             <span>{plannedMinutes.toLocaleString('fa-IR')} دقیقه برنامه‌ریزی‌شده</span>
+            <span>{plannedTests.toLocaleString('fa-IR')} تست برنامه‌ریزی‌شده</span>
           </div>
           <div className="student-weekly-days">
             {days.map((day) => {

@@ -23,6 +23,7 @@ export type DailyTask = {
   description: string | null
   estimatedMinutes: number | null
   id: string
+  plannedTestCount: number
   scheduledFor: string
   skipReason: DailyTaskSkipReason | null
   skippedAt: string | null
@@ -37,13 +38,18 @@ export type DailyTask = {
 export type StudySession = {
   createdAt: string
   dailyTaskId: string | null
-  durationMinutes: number
-  endedAt: string
+  durationMinutes: number | null
+  endedAt: string | null
   id: string
   notes: string | null
   startedAt: string
   subjectId: string | null
   updatedAt: string
+}
+
+export type SwitchStudySessionResult = {
+  activeSession: StudySession
+  finishedSession: StudySession | null
 }
 
 type Page<T> = {
@@ -134,6 +140,12 @@ class PlanningClient {
     )
   }
 
+  getTask(id: string): Promise<DailyTask> {
+    return authClient.authorizedRequest<DailyTask>(
+      `/student/daily-tasks/${encodeURIComponent(id)}`,
+    )
+  }
+
   createTask(input: CreateTaskInput): Promise<DailyTask> {
     return authClient.authorizedRequest<DailyTask>('/student/daily-tasks', {
       body: JSON.stringify(input),
@@ -171,6 +183,33 @@ class PlanningClient {
         body: JSON.stringify(input),
         method: 'POST',
       },
+    )
+  }
+
+  startTask(taskId: string): Promise<StudySession> {
+    return authClient.authorizedRequest<StudySession>(
+      `/student/tasks/${encodeURIComponent(taskId)}/start`,
+      { body: JSON.stringify({}), method: 'POST' },
+    )
+  }
+
+  getActiveStudySession(): Promise<StudySession | null> {
+    return authClient.authorizedRequest<StudySession | null>(
+      '/student/study-sessions/active',
+    )
+  }
+
+  switchTask(taskId: string): Promise<SwitchStudySessionResult> {
+    return authClient.authorizedRequest<SwitchStudySessionResult>(
+      `/student/tasks/${encodeURIComponent(taskId)}/switch`,
+      { body: JSON.stringify({}), method: 'POST' },
+    )
+  }
+
+  finishStudySession(sessionId: string, notes: string | null): Promise<StudySession> {
+    return authClient.authorizedRequest<StudySession>(
+      `/student/study-sessions/${encodeURIComponent(sessionId)}/finish`,
+      { body: JSON.stringify({ notes }), method: 'PATCH' },
     )
   }
 

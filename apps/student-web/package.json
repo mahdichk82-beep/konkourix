@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
-    "test": "node --test src/planning/weekly-movement.test.ts"
+    "test": "node --test src/planning/weekly-movement.test.ts src/planning/task-execution.test.ts"
   },
   "dependencies": {
     "react": "^19.2.8",

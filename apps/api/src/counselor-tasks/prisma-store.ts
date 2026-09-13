@@ -31,6 +31,7 @@ export const createPrismaCounselorTaskStore = (
           description: true,
           estimatedMinutes: true,
           id: true,
+          plannedTestCount: true,
           scheduledFor: true,
           skipReason: true,
           skippedAt: true,
@@ -55,17 +56,26 @@ export const createPrismaCounselorTaskStore = (
       })
       return {
         ok: true,
-        value: tasks.map(({ studySessions, ...task }) => ({
-          ...task,
-          recordedMinutes: studySessions.reduce(
-            (total, session) => total + calculateStudySessionDurationMinutes(
-              session.startedAt,
-              session.endedAt,
+        value: tasks.map(({ studySessions, ...task }) => {
+          const completedSessions = studySessions.filter(
+            (session) => session.endedAt !== null,
+          )
+          return {
+            ...task,
+            completedStudySessionCount: completedSessions.length,
+            hasActiveStudySession: studySessions.some(
+              (session) => session.endedAt === null,
             ),
-            0,
-          ),
-          studySessionCount: studySessions.length,
-        })),
+            recordedMinutes: completedSessions.reduce(
+              (total, session) => total + calculateStudySessionDurationMinutes(
+                session.startedAt,
+                session.endedAt!,
+              ),
+              0,
+            ),
+            studySessionCount: studySessions.length,
+          }
+        }),
       }
     })
   },
@@ -157,6 +167,55 @@ export const createPrismaCounselorTaskStore = (
 
       const task = await transaction.dailyTask.create({ data: input })
       return { ok: true, value: task }
+    })
+  },
+
+  async createAssignedStudentTasksBatch(counselorUserId, studentProfileId, inputs) {
+    return prisma.$transaction(async (transaction) => {
+      const counselor = await transaction.counselorProfile.findUnique({
+        select: { id: true },
+        where: { userId: counselorUserId },
+      })
+      if (!counselor) {
+        return { ok: false, reason: 'COUNSELOR_PROFILE_NOT_FOUND' as const }
+      }
+
+      const student = await transaction.studentProfile.findFirst({
+        select: { id: true },
+        where: assignedStudentWhere(counselorUserId, studentProfileId),
+      })
+      if (!student) return { ok: false, reason: 'STUDENT_NOT_FOUND' as const }
+
+      for (const input of inputs) {
+        if (input.subjectId) {
+          const subject = await transaction.studySubject.findFirst({
+            where: { id: input.subjectId, studentProfileId },
+          })
+          if (!subject) return { ok: false, reason: 'SUBJECT_NOT_FOUND' as const }
+          if (subject.archivedAt) {
+            return { ok: false, reason: 'SUBJECT_ARCHIVED' as const }
+          }
+        }
+
+        if (input.topicId) {
+          if (!input.subjectId) {
+            return { ok: false, reason: 'TOPIC_SUBJECT_REQUIRED' as const }
+          }
+          const topic = await transaction.topic.findFirst({
+            where: { id: input.topicId, subject: { studentProfileId } },
+          })
+          if (!topic) return { ok: false, reason: 'TOPIC_NOT_FOUND' as const }
+          if (topic.subjectId !== input.subjectId) {
+            return { ok: false, reason: 'TOPIC_SUBJECT_MISMATCH' as const }
+          }
+          if (topic.archivedAt) {
+            return { ok: false, reason: 'TOPIC_ARCHIVED' as const }
+          }
+        }
+      }
+
+      const tasks = await transaction.dailyTask.createManyAndReturn({ data: inputs })
+      return { ok: true, value: tasks }
     })
   },
 

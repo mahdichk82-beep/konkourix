@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 12, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 15, not a claim of overall product completion.
 
 ## Project
 
@@ -12,9 +12,9 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 12 — Task Lifecycle Foundation**.
+The project has completed **Phase 2 Milestone 15 — Active Study Execution & Seamless Switching Foundation**.
 
-Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, interactive student weekly planning, student-owned subject/topic management, optional task-topic assignment, task-linked study execution feedback, safe source-aware task rescheduling, meaningful task completion/skip metadata, read-only counselor access to assigned student profiles and task distribution, and counselor task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
+Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, interactive student weekly planning, student-owned subject/topic management, optional task-topic assignment, server-owned task execution sessions, safe source-aware task rescheduling, meaningful task completion/skip metadata, read-only counselor access to assigned student profiles and task distribution, and atomic counselor batch task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
@@ -89,6 +89,23 @@ Study Tracking recovery checkpoint:
 
 - HEAD: `07a11f51b6bcbd23653df1c6eb3ec080a3af4d2e`
 - Message: `feat: add weekly drag and drop foundation`
+
+## Phase 2 Milestone 13 Starting Checkpoint
+
+- HEAD: `1c84b1d091135ad0c6f53f2487351b6d54eda348`
+- Message: `feat: add task lifecycle foundation`
+
+## Phase 2 Milestone 14 Starting Checkpoint
+
+- HEAD: `1c84b1d091135ad0c6f53f2487351b6d54eda348`
+- Working tree already contained the intentional, uncommitted Phase 2 Milestone 13 implementation when this milestone began.
+
+## Phase 2 Milestone 15 Starting Checkpoint
+
+- HEAD: `1c84b1d091135ad0c6f53f2487351b6d54eda348`
+- Message: `feat: add task lifecycle foundation`
+- Working tree already contained the intentional, uncommitted Phase 2 Milestone 13 and Milestone 14 implementations when this milestone began. They were preserved without reset, clean, checkout, migration-history rewrite, or commit.
+- Development data preflight found zero active StudySessions and zero students with duplicate active StudySessions.
 
 ## Verified Baseline
 
@@ -745,6 +762,91 @@ Milestone verification:
 
 Analytics, reports, AI recommendations, mastery, scoring, streaks, gamification, revisions, audit history, event sourcing, and lifecycle conflict management remain deferred and require separately authorized milestones.
 
+### Phase 2 Milestone 13 — Counselor Planning Batch Foundation
+
+**Status: COMPLETE**
+
+- `POST /api/v1/counselor/students/:studentProfileId/tasks/batch` creates between 1 and 50 ordinary `DailyTask` records for one assigned student. No batch, group, weekly, template, recurrence, or calendar entity was introduced.
+- The endpoint requires an active authenticated counselor, resolves the counselor profile from the authenticated user, and verifies an active `StudentCounselor` assignment before accepting the URL student. `studentProfileId`, `createdByUserId`, and `source` are server-derived and rejected as request fields.
+- Every item requires a title and real `YYYY-MM-DD` date. Optional subjects and topics are validated against the assigned student's active resources; a topic must belong to its selected subject. Planned minutes are non-negative and map to the existing `estimatedMinutes`; planned test count is non-negative.
+- The full batch is validated before one Prisma transaction performs one `createManyAndReturn` insert. A validation or database failure creates no partial batch.
+- Every created record starts as `COUNSELOR` / `PENDING`, with `completedAt`, `skipReason`, and `skippedAt` empty. The task lifecycle and `StudySession` architecture are unchanged, and creator identity remains redacted from responses.
+- `DailyTask.plannedTestCount` is the only additive schema field because the existing model had no place to persist the required test-count value. Migration `20260912203000_add_daily_task_planned_test_count` adds the non-negative application-validated integer with a default of zero. No new entity or relationship was added.
+- Counselor Web assigned-student planning now includes a responsive Persian multi-row form with subject/topic selection, dates, planned minutes/tests, optional descriptions, add/remove controls, validation, loading, success, and error feedback. Created test counts are visible in existing counselor and student planning views.
+- Dependency-free Counselor Web tests cover row validation, add/remove behavior, normalized successful submission, and request-error handling. The canonical validation gate now runs both frontend unit suites.
+- API documentation lives in `docs/API.md`; README command and documentation indexes include the counselor test suite and API contract.
+
+Milestone verification:
+
+- API tests: **143/143 PASS**
+- Student Web unit tests: **2/2 PASS**
+- Counselor Web unit tests: **4/4 PASS**
+- API type-check and production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 10 migrations found and the database is up to date
+- Schema changed: **YES; `DailyTask.plannedTestCount` only**
+- Migration added and run: **YES; local development database only**
+
+Batch editing, batch rescheduling, task groups, planning templates, recurring tasks, calendar engines, AI scheduling, and automatic optimization remain deferred and require separately authorized milestones.
+
+### Phase 2 Milestone 14 — Task Execution Foundation
+
+**Status: COMPLETE**
+
+- `POST /api/v1/student/tasks/:id/start` starts actual execution for an owned `PENDING` task by creating an ordinary active `StudySession`. The server derives `studentProfileId`, `dailyTaskId`, optional `subjectId`, and `startedAt`; request ownership fields and timestamps are not accepted.
+- `PATCH /api/v1/student/study-sessions/:id/finish` finishes only an owned active session, assigns `endedAt` from server time, and exposes the calculated duration. Foreign sessions, already-finished sessions, and non-positive server durations are rejected.
+- `DailyTask` remains planned work and `StudySession` remains actual work. Starting or finishing a session never completes, skips, reopens, reschedules, or otherwise mutates the linked task. Multiple sessions per task remain supported by the existing many-to-one relation.
+- The existing completed-session creation APIs remain available for compatibility. The only schema change makes `StudySession.endedAt` nullable so a server-started active session can be represented; migration `20260912220000_allow_active_study_sessions` adds no table, entity, or relationship.
+- Student Today Planning now uses the server-backed start/finish flow, restores active state from persisted sessions, shows loading/success/error feedback, and prevents a new start for completed or skipped tasks. The UI retains the existing responsive Persian design and planner structure.
+- Focused backend tests cover start ownership, server-derived linkage/time, pending-only execution, lifecycle separation, finish ownership, repeated finish rejection, invalid duration rejection, duration calculation, and the transactional ownership predicate. Student Web tests cover start availability, start and finish request behavior, session-state replacement, and safe error messages.
+- Counselor Web has no execution controls or behavior change. Timer, Pomodoro, reporting, analytics, counselor review, workflow, AI, calendar, and new task/entity work remain absent.
+
+Milestone verification:
+
+- API tests: **150/150 PASS**
+- Student Web unit tests: **6/6 PASS**
+- Counselor Web unit tests: **4/4 PASS**
+- API type-check and production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 11 migrations found and the database is up to date
+- Schema changed: **YES; `StudySession.endedAt` is nullable**
+- Migration added and run: **YES; local development database only**
+
+Pomodoro/focus timers, automatic task completion, session cancellation, analytics, reports, counselor review dashboards, AI planning, workflow engines, and new task or calendar entities remain deferred and require separately authorized milestones.
+
+### Phase 2 Milestone 15 — Active Study Execution & Seamless Switching Foundation
+
+**Status: COMPLETE**
+
+- The canonical model remains `DailyTask = planned work` and `StudySession = actual execution`. A task retains `0..N` sessions. No execution model, Prisma field, migration, dependency, Redis coordination, or browser-storage authority was added.
+- Live start, switch, finish, and linked-task terminal lifecycle changes serialize on the authenticated student's stable PostgreSQL `StudentProfile` row inside transactions. This prevents concurrent API processes from creating overlapping live sessions for one student without restricting sequential sessions or different students.
+- Raw start safely reuses an already-active session for the same task and returns `ACTIVE_STUDY_SESSION_EXISTS` for a different active task. `GET /api/v1/student/study-sessions/active` restores authenticated server state. Atomic switch closes a different current interval and starts a fresh target interval at one server timestamp, degrades to start when none is active, and reuses an already-active target.
+- Manual historical completed-session creation remains available. Generic creation cannot create an open session, and generic update cannot edit/reopen active execution. Public execution views omit the internal student-profile identifier.
+- Starting, switching, and finishing never change `DailyTask.status`. A student cannot change a linked task to `COMPLETED` or `SKIPPED` while its session is active; execution must be finished first and the outcome remains a separate student decision.
+- Student Today Planning owns one page-level active execution state, restores it after refresh, renders a display-only elapsed timer from persisted `startedAt`, offers a Persian seamless-switch confirmation, and keeps the existing session history and completed-duration totals. Switching back to a pending task creates a new session.
+- Counselor Web remains read-only. Recorded minutes and completed-session counts exclude active sessions, while a separate live indicator prevents a current interval from being presented as completed study.
+- Cancellation, pause/resume, Pomodoro, focus modes, feedback ratings, analytics, reports, notifications, offline sync, automatic task outcomes, and new execution entities remain absent.
+
+Milestone verification:
+
+- API tests: **165/165 PASS**
+- Student Web unit tests: **13/13 PASS**
+- Counselor Web unit tests: **4/4 PASS**
+- API type-check and production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 11 migrations found and the database is up to date
+- Schema changed for Milestone 15: **NO**
+- Migration added or run for Milestone 15: **NO**
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -775,12 +877,12 @@ The following capabilities are present and covered by the current API baseline:
 - Student and counselor profile APIs
 - Student-counselor relationship foundation
 - Counselor-only read access to actively assigned student lists and basic profiles
-- Counselor-only creation and controlled rescheduling of counselor-source tasks for actively assigned students with server-owned provenance
+- Counselor-only single and atomic batch creation plus controlled rescheduling of counselor-source tasks for actively assigned students with server-owned provenance
 - Counselor-only read access to personal and counselor-created tasks owned by actively assigned students, without creator identity exposure
 - Student subjects, topics, study plans, and daily tasks with optional validated topic assignment, server-owned provenance, owned date-range reads, and controlled personal-task rescheduling
 - Student and assigned-counselor weekly task distribution derived from DailyTask dates without duplicate storage
 - Student-owned task lifecycle outcomes with optional localized skip-reason codes and server-controlled completion/skip timestamps
-- Study Sessions, including task-linked execution recording and owned task filtering, and Student Goals
+- Study Sessions, including serialized server-started active execution, active-session restoration, atomic task switching, owner-checked finishing, task-linked manual historical recording, and owned task filtering, and Student Goals
 - Backend role and ownership enforcement foundations; student resources are resolved from the authenticated user's StudentProfile
 
 Study Tracking recovery is committed in `8905e381fdcf820bc058a7acd81fc794c7cbfc08` and retained by the current checkpoint.
@@ -798,8 +900,12 @@ Commit `5fffa805d99e1fc870410c3b5115b2924059399f` records four verified repairs:
 
 - Persistent storage: PostgreSQL
 - ORM and migration system: Prisma
-- Known migrations: 9
+- Known migrations: 11
 - Migration status at this checkpoint: applied and up to date
+- Counselor batch planning migration: `20260912203000_add_daily_task_planned_test_count`
+- Counselor batch planning migration state: included in the validated Milestone 13–15 checkpoint and applied locally
+- Task Execution migration: `20260912220000_allow_active_study_sessions`
+- Task Execution migration state: included in the validated Milestone 13–15 checkpoint and applied locally
 - Task Lifecycle migration: `20260912174015_add_task_lifecycle_foundation`
 - Task Lifecycle migration state: committed and applied locally
 - Task Provenance migration: `20260911025617_add_task_provenance_foundation`
@@ -823,7 +929,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - It verifies authenticated access against the backend-protected student boundary before rendering protected content.
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing student profile fields, theme selection, password change, current logout, and logout-all.
-- Its planning area provides persistent today-task listing and creation with optional subject/topic assignment, completion and reason-aware skipping, status and subject filters, cursor pagination, inline subject creation, a safe counselor-source indicator, task-linked StudySession recording/feedback, controlled personal-task date changes, and an interactive Saturday-to-Friday view derived from the same tasks.
+- Its planning area provides persistent today-task listing and creation with optional subject/topic assignment, completion and reason-aware skipping, status and subject filters, cursor pagination, inline subject creation, counselor-supplied planned test-count visibility, a safe counselor-source indicator, central server-backed active StudySession restoration/start/finish/seamless switching with a live elapsed display, execution history and feedback, controlled personal-task date changes, and an interactive Saturday-to-Friday view derived from the same tasks.
 - Its study page provides persistent student-owned subject listing/creation and topic listing/creation/rename/archive/restore through the authenticated backend contracts.
 - It remains an application foundation rather than a complete student product UI.
 
@@ -836,7 +942,7 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing counselor profile fields, theme selection, password change, current logout, and logout-all.
 - Its student area provides a persistent assigned-student list and read-only basic profile detail through counselor-scoped backend contracts, with localized loading, empty, error, and pagination states.
-- Assigned-student detail provides constrained task creation, a paginated task view with direct execution and read-only lifecycle feedback plus controlled counselor-task date changes, and a read-only Saturday-to-Friday task distribution derived from the same assigned student's tasks. Counselor lifecycle/content editing, bulk rescheduling, batch planning, analytics, and reports remain absent.
+- Assigned-student detail provides constrained single and multi-row atomic task creation, a paginated task view with direct execution and read-only lifecycle feedback plus controlled counselor-task date changes, and a read-only Saturday-to-Friday task distribution derived from the same assigned student's tasks. Counselor lifecycle/content editing, bulk rescheduling, templates, analytics, and reports remain absent.
 - It remains an application foundation rather than a complete counselor product UI.
 
 Neither application shell should be described as a complete product merely because it builds.
@@ -844,8 +950,8 @@ Neither application shell should be described as a complete product merely becau
 ## Development Workflow State
 
 - Existing root `dev`, `build`, `test`, and `typecheck` commands retain their API scope; explicit frontend and aggregate commands supplement them.
-- `pnpm validate` is the canonical all-workspace local verification gate and now includes the focused Student Web unit suite.
-- Both frontend applications have independent lint and build scripts; their build commands include TypeScript project builds. Student Web also exposes its focused unit-test script.
+- `pnpm validate` is the canonical all-workspace local verification gate and includes the focused Student Web and Counselor Web unit suites.
+- Both frontend applications have independent lint, build, and focused unit-test scripts; their build commands include TypeScript project builds.
 - Local development uses API port 4000, Student Web port 5173, and Counselor Web port 5174 with explicit environment examples.
 - `.node-version` records Node.js 24.19.0, while root package metadata supports Node.js 24.x and pins pnpm 11.24.0.
 - Ordinary local development must remain Docker-independent and use Node.js processes with a locally available PostgreSQL instance.
@@ -906,7 +1012,7 @@ These items are not authorization to implement all remaining Phase 0 work in one
 - Advanced profile and account-recovery workflows
 - Complete task/planning UX beyond the current today/weekly views and subject/topic slices
 - Test sessions
-- Focus sessions and timer
+- Pomodoro, pause/resume, focus modes, and timer product expansion beyond the live elapsed display
 - Habits and streaks
 - Persian calendar and daily evaluations
 - Reports and analytics
@@ -930,4 +1036,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 12 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin timers, Pomodoro/focus mode, counselor task lifecycle or content editing, full weekly editing, manual within-day ordering, bulk rescheduling, recurring tasks, calendar or hourly scheduling, automatic or AI planning, broader task permissions, revisions, approval workflows, conflict handling, audit or drag history, undo, reports, analytics, mastery, scoring, streaks, gamification, messaging, notifications, search, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 15 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin session cancellation, pause/resume, automatic task completion, batch editing, batch rescheduling, task groups, planning templates, Pomodoro/focus mode, counselor mutation or task lifecycle/content editing, full weekly editing, manual within-day ordering, recurring tasks, calendar or hourly scheduling, automatic or AI planning, broader task permissions, revisions, approval workflows, audit or drag history, undo, reports, analytics, mastery, scoring, feedback ratings, streaks, gamification, messaging, notifications, search, later product work, TLS, deployment execution, monitoring, or backup execution.

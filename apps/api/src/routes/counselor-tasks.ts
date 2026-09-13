@@ -9,6 +9,7 @@ import {
   counselorStudentTaskParamSchema,
   counselorStudentTaskScheduleParamSchema,
   counselorStudentTopicParamSchema,
+  createCounselorTaskBatchSchema,
   createCounselorTaskSchema,
   listCounselorTaskResourcesSchema,
   listCounselorTasksSchema,
@@ -102,6 +103,23 @@ export const registerCounselorTaskRoutes = (
       return reply.status(201).send(
         successResponse(
           await options.counselorTasks.create(request.user!, studentProfileId, input),
+          request.context.requestId,
+        ),
+      )
+    },
+  )
+
+  app.post(
+    '/counselor/students/:studentProfileId/tasks/batch',
+    counselorOnly,
+    async (request, reply) => {
+      const { studentProfileId } = parseInput(
+        counselorStudentTaskParamSchema.safeParse(request.params),
+      )
+      const input = parseInput(createCounselorTaskBatchSchema.safeParse(request.body))
+      return reply.status(201).send(
+        successResponse(
+          await options.counselorTasks.createBatch(request.user!, studentProfileId, input),
           request.context.requestId,
         ),
       )

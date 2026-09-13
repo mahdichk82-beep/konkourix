@@ -168,6 +168,69 @@ test('Prisma student rescheduling atomically requires ownership, personal source
   }])
 })
 
+test('Prisma terminal task mutation locks the student and excludes active linked sessions', async () => {
+  const calls: string[] = []
+  const task = {
+    completedAt: new Date('2026-09-03T09:00:00.000Z'),
+    createdAt: new Date('2026-09-03T00:00:00.000Z'),
+    createdByUserId: 'student-user-1',
+    description: null,
+    estimatedMinutes: 30,
+    id: 'task-1',
+    plannedTestCount: 0,
+    scheduledFor: new Date('2026-09-03T00:00:00.000Z'),
+    skipReason: null,
+    skippedAt: null,
+    source: 'PERSONAL' as const,
+    status: 'COMPLETED' as const,
+    studentProfileId: 'student-profile-1',
+    studyPlanId: null,
+    subjectId: null,
+    title: 'Task',
+    topicId: null,
+    updatedAt: new Date('2026-09-03T09:00:00.000Z'),
+  }
+  let findCount = 0
+  const transaction = {
+    async $queryRawUnsafe(sql: string, profileId: string) {
+      calls.push('lock')
+      assert.equal(sql, 'SELECT "id" FROM "student_profiles" WHERE "id" = $1::uuid FOR UPDATE')
+      assert.equal(profileId, 'student-profile-1')
+      return [{ id: profileId }]
+    },
+    dailyTask: {
+      async findFirst() {
+        findCount += 1
+        calls.push('find')
+        return findCount === 1 ? { id: task.id } : task
+      },
+      async updateMany(query: { where: unknown }) {
+        calls.push('update')
+        assert.deepEqual(query.where, {
+          id: 'task-1',
+          studentProfileId: 'student-profile-1',
+          studySessions: { none: { endedAt: null } },
+        })
+        return { count: 1 }
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+
+  const result = await createPrismaStudentCoreStore(prisma).updateTerminalTask(
+    'student-profile-1',
+    'task-1',
+    { completedAt: task.completedAt, status: 'COMPLETED' },
+  )
+
+  assert.deepEqual(calls, ['lock', 'find', 'update', 'find'])
+  assert.deepEqual(result, { ok: true, value: task })
+})
+
 test('Prisma topic lists, reads, and updates always include subject ownership', async () => {
   const listQueries: unknown[] = []
   const findQueries: unknown[] = []

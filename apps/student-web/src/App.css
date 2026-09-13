@@ -103,6 +103,12 @@
 .planning-hero h2 { margin: 0.2rem 0 0.55rem; font-size: clamp(1.35rem, 3vw, 2rem); }
 .planning-hero p:last-child { margin: 0; color: var(--text-muted); }
 .planning-hero__actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.65rem; }
+.active-study-card, .study-switch-card { display: flex; align-items: center; justify-content: space-between; gap: 1rem; border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); box-shadow: none; }
+.active-study-card h2, .study-switch-card h2 { margin: 0.2rem 0 0.4rem; font-size: 1.1rem; }
+.active-study-card p:last-child, .study-switch-card p:last-child { margin: 0; color: var(--text-muted); font-size: 0.84rem; line-height: 1.7; }
+.active-study-card__timer { flex: 0 0 auto; color: var(--accent-strong); font-size: clamp(1.5rem, 4vw, 2.2rem); font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
+.study-switch-card { align-items: flex-start; flex-direction: column; background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface)); }
+.study-switch-card__actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
 .planning-create-card { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); box-shadow: none; }
 .planning-form { display: grid; gap: 1rem; }
 .planning-form label, .planning-filters label, .inline-subject__form label { display: grid; gap: 0.5rem; color: var(--text); font-size: 0.86rem; font-weight: 700; }
@@ -244,11 +250,12 @@
   .dashboard-grid, .settings-grid, .settings-stack { grid-template-columns: 1fr; }
   .account-summary { grid-template-columns: 1fr; }
   .theme-label { display: none; }
-  .planning-hero, .task-item { align-items: stretch; flex-direction: column; }
+  .planning-hero, .active-study-card, .task-item { align-items: stretch; flex-direction: column; }
   .planning-hero__actions, .weekly-planning-toolbar__actions { display: grid; grid-template-columns: 1fr; }
   .planning-hero .button, .task-actions .button, .weekly-planning-toolbar__actions .button { width: 100%; }
   .planning-form__row, .planning-filters, .inline-subject__form { grid-template-columns: 1fr; }
   .planning-form__actions .button { width: 100%; }
+  .active-study-card .button, .study-switch-card__actions, .study-switch-card__actions .button { width: 100%; }
   .task-actions { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .task-skip-reason { grid-column: 1 / -1; }
   .task-execution, .task-execution > .button, .task-execution__actions .button { width: 100%; }

@@ -7,6 +7,7 @@ import {
   studentsClient,
   type CounselorStudent,
 } from './students-client'
+import { StudentBatchTaskForm } from './StudentBatchTaskForm'
 import { StudentTaskForm } from './StudentTaskForm'
 import { StudentTaskList } from './StudentTaskList'
 import { StudentWeeklyPlanning } from './StudentWeeklyPlanning'
@@ -121,6 +122,11 @@ export function StudentDetailPage({ navigate, studentId }: StudentDetailPageProp
         studentId={student.id}
       />
       <StudentTaskList key={student.id} refreshKey={taskRefreshKey} studentId={student.id} />
+      <StudentBatchTaskForm
+        key={student.id}
+        onTasksCreated={() => setTaskRefreshKey((value) => value + 1)}
+        studentId={student.id}
+      />
       <StudentTaskForm
         onTaskCreated={() => setTaskRefreshKey((value) => value + 1)}
         studentId={student.id}

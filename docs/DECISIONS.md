@@ -197,3 +197,15 @@ This lightweight decision log records architectural constraints established by t
 **Frontend policy:** Student Web and Counselor Web retain independent settings pages, auth providers, API clients, role boundaries, and profile fields. Each page provides its existing theme preference, safe localized states, current-session logout, and confirmed logout-all. No device list is exposed because the current session model only stores raw IP and user-agent metadata; no schema expansion is justified for this milestone.
 
 **Status:** Accepted
+
+## ADR-019 — Active Study Execution Integrity
+
+**Decision:** `StudySession` remains the sole execution record. `DailyTask` represents planned work and may own zero or any number of sequential `StudySession` intervals. A student may have only one live server-timed `StudySession` (`endedAt = null`) at an instant, but may create unlimited sequential sessions across tasks and may return to any still-pending task.
+
+**Switching policy:** Changing tasks closes the current continuous interval and creates a new `StudySession` for the target at the same server transition timestamp. Returning to an earlier task creates another session; it does not resume or mutate its previous interval. A same-target retry reuses the current active session. This is a timer-integrity rule, not a study-plan restriction.
+
+**Concurrency policy:** Start, switch, finish, and terminal linked-task lifecycle mutation serialize on the authenticated student's stable PostgreSQL `StudentProfile` row inside database transactions. Process-memory locks, Redis, and duplicate lifecycle fields are not used.
+
+**Historical-entry policy:** Manual completed historical `StudySession` records remain supported and distinct from live execution. Client-controlled generic routes cannot create or reopen an active session. Execution never automatically completes or skips a `DailyTask`.
+
+**Status:** Accepted

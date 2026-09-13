@@ -54,6 +54,7 @@ export type DailyTaskRecord = {
   description: string | null
   scheduledFor: Date
   estimatedMinutes: number | null
+  plannedTestCount: number
   status: DailyTaskStatus
   completedAt: Date | null
   skipReason: DailyTaskSkipReason | null
@@ -70,6 +71,10 @@ export type RescheduleStudentTaskResult =
       ok: false
       reason: 'TASK_NOT_FOUND' | 'TASK_SOURCE_FORBIDDEN' | 'TASK_EXECUTED'
     }
+
+export type UpdateTerminalStudentTaskResult =
+  | { ok: true; value: DailyTaskRecord }
+  | { ok: false; reason: 'TASK_NOT_FOUND' | 'ACTIVE_STUDY_SESSION_EXISTS' }
 
 export type PageQuery = { cursor?: string; limit?: number }
 export type Page<T> = { items: T[]; nextCursor: string | null }

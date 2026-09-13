@@ -54,6 +54,7 @@ The root `dev`, `build`, `test`, and `typecheck` commands retain their existing 
 | `pnpm build:all` | Build all three applications |
 | `pnpm test` | Run the API test suite |
 | `pnpm test:student` | Run the Student Web unit tests |
+| `pnpm test:counselor` | Run the Counselor Web unit tests |
 | `pnpm typecheck` | Type-check the API |
 | `pnpm lint` | Lint both frontend applications |
 | `pnpm db:validate` | Validate the Prisma schema without running migrations |
@@ -72,10 +73,11 @@ $env:VITE_API_URL='https://api.example.test'
 pnpm validate
 ```
 
-The validation command runs API tests/type-check/build, frontend lint/build, and Prisma schema validation. It does not start services, run migrations, or require Docker.
+The validation command runs API and focused frontend tests, API type-check/build, frontend lint/build, and Prisma schema validation. It does not start services, run migrations, or require Docker.
 
 ## Additional documentation
 
+- [API contracts](docs/API.md)
 - [Project state](docs/PROJECT_STATE.md)
 - [Architectural decisions](docs/DECISIONS.md)
 - [Production container, Compose, and edge contract](docs/CONTAINERS.md)

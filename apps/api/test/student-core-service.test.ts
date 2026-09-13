@@ -21,6 +21,7 @@ const timestamp = new Date('2026-09-03T00:00:00.000Z')
 
 const createStore = (): StudentCoreStore & {
   executedTaskIds: Set<string>
+  activeTaskIds: Set<string>
   subjects: StudySubjectRecord[]
   topics: TopicRecord[]
   plans: StudyPlanRecord[]
@@ -28,6 +29,7 @@ const createStore = (): StudentCoreStore & {
 } => {
   const store = {
     executedTaskIds: new Set<string>(),
+    activeTaskIds: new Set<string>(),
     subjects: [] as StudySubjectRecord[],
     topics: [] as TopicRecord[],
     plans: [] as StudyPlanRecord[],
@@ -101,6 +103,15 @@ const createStore = (): StudentCoreStore & {
       if (!task) return null
       Object.assign(task, input, { updatedAt: timestamp })
       return task
+    },
+    async updateTerminalTask(profileId: string, id: string, input: Partial<Pick<DailyTaskRecord, 'studyPlanId' | 'subjectId' | 'topicId' | 'title' | 'description' | 'estimatedMinutes' | 'status' | 'completedAt' | 'skipReason' | 'skippedAt'>>) {
+      const task = store.tasks.find((item) => item.id === id && item.studentProfileId === profileId)
+      if (!task) return { ok: false as const, reason: 'TASK_NOT_FOUND' as const }
+      if (store.activeTaskIds.has(id)) {
+        return { ok: false as const, reason: 'ACTIVE_STUDY_SESSION_EXISTS' as const }
+      }
+      Object.assign(task, input, { updatedAt: timestamp })
+      return { ok: true as const, value: task }
     },
     async reschedulePersonalTask(profileId: string, id: string, scheduledFor: Date) {
       const task = store.tasks.find((item) => item.id === id && item.studentProfileId === profileId)
@@ -313,6 +324,36 @@ test('student lifecycle records skip metadata and preserves completion timestamp
     services.tasks.get({ id: 'other-student', role: 'STUDENT', status: 'ACTIVE' }, task.id),
     (error: unknown) => error instanceof ApiError && error.code === 'STUDENT_PROFILE_REQUIRED',
   )
+})
+
+test('an active linked study session blocks terminal task outcomes without choosing an outcome', async () => {
+  const store = createStore()
+  const services = createStudentCoreServices(store, () => timestamp)
+  const task = await services.tasks.create(student, {
+    title: 'Active task',
+    description: null,
+    scheduledFor: '2026-09-03',
+    estimatedMinutes: 30,
+    status: 'PENDING',
+    studyPlanId: null,
+    subjectId: null,
+    topicId: null,
+  })
+  store.activeTaskIds.add(task.id)
+
+  for (const status of ['COMPLETED', 'SKIPPED'] as const) {
+    await assert.rejects(
+      services.tasks.update(student, task.id, { status }),
+      (error: unknown) => error instanceof ApiError && error.code === 'TASK_ACTIVE_SESSION_EXISTS',
+    )
+  }
+  assert.equal(store.tasks[0]?.status, 'PENDING')
+
+  store.activeTaskIds.delete(task.id)
+  const completed = await services.tasks.update(student, task.id, {
+    status: 'COMPLETED',
+  })
+  assert.equal(completed.status, 'COMPLETED')
 })
 
 test('student task provenance is server-assigned, immutable, and creator-safe in responses', async () => {

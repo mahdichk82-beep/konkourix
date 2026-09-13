@@ -3,6 +3,7 @@ import test from 'node:test'
 import type { PrismaClient } from '../src/generated/prisma/client.js'
 import { createCounselorTaskServices } from '../src/counselor-tasks/services.js'
 import { createPrismaCounselorTaskStore } from '../src/counselor-tasks/prisma-store.js'
+import { ApiError } from '../src/errors/api-error.js'
 
 const ids = {
   counselor: '10000000-0000-4000-8000-000000000001',
@@ -33,6 +34,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
           description: null,
           estimatedMinutes: 30,
           id: ids.task,
+          plannedTestCount: 0,
           scheduledFor: timestamp,
           skipReason: null,
           skippedAt: null,
@@ -46,6 +48,10 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
             {
               endedAt: new Date('2026-09-11T10:45:00.000Z'),
               startedAt: new Date('2026-09-11T10:00:00.000Z'),
+            },
+            {
+              endedAt: null,
+              startedAt: new Date('2026-09-11T11:00:00.000Z'),
             },
           ],
           studentProfileId: ids.student,
@@ -91,6 +97,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
       description: true,
       estimatedMinutes: true,
       id: true,
+      plannedTestCount: true,
       scheduledFor: true,
       skipReason: true,
       skippedAt: true,
@@ -110,7 +117,9 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
   }])
   assert.equal(result.items[0]?.source, 'PERSONAL')
   assert.equal(result.items[0]?.recordedMinutes, 75)
-  assert.equal(result.items[0]?.studySessionCount, 2)
+  assert.equal(result.items[0]?.studySessionCount, 3)
+  assert.equal(result.items[0]?.completedStudySessionCount, 2)
+  assert.equal(result.items[0]?.hasActiveStudySession, true)
   assert.equal('createdByUserId' in (result.items[0] ?? {}), false)
 })
 
@@ -227,6 +236,7 @@ test('Prisma counselor task creation validates assignment and relations atomical
     createdByUserId: ids.counselor,
     description: null,
     estimatedMinutes: 45,
+    plannedTestCount: 0,
     scheduledFor: new Date('2026-09-12T00:00:00.000Z'),
     skipReason: null,
     skippedAt: null,
@@ -241,6 +251,238 @@ test('Prisma counselor task creation validates assignment and relations atomical
   assert.equal(result.source, 'COUNSELOR')
   assert.equal(result.studentProfileId, ids.student)
   assert.equal('createdByUserId' in result, false)
+})
+
+test('Prisma counselor batch creation verifies profile, assignment, resources, and inserts once', async () => {
+  const counselorQueries: unknown[] = []
+  const profileQueries: unknown[] = []
+  const subjectQueries: unknown[] = []
+  const topicQueries: unknown[] = []
+  const batchCreates: Array<{ data: Array<Record<string, unknown>> }> = []
+  let transactionCount = 0
+  const transaction = {
+    counselorProfile: {
+      async findUnique(query: unknown) {
+        counselorQueries.push(query)
+        return { id: ids.counselor }
+      },
+    },
+    studentProfile: {
+      async findFirst(query: unknown) {
+        profileQueries.push(query)
+        return { id: ids.student }
+      },
+    },
+    studySubject: {
+      async findFirst(query: unknown) {
+        subjectQueries.push(query)
+        return { id: ids.subject, archivedAt: null }
+      },
+    },
+    topic: {
+      async findFirst(query: unknown) {
+        topicQueries.push(query)
+        return { id: ids.topic, subjectId: ids.subject, archivedAt: null }
+      },
+    },
+    dailyTask: {
+      async createManyAndReturn(input: { data: Array<Record<string, unknown>> }) {
+        batchCreates.push(input)
+        return input.data.map((data, index) => ({
+          id: `60000000-0000-4000-8000-${String(index + 10).padStart(12, '0')}`,
+          ...data,
+          createdAt: timestamp,
+          updatedAt: timestamp,
+        }))
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      transactionCount += 1
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+  const services = createCounselorTaskServices(createPrismaCounselorTaskStore(prisma))
+
+  const result = await services.createBatch(
+    { id: ids.counselor, role: 'COUNSELOR', status: 'ACTIVE' },
+    ids.student,
+    {
+      tasks: [
+        {
+          title: 'Biology batch task',
+          description: null,
+          scheduledFor: '2026-09-15',
+          plannedMinutes: 90,
+          plannedTestCount: 12,
+          subjectId: ids.subject,
+          topicId: ids.topic,
+        },
+        {
+          title: 'Unlinked batch task',
+          description: null,
+          scheduledFor: '2026-09-16',
+          plannedMinutes: 0,
+          plannedTestCount: 0,
+          subjectId: null,
+          topicId: null,
+        },
+      ],
+    },
+  )
+
+  assert.equal(transactionCount, 1)
+  assert.deepEqual(counselorQueries, [{
+    select: { id: true },
+    where: { userId: ids.counselor },
+  }])
+  assert.deepEqual(profileQueries, [{
+    select: { id: true },
+    where: {
+      id: ids.student,
+      user: {
+        studentRelationships: {
+          some: { counselorId: ids.counselor, status: 'ACTIVE' },
+        },
+      },
+    },
+  }])
+  assert.deepEqual(subjectQueries, [{
+    where: { id: ids.subject, studentProfileId: ids.student },
+  }])
+  assert.deepEqual(topicQueries, [{
+    where: { id: ids.topic, subject: { studentProfileId: ids.student } },
+  }])
+  assert.equal(batchCreates.length, 1)
+  assert.equal(batchCreates[0]?.data.length, 2)
+  assert.deepEqual(batchCreates[0]?.data[0], {
+    completedAt: null,
+    createdByUserId: ids.counselor,
+    description: null,
+    estimatedMinutes: 90,
+    plannedTestCount: 12,
+    scheduledFor: new Date('2026-09-15T00:00:00.000Z'),
+    skipReason: null,
+    skippedAt: null,
+    source: 'COUNSELOR',
+    status: 'PENDING',
+    studentProfileId: ids.student,
+    studyPlanId: null,
+    subjectId: ids.subject,
+    title: 'Biology batch task',
+    topicId: ids.topic,
+  })
+  assert.equal(result.created, 2)
+  assert.equal(result.tasks.every((task) => task.source === 'COUNSELOR'), true)
+  assert.equal(result.tasks.every((task) => !('createdByUserId' in task)), true)
+})
+
+test('Prisma counselor batch creation rolls back when the atomic insert fails', async () => {
+  const persisted: Array<Record<string, unknown>> = []
+  let transactionCount = 0
+  const transaction = {
+    counselorProfile: { findUnique: async () => ({ id: ids.counselor }) },
+    studentProfile: { findFirst: async () => ({ id: ids.student }) },
+    dailyTask: {
+      async createManyAndReturn(input: { data: Array<Record<string, unknown>> }) {
+        persisted.push(input.data[0] ?? {})
+        throw new Error('simulated batch insert failure')
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      transactionCount += 1
+      const snapshotLength = persisted.length
+      try {
+        return await operation(transaction)
+      } catch (error) {
+        persisted.splice(snapshotLength)
+        throw error
+      }
+    },
+  } as unknown as PrismaClient
+  const services = createCounselorTaskServices(createPrismaCounselorTaskStore(prisma))
+
+  await assert.rejects(
+    services.createBatch(
+      { id: ids.counselor, role: 'COUNSELOR', status: 'ACTIVE' },
+      ids.student,
+      {
+        tasks: [
+          {
+            title: 'First task',
+            description: null,
+            scheduledFor: '2026-09-15',
+            plannedMinutes: 30,
+            plannedTestCount: 0,
+            subjectId: null,
+            topicId: null,
+          },
+          {
+            title: 'Second task',
+            description: null,
+            scheduledFor: '2026-09-16',
+            plannedMinutes: 30,
+            plannedTestCount: 0,
+            subjectId: null,
+            topicId: null,
+          },
+        ],
+      },
+    ),
+    /simulated batch insert failure/,
+  )
+  assert.equal(transactionCount, 1)
+  assert.deepEqual(persisted, [])
+})
+
+test('Prisma counselor batch creation requires a persisted counselor profile', async () => {
+  let assignmentChecked = false
+  let insertCalled = false
+  const transaction = {
+    counselorProfile: { findUnique: async () => null },
+    studentProfile: {
+      async findFirst() {
+        assignmentChecked = true
+        return { id: ids.student }
+      },
+    },
+    dailyTask: {
+      async createManyAndReturn() {
+        insertCalled = true
+        return []
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+  const services = createCounselorTaskServices(createPrismaCounselorTaskStore(prisma))
+
+  await assert.rejects(
+    services.createBatch(
+      { id: ids.counselor, role: 'COUNSELOR', status: 'ACTIVE' },
+      ids.student,
+      {
+        tasks: [{
+          title: 'Blocked task',
+          description: null,
+          scheduledFor: '2026-09-15',
+          plannedMinutes: 30,
+          plannedTestCount: 0,
+          subjectId: null,
+          topicId: null,
+        }],
+      },
+    ),
+    (error: unknown) => error instanceof ApiError && error.code === 'COUNSELOR_PROFILE_REQUIRED',
+  )
+  assert.equal(assignmentChecked, false)
+  assert.equal(insertCalled, false)
 })
 
 test('Prisma counselor rescheduling atomically rechecks assignment, ownership, source, and sessions', async () => {
@@ -346,6 +588,7 @@ test('Prisma counselor task creation stops before insert when assignment is abse
     createdByUserId: ids.counselor,
     description: null,
     estimatedMinutes: null,
+    plannedTestCount: 0,
     scheduledFor: timestamp,
     source: 'COUNSELOR',
     status: 'PENDING',

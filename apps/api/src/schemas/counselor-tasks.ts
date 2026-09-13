@@ -40,4 +40,18 @@ export const createCounselorTaskSchema = z.object({
   topicId: z.string().uuid().nullable().optional().default(null),
 }).strict()
 
+const createCounselorTaskBatchItemSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  description: z.string().trim().max(2000).nullable().optional().default(null),
+  scheduledFor: dateOnly,
+  plannedMinutes: z.number().int().min(0).max(1440).optional().default(0),
+  plannedTestCount: z.number().int().min(0).optional().default(0),
+  subjectId: z.string().uuid().nullable().optional().default(null),
+  topicId: z.string().uuid().nullable().optional().default(null),
+}).strict()
+
+export const createCounselorTaskBatchSchema = z.object({
+  tasks: z.array(createCounselorTaskBatchItemSchema).min(1).max(50),
+}).strict()
+
 export const rescheduleCounselorTaskSchema = z.object({ scheduledFor: dateOnly }).strict()

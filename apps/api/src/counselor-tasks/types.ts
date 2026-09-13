@@ -49,6 +49,21 @@ export type CreateCounselorTaskInput = {
   topicId: string | null
 }
 
+export type CreateCounselorTaskBatchItemInput = {
+  title: string
+  description: string | null
+  scheduledFor: string
+  plannedMinutes: number
+  plannedTestCount: number
+  subjectId: string | null
+  topicId: string | null
+}
+
+export type CreateCounselorTaskBatchView = {
+  created: number
+  tasks: CounselorTaskView[]
+}
+
 export type CreateCounselorTaskRecordInput = Omit<
   DailyTaskRecord,
   'id' | 'createdAt' | 'updatedAt'
@@ -78,6 +93,21 @@ export type CreateCounselorTaskResult =
         | 'TOPIC_ARCHIVED'
     }
 
+export type CreateCounselorTaskBatchResult =
+  | { ok: true; value: DailyTaskRecord[] }
+  | {
+      ok: false
+      reason:
+        | 'COUNSELOR_PROFILE_NOT_FOUND'
+        | 'STUDENT_NOT_FOUND'
+        | 'SUBJECT_NOT_FOUND'
+        | 'SUBJECT_ARCHIVED'
+        | 'TOPIC_SUBJECT_REQUIRED'
+        | 'TOPIC_NOT_FOUND'
+        | 'TOPIC_SUBJECT_MISMATCH'
+        | 'TOPIC_ARCHIVED'
+    }
+
 export type RescheduleCounselorTaskResult =
   | { ok: true; value: DailyTaskRecord }
   | {
@@ -92,6 +122,8 @@ export type RescheduleCounselorTaskResult =
 export type CounselorTaskView = DailyTaskView
 
 export type CounselorVisibleTaskView = CounselorTaskView & {
+  completedStudySessionCount: number
+  hasActiveStudySession: boolean
   recordedMinutes: number
   studySessionCount: number
 }

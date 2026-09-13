@@ -19,6 +19,7 @@ type CounselorTask = {
   description: string | null
   estimatedMinutes: number | null
   id: string
+  plannedTestCount: number
   scheduledFor: string
   skipReason: CounselorTaskSkipReason | null
   skippedAt: string | null
@@ -33,6 +34,8 @@ type CounselorTask = {
 }
 
 export type CounselorVisibleTask = CounselorTask & {
+  completedStudySessionCount: number
+  hasActiveStudySession: boolean
   recordedMinutes: number
   studySessionCount: number
 }
@@ -54,6 +57,21 @@ export type CreateCounselorTaskInput = {
   subjectId: string | null
   title: string
   topicId: string | null
+}
+
+export type CreateCounselorBatchTaskInput = {
+  description: string | null
+  plannedMinutes: number
+  plannedTestCount: number
+  scheduledFor: string
+  subjectId: string | null
+  title: string
+  topicId: string | null
+}
+
+export type CreateCounselorTaskBatchResult = {
+  created: number
+  tasks: CounselorCreatedTask[]
 }
 
 const resourcePath = (studentProfileId: string, suffix: string) =>
@@ -122,6 +140,19 @@ export const studentTasksClient = {
       resourcePath(studentProfileId, '/tasks'),
       {
         body: JSON.stringify(input),
+        method: 'POST',
+      },
+    )
+  },
+
+  createBatch(
+    studentProfileId: string,
+    tasks: CreateCounselorBatchTaskInput[],
+  ): Promise<CreateCounselorTaskBatchResult> {
+    return authClient.authorizedRequest<CreateCounselorTaskBatchResult>(
+      resourcePath(studentProfileId, '/tasks/batch'),
+      {
+        body: JSON.stringify({ tasks }),
         method: 'POST',
       },
     )

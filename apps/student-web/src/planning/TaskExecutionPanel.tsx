@@ -1,14 +1,24 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AuthApiError } from '../auth/auth-client'
 import { Button } from '../components/ui/Button'
+import { planningClient, type StudySession } from './planning-client'
 import {
-  planningClient,
-  type StudySession,
-} from './planning-client'
+  completedStudySummary,
+  executeFinish,
+  executionErrorCodeMessage,
+  taskExecutionAction,
+  upsertStudySession,
+} from './task-execution'
 
 type TaskExecutionPanelProps = {
   taskId: string
+  taskStatus: 'PENDING' | 'COMPLETED' | 'SKIPPED'
   taskTitle: string
+  activeSession: StudySession | null
+  executionReady: boolean
+  executionRevision: number
+  onFinish(sessionId: string, notes: string | null): Promise<StudySession>
+  onStart(taskId: string, taskTitle: string): Promise<'STARTED' | 'CONTINUED' | 'SWITCH_PENDING'>
 }
 
 const dateTimeFormatter = new Intl.DateTimeFormat('fa-IR', {
@@ -18,13 +28,8 @@ const dateTimeFormatter = new Intl.DateTimeFormat('fa-IR', {
 
 const executionErrorMessage = (error: unknown) => {
   if (error instanceof AuthApiError) {
-    if (error.code === 'TASK_NOT_FOUND') return 'این کار دیگر در دسترس نیست.'
-    if (error.code === 'SUBJECT_ARCHIVED') {
-      return 'درس این کار بایگانی شده و ثبت مطالعه تازه برای آن ممکن نیست.'
-    }
-    if (error.code === 'SESSION_TIME_INVALID') {
-      return 'زمان پایان باید بعد از زمان شروع باشد.'
-    }
+    const message = executionErrorCodeMessage(error.code)
+    if (message) return message
   }
   return 'ثبت یا دریافت مطالعه ممکن نشد. دوباره تلاش کنید.'
 }
@@ -45,23 +50,33 @@ const loadTaskSessions = async (taskId: string): Promise<StudySession[]> => {
   return sessions
 }
 
-export function TaskExecutionPanel({ taskId, taskTitle }: TaskExecutionPanelProps) {
+export function TaskExecutionPanel({
+  activeSession,
+  executionReady,
+  executionRevision,
+  onFinish,
+  onStart,
+  taskId,
+  taskStatus,
+  taskTitle,
+}: TaskExecutionPanelProps) {
   const [expanded, setExpanded] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [sessions, setSessions] = useState<StudySession[]>([])
-  const [startedAt, setStartedAt] = useState<Date | null>(null)
   const [notes, setNotes] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
-  const recordedMinutes = useMemo(
-    () => sessions.reduce((total, session) => total + session.durationMinutes, 0),
+  const { completedSessions, recordedMinutes } = useMemo(
+    () => completedStudySummary(sessions),
     [sessions],
   )
+  const taskActiveSession = activeSession?.dailyTaskId === taskId ? activeSession : null
+  const action = taskExecutionAction(taskStatus, taskId, activeSession)
 
-  const refresh = async () => {
+  const refresh = useCallback(async () => {
     setLoading(true)
     setError(null)
     try {
@@ -72,7 +87,11 @@ export function TaskExecutionPanel({ taskId, taskTitle }: TaskExecutionPanelProp
     } finally {
       setLoading(false)
     }
-  }
+  }, [taskId])
+
+  useEffect(() => {
+    if (loaded) void Promise.resolve().then(refresh)
+  }, [executionRevision, loaded, refresh])
 
   const toggle = () => {
     const nextExpanded = !expanded
@@ -81,34 +100,41 @@ export function TaskExecutionPanel({ taskId, taskTitle }: TaskExecutionPanelProp
     if (nextExpanded && !loaded && !loading) void refresh()
   }
 
-  const start = () => {
-    setStartedAt(new Date())
+  const start = async () => {
+    if (submitting || taskStatus !== 'PENDING' || !executionReady) return
+    setSubmitting(true)
     setError(null)
     setSuccess(null)
+    try {
+      const result = await onStart(taskId, taskTitle)
+      if (result === 'STARTED') {
+        setSuccess(`مطالعه «${taskTitle}» شروع شد. وضعیت کار جداگانه باقی ماند.`)
+      } else if (result === 'CONTINUED') {
+        setSuccess(`مطالعه «${taskTitle}» از قبل فعال است و ادامه دارد.`)
+      }
+    } catch (startError) {
+      setError(executionErrorMessage(startError))
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const finish = async () => {
-    if (!startedAt || submitting) return
-    const endedAt = new Date()
-    if (endedAt <= startedAt) {
-      setError('برای ثبت مطالعه، لحظه‌ای بعد از شروع آن را پایان دهید.')
-      return
-    }
+    if (!taskActiveSession || submitting) return
 
     setSubmitting(true)
     setError(null)
     setSuccess(null)
     try {
-      const session = await planningClient.createTaskSession(taskId, {
-        endedAt: endedAt.toISOString(),
-        notes: notes.trim() || null,
-        startedAt: startedAt.toISOString(),
-      })
-      setSessions((current) => [session, ...current.filter(({ id }) => id !== session.id)])
+      const session = await executeFinish(
+        taskActiveSession.id,
+        notes.trim() || null,
+        onFinish,
+      )
+      setSessions((current) => upsertStudySession(current, session))
       setLoaded(true)
-      setStartedAt(null)
       setNotes('')
-      setSuccess(`مطالعه «${taskTitle}» با ${session.durationMinutes.toLocaleString('fa-IR')} دقیقه ثبت شد. وضعیت کار جداگانه باقی ماند.`)
+      setSuccess(`مطالعه «${taskTitle}» با ${(session.durationMinutes ?? 0).toLocaleString('fa-IR')} دقیقه ثبت شد. وضعیت کار جداگانه باقی ماند.`)
     } catch (submitError) {
       setError(executionErrorMessage(submitError))
     } finally {
@@ -135,15 +161,15 @@ export function TaskExecutionPanel({ taskId, taskTitle }: TaskExecutionPanelProp
             <>
               <div className="task-execution__summary">
                 <strong>{recordedMinutes.toLocaleString('fa-IR')} دقیقه</strong>
-                <span>مطالعه ثبت‌شده در {sessions.length.toLocaleString('fa-IR')} جلسه</span>
-                {sessions[0] && (
-                  <small>آخرین ثبت: {dateTimeFormatter.format(new Date(sessions[0].endedAt))}</small>
+                <span>مطالعه ثبت‌شده در {completedSessions.length.toLocaleString('fa-IR')} جلسه</span>
+                {completedSessions[0]?.endedAt && (
+                  <small>آخرین ثبت: {dateTimeFormatter.format(new Date(completedSessions[0].endedAt))}</small>
                 )}
               </div>
 
-              {startedAt ? (
+              {action === 'FINISH' && taskActiveSession ? (
                 <div className="task-execution__active">
-                  <p>شروع مطالعه: {dateTimeFormatter.format(startedAt)}</p>
+                  <p>جلسه فعال · شروع: {dateTimeFormatter.format(new Date(taskActiveSession.startedAt))}</p>
                   <label htmlFor={`session-notes-${taskId}`}>
                     یادداشت (اختیاری)
                     <textarea
@@ -159,24 +185,21 @@ export function TaskExecutionPanel({ taskId, taskTitle }: TaskExecutionPanelProp
                     <Button disabled={submitting} onClick={() => void finish()}>
                       {submitting ? 'در حال ثبت…' : 'پایان و ثبت مطالعه'}
                     </Button>
-                    <Button
-                      disabled={submitting}
-                      onClick={() => {
-                        setStartedAt(null)
-                        setNotes('')
-                        setError(null)
-                      }}
-                      variant="ghost"
-                    >
-                      انصراف
-                    </Button>
                   </div>
                 </div>
-              ) : (
+              ) : action === 'START' ? (
                 <div className="task-execution__start">
-                  <p>شروع و پایان مطالعه فقط برای ساخت یک جلسه واقعی ثبت می‌شوند و وضعیت کار را تغییر نمی‌دهند.</p>
-                  <Button onClick={start}>شروع مطالعه</Button>
+                  <p>
+                    {activeSession
+                      ? 'با انتخاب این کار، ابتدا برای تغییر مطالعه تأیید می‌گیرید.'
+                      : 'شروع و پایان مطالعه یک جلسه واقعی می‌سازند و وضعیت کار را تغییر نمی‌دهند.'}
+                  </p>
+                  <Button disabled={submitting || !executionReady} onClick={() => void start()}>
+                    {submitting ? 'در حال شروع…' : activeSession ? 'تغییر مطالعه به این کار' : 'شروع مطالعه'}
+                  </Button>
                 </div>
+              ) : (
+                <p className="task-execution__state">برای این وضعیت امکان شروع جلسه تازه وجود ندارد.</p>
               )}
 
               {error && <p className="form-error" role="alert">{error}</p>}

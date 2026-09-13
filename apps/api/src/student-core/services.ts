@@ -263,6 +263,7 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         completedAt: input.status === 'COMPLETED' ? now() : null,
         createdByUserId: actor.id,
         description: input.description ?? null,
+        plannedTestCount: 0,
         scheduledFor: dateOnly(input.scheduledFor),
         source: 'PERSONAL',
         skipReason: input.status === 'SKIPPED' ? input.skipReason ?? null : null,
@@ -296,7 +297,7 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         )
       }
       const lifecycleAt = input.status === undefined ? null : now()
-      const result = await store.updateTask(profile.id, id, {
+      const update = {
         ...(input.studyPlanId === undefined ? {} : { studyPlanId: input.studyPlanId }),
         ...(input.subjectId === undefined ? {} : { subjectId: input.subjectId }),
         ...(input.topicId === undefined ? {} : { topicId: input.topicId }),
@@ -307,7 +308,18 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
         ...(input.status === undefined ? {} : { completedAt: input.status === 'COMPLETED' ? lifecycleAt : null }),
         ...(input.status === undefined ? {} : { skipReason: input.status === 'SKIPPED' ? input.skipReason ?? null : null }),
         ...(input.status === undefined ? {} : { skippedAt: input.status === 'SKIPPED' ? lifecycleAt : null }),
-      })
+      }
+      if (input.status === 'COMPLETED' || input.status === 'SKIPPED') {
+        const result = await store.updateTerminalTask(profile.id, id, update)
+        if (!result.ok) {
+          if (result.reason === 'ACTIVE_STUDY_SESSION_EXISTS') {
+            throw new ApiError(409, 'TASK_ACTIVE_SESSION_EXISTS', 'Finish the active study session before changing task outcome')
+          }
+          throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
+        }
+        return toTaskView(result.value)
+      }
+      const result = await store.updateTask(profile.id, id, update)
       if (!result) throw new ApiError(404, 'TASK_NOT_FOUND', 'Daily task not found')
       return toTaskView(result)
     },

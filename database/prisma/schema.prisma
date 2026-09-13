@@ -218,6 +218,7 @@ model DailyTask {
   description      String?
   scheduledFor     DateTime        @db.Date
   estimatedMinutes Int?
+  plannedTestCount Int             @default(0)
   status           DailyTaskStatus @default(PENDING)
   completedAt      DateTime?
   skipReason       DailyTaskSkipReason?
@@ -247,7 +248,7 @@ model StudySession {
   subjectId        String?  @db.Uuid
   dailyTaskId      String?  @db.Uuid
   startedAt        DateTime
-  endedAt          DateTime
+  endedAt          DateTime?
   notes            String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

@@ -5,6 +5,7 @@ import type {
   CounselorStudentSubject,
   CounselorTaskPageQuery,
   CounselorTaskStoreQuery,
+  CreateCounselorTaskBatchResult,
   CreateCounselorTaskRecordInput,
   CreateCounselorTaskResult,
   RescheduleCounselorTaskResult,
@@ -32,6 +33,11 @@ export interface CounselorTaskStore {
     studentProfileId: string,
     input: CreateCounselorTaskRecordInput,
   ): Promise<CreateCounselorTaskResult>
+  createAssignedStudentTasksBatch(
+    counselorUserId: string,
+    studentProfileId: string,
+    inputs: CreateCounselorTaskRecordInput[],
+  ): Promise<CreateCounselorTaskBatchResult>
   rescheduleAssignedStudentTask(
     counselorUserId: string,
     studentProfileId: string,
