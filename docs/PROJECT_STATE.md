@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 15, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 16, not a claim of overall product completion.
 
 ## Project
 
@@ -12,13 +12,13 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 15 — Active Study Execution & Seamless Switching Foundation**.
+The project has completed **Phase 2 Milestone 16 — Stale Study Session Recovery Foundation**.
 
 Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, interactive student weekly planning, student-owned subject/topic management, optional task-topic assignment, server-owned task execution sessions, safe source-aware task rescheduling, meaningful task completion/skip metadata, read-only counselor access to assigned student profiles and task distribution, and atomic counselor batch task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
-- Audit and baseline re-verification date: **2026-09-12**
+- Audit and baseline re-verification date: **2026-09-13**
 
 ## Phase 1 Milestone 3 Starting Checkpoint
 
@@ -106,6 +106,14 @@ Study Tracking recovery checkpoint:
 - Message: `feat: add task lifecycle foundation`
 - Working tree already contained the intentional, uncommitted Phase 2 Milestone 13 and Milestone 14 implementations when this milestone began. They were preserved without reset, clean, checkout, migration-history rewrite, or commit.
 - Development data preflight found zero active StudySessions and zero students with duplicate active StudySessions.
+
+## Phase 2 Milestone 16 Starting Checkpoint
+
+- HEAD: `7ca90b52291da7805474b5aa8174b4a39e8e6751`
+- Message: `feat: complete counselor planning and study execution foundations`
+- Starting working tree: **clean**
+- Development StudySession lifecycle preflight: **0 active, 0 finished, 0 total**
+- The accepted Milestone 15 checkpoint and all 11 existing migrations were preserved without reset, clean, checkout, history rewrite, or commit.
 
 ## Verified Baseline
 
@@ -847,6 +855,34 @@ Milestone verification:
 - Schema changed for Milestone 15: **NO**
 - Migration added or run for Milestone 15: **NO**
 
+### Phase 2 Milestone 16 — Stale Study Session Recovery Foundation
+
+**Status: COMPLETE**
+
+- `DailyTask` remains planned work and `StudySession` remains the sole actual-execution record. No execution entity or status enum was added. Lifecycle is derived from timestamps: active has neither terminal timestamp, finished has only `endedAt`, and cancelled has only `cancelledAt`.
+- The only schema field is nullable `StudySession.cancelledAt`. Additive migration `20260913140000_add_study_session_cancellation` also installs `study_sessions_finish_cancel_exclusive`, which prevents both `endedAt` and `cancelledAt` being non-null. Existing data required no backfill or timestamp changes.
+- `PATCH /api/v1/student/study-sessions/:id/cancel` accepts a strict empty body, derives ownership from the authenticated student, serializes on the existing PostgreSQL `StudentProfile` row lock, and assigns `cancelledAt` from the server. Cancelled records remain historical but expose null duration and cannot be finished, cancelled again, or generically edited.
+- Active-session reads, starts, switches, terminal task mutations, execution summaries, and browser state now require both `endedAt` and `cancelledAt` to be null. Finish rejects cancelled intervals. Manual completed historical entry remains available and cannot assign cancellation metadata or manufacture live execution.
+- Atomic switch accepts optional `currentSessionAction: FINISH | CANCEL`, defaulting to `FINISH`. A different current interval is finished or cancelled at the same server transition timestamp used to start the target. No-active switching starts safely, while a same-target request reuses the existing interval.
+- Cancellation never changes task status, source, creator, ownership, or any planned content. Active execution continues to block `COMPLETED`/`SKIPPED`; cancelled execution does not. Active or finished history blocks rescheduling, while cancelled-only history does not.
+- Student Today Planning provides confirmed cancellation, Finish/Cancel/Continue switching, central active-state clearing/restoration, and a localized cancelled-history indicator with no duration. Counselor Web remains read-only; its completed minutes/count and live indicator exclude cancelled sessions, and only its rescheduling affordance needed compatibility alignment.
+- Automatic stale thresholds, automatic finishing/cancellation, pause/resume, Pomodoro, focus/test session models, feedback ratings, analytics, reports, notifications, automatic task outcomes, and new execution entities remain absent.
+
+Milestone verification:
+
+- API tests: **176/176 PASS**
+- Student Web unit tests: **16/16 PASS**
+- Counselor Web unit tests: **4/4 PASS**
+- API type-check and production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 12 migrations found and the database is up to date
+- `git diff --check`: **PASS**
+- Schema changed for Milestone 16: **YES; nullable `StudySession.cancelledAt` only**
+- Migration added and run for Milestone 16: **YES; local development database only**
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -1036,4 +1072,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 15 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin session cancellation, pause/resume, automatic task completion, batch editing, batch rescheduling, task groups, planning templates, Pomodoro/focus mode, counselor mutation or task lifecycle/content editing, full weekly editing, manual within-day ordering, recurring tasks, calendar or hourly scheduling, automatic or AI planning, broader task permissions, revisions, approval workflows, audit or drag history, undo, reports, analytics, mastery, scoring, feedback ratings, streaks, gamification, messaging, notifications, search, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 16 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin automatic stale detection, pause/resume, automatic task completion, batch editing, batch rescheduling, task groups, planning templates, Pomodoro/focus mode, counselor execution mutation or task lifecycle/content editing, full weekly editing, manual within-day ordering, recurring tasks, calendar or hourly scheduling, automatic or AI planning, broader task permissions, revisions, approval workflows, audit or drag history, undo, reports, analytics, mastery, scoring, feedback ratings, streaks, gamification, messaging, notifications, search, later product work, TLS, deployment execution, monitoring, or backup execution.

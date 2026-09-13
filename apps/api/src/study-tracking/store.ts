@@ -1,4 +1,6 @@
 import type {
+  CancelStudySessionResult,
+  CurrentSessionAction,
   DailyTaskRef,
   FinishStudySessionResult,
   GoalListQuery,
@@ -29,6 +31,7 @@ export interface StudyTrackingStore {
     profileId: string,
     taskId: string,
     transitionAt: Date,
+    currentSessionAction: CurrentSessionAction,
   ): Promise<SwitchStudySessionResult>
   finishSession(
     profileId: string,
@@ -36,6 +39,11 @@ export interface StudyTrackingStore {
     endedAt: Date,
     notes?: string | null,
   ): Promise<FinishStudySessionResult>
+  cancelSession(
+    profileId: string,
+    id: string,
+    cancelledAt: Date,
+  ): Promise<CancelStudySessionResult>
   listGoals(profileId: string, query?: GoalListQuery): Promise<StudentGoalRecord[]>
   findGoalById(profileId: string, id: string): Promise<StudentGoalRecord | null>
   createGoal(input: Omit<StudentGoalRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<StudentGoalRecord>

@@ -106,7 +106,7 @@ test('Prisma task reads and updates always include student ownership', async () 
   ])
 })
 
-test('Prisma student rescheduling atomically requires ownership, personal source, and no sessions', async () => {
+test('Prisma student rescheduling ignores cancelled-only history but excludes active or finished sessions', async () => {
   const findQueries: unknown[] = []
   const updateQueries: unknown[] = []
   const task = {
@@ -163,12 +163,12 @@ test('Prisma student rescheduling atomically requires ownership, personal source
       id: 'task-1',
       source: 'PERSONAL',
       studentProfileId: 'student-profile-1',
-      studySessions: { none: {} },
+      studySessions: { none: { cancelledAt: null } },
     },
   }])
 })
 
-test('Prisma terminal task mutation locks the student and excludes active linked sessions', async () => {
+test('Prisma terminal task mutation locks the student and excludes active but not cancelled sessions', async () => {
   const calls: string[] = []
   const task = {
     completedAt: new Date('2026-09-03T09:00:00.000Z'),
@@ -209,7 +209,7 @@ test('Prisma terminal task mutation locks the student and excludes active linked
         assert.deepEqual(query.where, {
           id: 'task-1',
           studentProfileId: 'student-profile-1',
-          studySessions: { none: { endedAt: null } },
+          studySessions: { none: { cancelledAt: null, endedAt: null } },
         })
         return { count: 1 }
       },

@@ -209,3 +209,15 @@ This lightweight decision log records architectural constraints established by t
 **Historical-entry policy:** Manual completed historical `StudySession` records remain supported and distinct from live execution. Client-controlled generic routes cannot create or reopen an active session. Execution never automatically completes or skips a `DailyTask`.
 
 **Status:** Accepted
+
+## ADR-020 — Persisted Study Session Cancellation Recovery
+
+**Decision:** `StudySession` remains the sole execution record. Cancellation is represented only by nullable server-owned `cancelledAt`; no status enum or new execution entity is introduced. Active sessions have both `endedAt` and `cancelledAt` null, finished sessions have only `endedAt`, and cancelled sessions have only `cancelledAt`. A database check constraint prevents a session from being both finished and cancelled.
+
+**Recovery policy:** A cancelled live interval remains in history as recovery/audit metadata but has no completed duration and contributes neither recorded minutes nor completed-session count. Cancellation never changes `DailyTask` lifecycle. A student may start another `StudySession`, including for the same task, immediately after cancellation.
+
+**Switching policy:** Switching accepts `FINISH` or `CANCEL` for a different current session and performs that transition plus target start atomically at one server timestamp. Omission remains backward-compatible with `FINISH`; a same-target request reuses the active interval without fragmenting it.
+
+**Planning policy:** Active or finished execution blocks rescheduling, while cancelled-only history does not. Active execution still blocks a terminal task outcome; cancelled history does not. The outcome remains an independent student decision.
+
+**Status:** Accepted

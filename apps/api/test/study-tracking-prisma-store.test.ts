@@ -34,6 +34,33 @@ test('Prisma task-session reads retain student and task ownership filters', asyn
   }])
 })
 
+test('Prisma generic session updates remain limited to finished non-cancelled history', async () => {
+  const updates: unknown[] = []
+  const prisma = {
+    studySession: {
+      async findFirst() { return null },
+      async updateMany(query: unknown) {
+        updates.push(query)
+        return { count: 0 }
+      },
+    },
+  } as unknown as PrismaClient
+
+  const result = await createPrismaStudyTrackingStore(prisma)
+    .updateSession('student-profile-1', 'session-1', { notes: 'edited' })
+
+  assert.equal(result, null)
+  assert.deepEqual(updates, [{
+    data: { notes: 'edited' },
+    where: {
+      cancelledAt: null,
+      endedAt: { not: null },
+      id: 'session-1',
+      studentProfileId: 'student-profile-1',
+    },
+  }])
+})
+
 test('Prisma session finish atomically retains ownership and unfinished predicates', async () => {
   const finds: unknown[] = []
   const locks: unknown[][] = []
@@ -41,6 +68,7 @@ test('Prisma session finish atomically retains ownership and unfinished predicat
   const startedAt = new Date('2026-09-03T08:00:00.000Z')
   const endedAt = new Date('2026-09-03T09:00:00.000Z')
   const session = {
+    cancelledAt: null,
     id: 'session-1',
     studentProfileId: 'student-profile-1',
     subjectId: null,
@@ -88,6 +116,7 @@ test('Prisma session finish atomically retains ownership and unfinished predicat
   assert.deepEqual(updates, [{
     data: { endedAt, notes: 'Done' },
     where: {
+      cancelledAt: null,
       endedAt: null,
       id: 'session-1',
       startedAt: { lt: endedAt },
@@ -100,6 +129,7 @@ test('Prisma live start locks the student row before inspecting active sessions'
   const calls: string[] = []
   const startedAt = new Date('2026-09-03T08:00:00.000Z')
   const created = {
+    cancelledAt: null,
     id: 'session-1',
     studentProfileId: 'student-profile-1',
     subjectId: 'subject-1',
@@ -136,6 +166,7 @@ test('Prisma live start locks the student row before inspecting active sessions'
       async create(query: { data: unknown }) {
         calls.push('create')
         assert.deepEqual(query.data, {
+          cancelledAt: null,
           dailyTaskId: 'task-1',
           endedAt: null,
           notes: null,
@@ -166,7 +197,7 @@ test('Prisma switch closes and starts intervals at one logical timestamp under t
   const active = {
     id: 'session-a', studentProfileId: 'student-profile-1', subjectId: 'subject-a',
     dailyTaskId: 'task-a', startedAt: new Date('2026-09-03T08:00:00.000Z'),
-    endedAt: null, notes: null, createdAt: new Date('2026-09-03T08:00:00.000Z'),
+    cancelledAt: null, endedAt: null, notes: null, createdAt: new Date('2026-09-03T08:00:00.000Z'),
     updatedAt: new Date('2026-09-03T08:00:00.000Z'),
   }
   const finished = { ...active, endedAt: transitionAt, updatedAt: transitionAt }
@@ -200,7 +231,7 @@ test('Prisma switch closes and starts intervals at one logical timestamp under t
         calls.push(findCount === 1 ? 'active' : 'finished')
         return findCount === 1 ? active : finished
       },
-      async updateMany(query: { data: { endedAt: Date } }) {
+      async updateMany(query: { data: { endedAt?: Date } }) {
         calls.push('finish')
         assert.equal(query.data.endedAt, transitionAt)
         return { count: 1 }
@@ -224,7 +255,7 @@ test('Prisma switch closes and starts intervals at one logical timestamp under t
   assert.deepEqual(calls, ['lock', 'task', 'active', 'finish', 'finished', 'create'])
   assert.deepEqual(result, {
     ok: true,
-    value: { activeSession: next, finishedSession: finished },
+    value: { activeSession: next, cancelledSession: null, finishedSession: finished },
   })
 })
 
@@ -277,4 +308,138 @@ test('different students lock independently and may each start one live session'
   assert.equal(results.every((result) => result.ok), true)
   assert.deepEqual(lockedProfiles.sort(), ['profile-a', 'profile-b'])
   assert.deepEqual(createdProfiles.sort(), ['profile-a', 'profile-b'])
+})
+
+test('Prisma cancellation locks the student and atomically preserves unfinished state', async () => {
+  const calls: string[] = []
+  const cancelledAt = new Date('2026-09-04T08:00:00.000Z')
+  const active = {
+    cancelledAt: null,
+    createdAt: new Date('2026-09-03T20:00:00.000Z'),
+    dailyTaskId: 'task-1',
+    endedAt: null,
+    id: 'session-1',
+    notes: null,
+    startedAt: new Date('2026-09-03T20:00:00.000Z'),
+    studentProfileId: 'student-profile-1',
+    subjectId: null,
+    updatedAt: new Date('2026-09-03T20:00:00.000Z'),
+  }
+  const cancelled = { ...active, cancelledAt, updatedAt: cancelledAt }
+  let findCount = 0
+  const transaction = {
+    async $queryRawUnsafe(sql: string, profileId: string) {
+      calls.push('lock')
+      assert.equal(sql, 'SELECT "id" FROM "student_profiles" WHERE "id" = $1::uuid FOR UPDATE')
+      assert.equal(profileId, 'student-profile-1')
+      return [{ id: profileId }]
+    },
+    studySession: {
+      async findFirst(query: unknown) {
+        calls.push('find')
+        assert.deepEqual(query, { where: { id: 'session-1', studentProfileId: 'student-profile-1' } })
+        findCount += 1
+        return findCount === 1 ? active : cancelled
+      },
+      async updateMany(query: unknown) {
+        calls.push('cancel')
+        assert.deepEqual(query, {
+          data: { cancelledAt },
+          where: {
+            cancelledAt: null,
+            endedAt: null,
+            id: 'session-1',
+            studentProfileId: 'student-profile-1',
+          },
+        })
+        return { count: 1 }
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+
+  const result = await createPrismaStudyTrackingStore(prisma)
+    .cancelSession('student-profile-1', 'session-1', cancelledAt)
+
+  assert.deepEqual(calls, ['lock', 'find', 'cancel', 'find'])
+  assert.deepEqual(result, { ok: true, value: cancelled })
+  assert.equal(cancelled.endedAt, null)
+})
+
+test('Prisma CANCEL switch cancels and starts at one logical timestamp', async () => {
+  const transitionAt = new Date('2026-09-04T08:00:00.000Z')
+  const active = {
+    cancelledAt: null,
+    createdAt: new Date('2026-09-03T20:00:00.000Z'),
+    dailyTaskId: 'task-a',
+    endedAt: null,
+    id: 'session-a',
+    notes: null,
+    startedAt: new Date('2026-09-03T20:00:00.000Z'),
+    studentProfileId: 'student-profile-1',
+    subjectId: null,
+    updatedAt: new Date('2026-09-03T20:00:00.000Z'),
+  }
+  const cancelled = { ...active, cancelledAt: transitionAt, updatedAt: transitionAt }
+  const next = {
+    ...active,
+    createdAt: transitionAt,
+    dailyTaskId: 'task-b',
+    id: 'session-b',
+    startedAt: transitionAt,
+    updatedAt: transitionAt,
+  }
+  let findCount = 0
+  const transaction = {
+    async $queryRawUnsafe() { return [{ id: 'student-profile-1' }] },
+    dailyTask: {
+      async findFirst() {
+        return {
+          id: 'task-b', studentProfileId: 'student-profile-1', subjectId: null,
+          status: 'PENDING', subject: null,
+        }
+      },
+    },
+    studySession: {
+      async findFirst() {
+        findCount += 1
+        return findCount === 1 ? active : cancelled
+      },
+      async updateMany(query: unknown) {
+        assert.deepEqual(query, {
+          data: { cancelledAt: transitionAt },
+          where: {
+            cancelledAt: null,
+            endedAt: null,
+            id: 'session-a',
+            studentProfileId: 'student-profile-1',
+          },
+        })
+        return { count: 1 }
+      },
+      async create(query: { data: { cancelledAt: null; endedAt: null; startedAt: Date } }) {
+        assert.equal(query.data.cancelledAt, null)
+        assert.equal(query.data.endedAt, null)
+        assert.equal(query.data.startedAt, transitionAt)
+        return next
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+
+  const result = await createPrismaStudyTrackingStore(prisma)
+    .switchTaskSession('student-profile-1', 'task-b', transitionAt, 'CANCEL')
+
+  assert.deepEqual(result, {
+    ok: true,
+    value: { activeSession: next, cancelledSession: cancelled, finishedSession: null },
+  })
 })

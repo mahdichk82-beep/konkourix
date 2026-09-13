@@ -21,6 +21,7 @@ export type StudySessionRecord = {
   dailyTaskId: string | null
   startedAt: Date
   endedAt: Date | null
+  cancelledAt: Date | null
   notes: string | null
   createdAt: Date
   updatedAt: Date
@@ -42,11 +43,14 @@ export type StartStudySessionResult =
         | 'ACTIVE_STUDY_SESSION_EXISTS'
     }
 
+export type CurrentSessionAction = 'FINISH' | 'CANCEL'
+
 export type SwitchStudySessionResult =
   | {
       ok: true
       value: {
         finishedSession: StudySessionRecord | null
+        cancelledSession: StudySessionRecord | null
         activeSession: StudySessionRecord
       }
     }
@@ -63,12 +67,17 @@ export type SwitchStudySessionResult =
 
 export type SwitchStudySessionView = {
   finishedSession: StudySessionView | null
+  cancelledSession: StudySessionView | null
   activeSession: StudySessionView
 }
 
 export type FinishStudySessionResult =
   | { ok: true; value: StudySessionRecord }
-  | { ok: false; reason: 'SESSION_NOT_FOUND' | 'SESSION_ALREADY_FINISHED' | 'SESSION_TIME_INVALID' }
+  | { ok: false; reason: 'SESSION_NOT_FOUND' | 'SESSION_ALREADY_FINISHED' | 'SESSION_ALREADY_CANCELLED' | 'SESSION_TIME_INVALID' }
+
+export type CancelStudySessionResult =
+  | { ok: true; value: StudySessionRecord }
+  | { ok: false; reason: 'SESSION_NOT_FOUND' | 'SESSION_ALREADY_FINISHED' | 'SESSION_ALREADY_CANCELLED' }
 
 export type StudentGoalRecord = {
   id: string

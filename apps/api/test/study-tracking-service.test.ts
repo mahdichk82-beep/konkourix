@@ -36,7 +36,9 @@ const createStore = (): StudyTrackingStore & {
     },
     async findActiveSession(profileId: string) {
       return store.sessions.find((item) =>
-        item.studentProfileId === profileId && item.endedAt === null,
+        item.studentProfileId === profileId
+        && item.endedAt === null
+        && item.cancelledAt === null,
       ) ?? null
     },
     async findSessionById(profileId: string, id: string) {
@@ -67,6 +69,7 @@ const createStore = (): StudyTrackingStore & {
             : { ok: false as const, reason: 'ACTIVE_STUDY_SESSION_EXISTS' as const }
         }
         const value = await store.createSession({
+          cancelledAt: null,
           dailyTaskId: taskId,
           endedAt: null,
           notes: null,
@@ -77,7 +80,12 @@ const createStore = (): StudyTrackingStore & {
         return { ok: true as const, value, reused: false }
       })
     },
-    async switchTaskSession(profileId: string, taskId: string, transitionAt: Date) {
+    async switchTaskSession(
+      profileId: string,
+      taskId: string,
+      transitionAt: Date,
+      currentSessionAction: 'FINISH' | 'CANCEL',
+    ) {
       return serializeLive(async () => {
         const target = await store.findTaskById(profileId, taskId)
         if (!target) return { ok: false as const, reason: 'TASK_NOT_FOUND' as const }
@@ -88,18 +96,25 @@ const createStore = (): StudyTrackingStore & {
         if (active?.dailyTaskId === taskId) {
           return {
             ok: true as const,
-            value: { activeSession: active, finishedSession: null },
+            value: { activeSession: active, cancelledSession: null, finishedSession: null },
           }
         }
+        let cancelledSession = null
         let finishedSession = null
         if (active) {
-          if (transitionAt <= active.startedAt) {
+          if (currentSessionAction === 'FINISH' && transitionAt <= active.startedAt) {
             return { ok: false as const, reason: 'SESSION_TIME_INVALID' as const }
           }
-          active.endedAt = transitionAt
-          finishedSession = active
+          if (currentSessionAction === 'CANCEL') {
+            active.cancelledAt = transitionAt
+            cancelledSession = active
+          } else {
+            active.endedAt = transitionAt
+            finishedSession = active
+          }
         }
         const activeSession = await store.createSession({
+          cancelledAt: null,
           dailyTaskId: taskId,
           endedAt: null,
           notes: null,
@@ -109,18 +124,31 @@ const createStore = (): StudyTrackingStore & {
         })
         return {
           ok: true as const,
-          value: { activeSession, finishedSession },
+          value: { activeSession, cancelledSession, finishedSession },
         }
       })
     },
     async finishSession(profileId: string, id: string, endedAt: Date, notes?: string | null) {
-      const record = store.sessions.find((item) => item.id === id && item.studentProfileId === profileId)
-      if (!record) return { ok: false as const, reason: 'SESSION_NOT_FOUND' as const }
-      if (record.endedAt) return { ok: false as const, reason: 'SESSION_ALREADY_FINISHED' as const }
-      if (endedAt <= record.startedAt) return { ok: false as const, reason: 'SESSION_TIME_INVALID' as const }
-      record.endedAt = endedAt
-      if (notes !== undefined) record.notes = notes
-      return { ok: true as const, value: record }
+      return serializeLive(async () => {
+        const record = store.sessions.find((item) => item.id === id && item.studentProfileId === profileId)
+        if (!record) return { ok: false as const, reason: 'SESSION_NOT_FOUND' as const }
+        if (record.endedAt) return { ok: false as const, reason: 'SESSION_ALREADY_FINISHED' as const }
+        if (record.cancelledAt) return { ok: false as const, reason: 'SESSION_ALREADY_CANCELLED' as const }
+        if (endedAt <= record.startedAt) return { ok: false as const, reason: 'SESSION_TIME_INVALID' as const }
+        record.endedAt = endedAt
+        if (notes !== undefined) record.notes = notes
+        return { ok: true as const, value: record }
+      })
+    },
+    async cancelSession(profileId: string, id: string, cancelledAt: Date) {
+      return serializeLive(async () => {
+        const record = store.sessions.find((item) => item.id === id && item.studentProfileId === profileId)
+        if (!record) return { ok: false as const, reason: 'SESSION_NOT_FOUND' as const }
+        if (record.endedAt) return { ok: false as const, reason: 'SESSION_ALREADY_FINISHED' as const }
+        if (record.cancelledAt) return { ok: false as const, reason: 'SESSION_ALREADY_CANCELLED' as const }
+        record.cancelledAt = cancelledAt
+        return { ok: true as const, value: record }
+      })
     },
     async listGoals() { return store.goals },
     async findGoalById(_profileId: string, id: string) { return store.goals.find((item) => item.id === id) ?? null },
@@ -216,6 +244,7 @@ test('only pending tasks are executable and starting does not alter task lifecyc
 test('student finishes only an owned active session and duration uses server finish time', async () => {
   const store = createStore()
   store.sessions.push({
+    cancelledAt: null,
     createdAt: timestamp,
     dailyTaskId: task.id,
     endedAt: null,
@@ -253,6 +282,7 @@ test('student finishes only an owned active session and duration uses server fin
 test('finishing rejects a server end time that is not after session start', async () => {
   const store = createStore()
   store.sessions.push({
+    cancelledAt: null,
     createdAt: timestamp,
     dailyTaskId: task.id,
     endedAt: null,
@@ -317,6 +347,7 @@ test('task execution supports owned subjectless tasks and rejects inaccessible t
 test('task-specific session reads require an owned task and preserve duration calculation', async () => {
   const store = createStore()
   store.sessions.push({
+    cancelledAt: null,
     createdAt: timestamp,
     dailyTaskId: task.id,
     endedAt: new Date('2026-09-03T09:30:00.000Z'),
@@ -475,4 +506,188 @@ test('active-session query is owner scoped and generic update cannot reopen or e
   })
   assert.equal(edited.durationMinutes, 40)
   assert.equal(await services.sessions.active(student), null)
+})
+
+test('cancelling an owned active session persists recovery metadata without completed effort', async () => {
+  const store = createStore()
+  const times = [
+    new Date('2026-09-03T08:00:00.000Z'),
+    new Date('2026-09-04T08:00:00.000Z'),
+    new Date('2026-09-04T08:01:00.000Z'),
+  ]
+  const services = createStudyTrackingServices(store, () => times.shift()!)
+  const active = await services.sessions.startTask(student, task.id)
+  const cancelled = await services.sessions.cancel(student, active.id)
+
+  assert.equal(cancelled.cancelledAt?.toISOString(), '2026-09-04T08:00:00.000Z')
+  assert.equal(cancelled.endedAt, null)
+  assert.equal(cancelled.durationMinutes, null)
+  assert.equal('studentProfileId' in cancelled, false)
+  assert.equal(await services.sessions.active(student), null)
+  assert.equal(task.status, 'PENDING')
+
+  const restarted = await services.sessions.startTask(student, task.id)
+  assert.notEqual(restarted.id, cancelled.id)
+  assert.equal(restarted.cancelledAt, null)
+  assert.equal(store.sessions.length, 2)
+})
+
+test('finished and cancelled sessions reject invalid lifecycle transitions and cancelled edits', async () => {
+  const store = createStore()
+  const times = [
+    new Date('2026-09-03T08:00:00.000Z'),
+    new Date('2026-09-03T09:00:00.000Z'),
+    new Date('2026-09-03T10:00:00.000Z'),
+    new Date('2026-09-03T11:00:00.000Z'),
+    new Date('2026-09-03T12:00:00.000Z'),
+    new Date('2026-09-03T13:00:00.000Z'),
+    new Date('2026-09-03T14:00:00.000Z'),
+    new Date('2026-09-03T15:00:00.000Z'),
+  ]
+  const services = createStudyTrackingServices(store, () => times.shift()!)
+
+  const first = await services.sessions.startTask(student, task.id)
+  await services.sessions.finish(student, first.id, {})
+  await assert.rejects(
+    services.sessions.cancel(student, first.id),
+    (error: unknown) => error instanceof ApiError && error.code === 'SESSION_ALREADY_FINISHED',
+  )
+
+  const second = await services.sessions.startTask(student, task.id)
+  await services.sessions.cancel(student, second.id)
+  await assert.rejects(
+    services.sessions.cancel(student, second.id),
+    (error: unknown) => error instanceof ApiError && error.code === 'SESSION_ALREADY_CANCELLED',
+  )
+  await assert.rejects(
+    services.sessions.finish(student, second.id, {}),
+    (error: unknown) => error instanceof ApiError && error.code === 'SESSION_ALREADY_CANCELLED',
+  )
+  await assert.rejects(
+    services.sessions.update(student, second.id, { notes: 'rewrite' }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SESSION_CANCELLED_UPDATE_FORBIDDEN',
+  )
+  store.sessions.push({
+    ...store.sessions[0]!,
+    cancelledAt: null,
+    endedAt: null,
+    id: 'foreign-active-session',
+    studentProfileId: 'other-profile',
+  })
+  await assert.rejects(
+    services.sessions.cancel(student, 'foreign-active-session'),
+    (error: unknown) => error instanceof ApiError && error.code === 'SESSION_NOT_FOUND',
+  )
+})
+
+test('CANCEL switching discards the previous interval and starts a new active task atomically', async () => {
+  const store = createStore()
+  store.findTaskById = async (profileId, id) => {
+    if (profileId !== profile.id) return null
+    return id === task.id ? task : id === secondTask.id ? secondTask : null
+  }
+  const times = [
+    new Date('2026-09-03T20:00:00.000Z'),
+    new Date('2026-09-04T08:00:00.000Z'),
+  ]
+  const services = createStudyTrackingServices(store, () => times.shift()!)
+  const first = await services.sessions.startTask(student, task.id)
+  const switched = await services.sessions.switchTask(student, secondTask.id, 'CANCEL')
+
+  assert.equal(switched.finishedSession, null)
+  assert.equal(switched.cancelledSession?.id, first.id)
+  assert.equal(switched.cancelledSession?.endedAt, null)
+  assert.equal(switched.cancelledSession?.durationMinutes, null)
+  assert.equal(switched.activeSession.dailyTaskId, secondTask.id)
+  assert.equal(switched.activeSession.startedAt.toISOString(), '2026-09-04T08:00:00.000Z')
+  assert.equal(store.sessions.filter((session) =>
+    session.endedAt === null && session.cancelledAt === null).length, 1)
+  assert.equal(task.status, 'PENDING')
+  assert.equal(secondTask.status, 'PENDING')
+})
+
+test('CANCEL switch to the already-active task reuses it without fragmentation', async () => {
+  const store = createStore()
+  const services = createStudyTrackingServices(store, () => timestamp)
+  const active = await services.sessions.startTask(student, task.id)
+  const result = await services.sessions.switchTask(student, task.id, 'CANCEL')
+
+  assert.equal(result.activeSession.id, active.id)
+  assert.equal(result.cancelledSession, null)
+  assert.equal(result.finishedSession, null)
+  assert.equal(store.sessions.length, 1)
+  assert.equal(store.sessions[0]?.cancelledAt, null)
+})
+
+test('serialized finish/cancel and subsequent retries retain an exclusive lifecycle', async () => {
+  const store = createStore()
+  const times = [
+    new Date('2026-09-03T08:00:00.000Z'),
+    new Date('2026-09-03T09:00:00.000Z'),
+    new Date('2026-09-03T09:00:00.000Z'),
+    new Date('2026-09-03T10:00:00.000Z'),
+    new Date('2026-09-03T10:01:00.000Z'),
+    new Date('2026-09-03T10:02:00.000Z'),
+    new Date('2026-09-03T10:02:00.000Z'),
+  ]
+  const services = createStudyTrackingServices(store, () => times.shift()!)
+  const first = await services.sessions.startTask(student, task.id)
+  const race = await Promise.allSettled([
+    services.sessions.finish(student, first.id, {}),
+    services.sessions.cancel(student, first.id),
+  ])
+
+  assert.equal(race.filter((result) => result.status === 'fulfilled').length, 1)
+  assert.equal(race.filter((result) => result.status === 'rejected').length, 1)
+  const racedSession = store.sessions[0]!
+  assert.equal(racedSession.endedAt !== null && racedSession.cancelledAt !== null, false)
+
+  if (racedSession.endedAt !== null) {
+    const next = await services.sessions.startTask(student, task.id)
+    await services.sessions.cancel(student, next.id)
+  }
+  const restartRace = await Promise.all([
+    services.sessions.startTask(student, task.id),
+    services.sessions.startTask(student, task.id),
+  ])
+  assert.equal(restartRace[0]?.id, restartRace[1]?.id)
+  assert.equal(store.sessions.filter((session) =>
+    session.endedAt === null && session.cancelledAt === null).length, 1)
+})
+
+test('concurrent cancel with start or switch cannot leave duplicate live sessions', async () => {
+  const store = createStore()
+  store.findTaskById = async (profileId, id) => {
+    if (profileId !== profile.id) return null
+    return id === task.id ? task : id === secondTask.id ? secondTask : null
+  }
+  const times = [
+    new Date('2026-09-03T20:00:00.000Z'),
+    new Date('2026-09-04T08:00:00.000Z'),
+    new Date('2026-09-04T08:00:00.000Z'),
+    new Date('2026-09-04T09:00:00.000Z'),
+    new Date('2026-09-04T09:01:00.000Z'),
+    new Date('2026-09-04T09:01:00.000Z'),
+  ]
+  const services = createStudyTrackingServices(store, () => times.shift()!)
+  const first = await services.sessions.startTask(student, task.id)
+
+  await Promise.all([
+    services.sessions.cancel(student, first.id),
+    services.sessions.startTask(student, task.id),
+  ])
+  let active = await services.sessions.active(student)
+  assert.notEqual(active?.id, first.id)
+  assert.equal(store.sessions.filter((session) =>
+    session.endedAt === null && session.cancelledAt === null).length, 1)
+
+  const results = await Promise.allSettled([
+    services.sessions.cancel(student, active!.id),
+    services.sessions.switchTask(student, secondTask.id, 'CANCEL'),
+  ])
+  assert.equal(results.some((result) => result.status === 'fulfilled'), true)
+  active = await services.sessions.active(student)
+  assert.equal(active?.dailyTaskId, secondTask.id)
+  assert.equal(store.sessions.filter((session) =>
+    session.endedAt === null && session.cancelledAt === null).length, 1)
 })

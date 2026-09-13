@@ -31,6 +31,7 @@ export type StudySessionMinAggregateOutputType = {
   dailyTaskId: string | null
   startedAt: Date | null
   endedAt: Date | null
+  cancelledAt: Date | null
   notes: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -43,6 +44,7 @@ export type StudySessionMaxAggregateOutputType = {
   dailyTaskId: string | null
   startedAt: Date | null
   endedAt: Date | null
+  cancelledAt: Date | null
   notes: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -55,6 +57,7 @@ export type StudySessionCountAggregateOutputType = {
   dailyTaskId: number
   startedAt: number
   endedAt: number
+  cancelledAt: number
   notes: number
   createdAt: number
   updatedAt: number
@@ -69,6 +72,7 @@ export type StudySessionMinAggregateInputType = {
   dailyTaskId?: true
   startedAt?: true
   endedAt?: true
+  cancelledAt?: true
   notes?: true
   createdAt?: true
   updatedAt?: true
@@ -81,6 +85,7 @@ export type StudySessionMaxAggregateInputType = {
   dailyTaskId?: true
   startedAt?: true
   endedAt?: true
+  cancelledAt?: true
   notes?: true
   createdAt?: true
   updatedAt?: true
@@ -93,6 +98,7 @@ export type StudySessionCountAggregateInputType = {
   dailyTaskId?: true
   startedAt?: true
   endedAt?: true
+  cancelledAt?: true
   notes?: true
   createdAt?: true
   updatedAt?: true
@@ -178,6 +184,7 @@ export type StudySessionGroupByOutputType = {
   dailyTaskId: string | null
   startedAt: Date
   endedAt: Date | null
+  cancelledAt: Date | null
   notes: string | null
   createdAt: Date
   updatedAt: Date
@@ -211,6 +218,7 @@ export type StudySessionWhereInput = {
   dailyTaskId?: Prisma.UuidNullableFilter<"StudySession"> | string | null
   startedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   endedAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
+  cancelledAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
   notes?: Prisma.StringNullableFilter<"StudySession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
@@ -226,6 +234,7 @@ export type StudySessionOrderByWithRelationInput = {
   dailyTaskId?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  cancelledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -244,6 +253,7 @@ export type StudySessionWhereUniqueInput = Prisma.AtLeast<{
   dailyTaskId?: Prisma.UuidNullableFilter<"StudySession"> | string | null
   startedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   endedAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
+  cancelledAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
   notes?: Prisma.StringNullableFilter<"StudySession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
@@ -259,6 +269,7 @@ export type StudySessionOrderByWithAggregationInput = {
   dailyTaskId?: Prisma.SortOrderInput | Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  cancelledAt?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -277,6 +288,7 @@ export type StudySessionScalarWhereWithAggregatesInput = {
   dailyTaskId?: Prisma.UuidNullableWithAggregatesFilter<"StudySession"> | string | null
   startedAt?: Prisma.DateTimeWithAggregatesFilter<"StudySession"> | Date | string
   endedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"StudySession"> | Date | string | null
+  cancelledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"StudySession"> | Date | string | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"StudySession"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"StudySession"> | Date | string
@@ -286,6 +298,7 @@ export type StudySessionCreateInput = {
   id?: string
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -301,6 +314,7 @@ export type StudySessionUncheckedCreateInput = {
   dailyTaskId?: string | null
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -310,6 +324,7 @@ export type StudySessionUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -325,6 +340,7 @@ export type StudySessionUncheckedUpdateInput = {
   dailyTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -337,6 +353,7 @@ export type StudySessionCreateManyInput = {
   dailyTaskId?: string | null
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -346,6 +363,7 @@ export type StudySessionUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -358,6 +376,7 @@ export type StudySessionUncheckedUpdateManyInput = {
   dailyTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -380,6 +399,7 @@ export type StudySessionCountOrderByAggregateInput = {
   dailyTaskId?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
+  cancelledAt?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -392,6 +412,7 @@ export type StudySessionMaxOrderByAggregateInput = {
   dailyTaskId?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
+  cancelledAt?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -404,6 +425,7 @@ export type StudySessionMinOrderByAggregateInput = {
   dailyTaskId?: Prisma.SortOrder
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
+  cancelledAt?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -539,6 +561,7 @@ export type StudySessionCreateWithoutStudentProfileInput = {
   id?: string
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -552,6 +575,7 @@ export type StudySessionUncheckedCreateWithoutStudentProfileInput = {
   dailyTaskId?: string | null
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -593,6 +617,7 @@ export type StudySessionScalarWhereInput = {
   dailyTaskId?: Prisma.UuidNullableFilter<"StudySession"> | string | null
   startedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   endedAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
+  cancelledAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
   notes?: Prisma.StringNullableFilter<"StudySession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
@@ -602,6 +627,7 @@ export type StudySessionCreateWithoutSubjectInput = {
   id?: string
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -615,6 +641,7 @@ export type StudySessionUncheckedCreateWithoutSubjectInput = {
   dailyTaskId?: string | null
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -650,6 +677,7 @@ export type StudySessionCreateWithoutDailyTaskInput = {
   id?: string
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -663,6 +691,7 @@ export type StudySessionUncheckedCreateWithoutDailyTaskInput = {
   subjectId?: string | null
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -700,6 +729,7 @@ export type StudySessionCreateManyStudentProfileInput = {
   dailyTaskId?: string | null
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -709,6 +739,7 @@ export type StudySessionUpdateWithoutStudentProfileInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -722,6 +753,7 @@ export type StudySessionUncheckedUpdateWithoutStudentProfileInput = {
   dailyTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -733,6 +765,7 @@ export type StudySessionUncheckedUpdateManyWithoutStudentProfileInput = {
   dailyTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -744,6 +777,7 @@ export type StudySessionCreateManySubjectInput = {
   dailyTaskId?: string | null
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -753,6 +787,7 @@ export type StudySessionUpdateWithoutSubjectInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -766,6 +801,7 @@ export type StudySessionUncheckedUpdateWithoutSubjectInput = {
   dailyTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -777,6 +813,7 @@ export type StudySessionUncheckedUpdateManyWithoutSubjectInput = {
   dailyTaskId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -788,6 +825,7 @@ export type StudySessionCreateManyDailyTaskInput = {
   subjectId?: string | null
   startedAt: Date | string
   endedAt?: Date | string | null
+  cancelledAt?: Date | string | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -797,6 +835,7 @@ export type StudySessionUpdateWithoutDailyTaskInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -810,6 +849,7 @@ export type StudySessionUncheckedUpdateWithoutDailyTaskInput = {
   subjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -821,6 +861,7 @@ export type StudySessionUncheckedUpdateManyWithoutDailyTaskInput = {
   subjectId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -835,6 +876,7 @@ export type StudySessionSelect<ExtArgs extends runtime.Types.Extensions.Internal
   dailyTaskId?: boolean
   startedAt?: boolean
   endedAt?: boolean
+  cancelledAt?: boolean
   notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -850,6 +892,7 @@ export type StudySessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   dailyTaskId?: boolean
   startedAt?: boolean
   endedAt?: boolean
+  cancelledAt?: boolean
   notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -865,6 +908,7 @@ export type StudySessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   dailyTaskId?: boolean
   startedAt?: boolean
   endedAt?: boolean
+  cancelledAt?: boolean
   notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -880,12 +924,13 @@ export type StudySessionSelectScalar = {
   dailyTaskId?: boolean
   startedAt?: boolean
   endedAt?: boolean
+  cancelledAt?: boolean
   notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type StudySessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentProfileId" | "subjectId" | "dailyTaskId" | "startedAt" | "endedAt" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["studySession"]>
+export type StudySessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentProfileId" | "subjectId" | "dailyTaskId" | "startedAt" | "endedAt" | "cancelledAt" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["studySession"]>
 export type StudySessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
   subject?: boolean | Prisma.StudySession$subjectArgs<ExtArgs>
@@ -916,6 +961,7 @@ export type $StudySessionPayload<ExtArgs extends runtime.Types.Extensions.Intern
     dailyTaskId: string | null
     startedAt: Date
     endedAt: Date | null
+    cancelledAt: Date | null
     notes: string | null
     createdAt: Date
     updatedAt: Date
@@ -1351,6 +1397,7 @@ export interface StudySessionFieldRefs {
   readonly dailyTaskId: Prisma.FieldRef<"StudySession", 'String'>
   readonly startedAt: Prisma.FieldRef<"StudySession", 'DateTime'>
   readonly endedAt: Prisma.FieldRef<"StudySession", 'DateTime'>
+  readonly cancelledAt: Prisma.FieldRef<"StudySession", 'DateTime'>
   readonly notes: Prisma.FieldRef<"StudySession", 'String'>
   readonly createdAt: Prisma.FieldRef<"StudySession", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"StudySession", 'DateTime'>

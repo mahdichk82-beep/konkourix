@@ -1,17 +1,22 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
+  activeSessionAfterCancel,
   activeSessionAfterFinish,
   activeSessionAfterSwitch,
+  cancelStudyConsequenceMessage,
   completedStudySummary,
   elapsedStudyMilliseconds,
   executeActiveRestore,
+  executeCancel,
   executeFinish,
   executeStart,
   executeSwitch,
   executionErrorCodeMessage,
   executionStartDecision,
   formatElapsedStudyTime,
+  studySessionLifecycle,
+  switchExecutionChoices,
   taskExecutionAction,
   upsertStudySession,
 } from './task-execution.ts'
@@ -22,10 +27,12 @@ const session = (
   dailyTaskId: string,
   startedAt: string,
   endedAt: string | null = null,
+  cancelledAt: string | null = null,
 ): StudySession => ({
+  cancelledAt,
   createdAt: startedAt,
   dailyTaskId,
-  durationMinutes: endedAt ? 25 : null,
+  durationMinutes: endedAt && !cancelledAt ? 25 : null,
   endedAt,
   id,
   notes: null,
@@ -67,10 +74,19 @@ test('active sessions are excluded from completed recorded minutes', () => {
     '2026-09-12T07:00:00.000Z',
     '2026-09-12T07:25:00.000Z',
   )
-  assert.deepEqual(completedStudySummary([activeA, finishedA]), {
+  const cancelledA = session(
+    'session-cancelled',
+    'task-a',
+    '2026-09-12T06:00:00.000Z',
+    null,
+    '2026-09-12T06:25:00.000Z',
+  )
+  assert.deepEqual(completedStudySummary([activeA, cancelledA, finishedA]), {
     completedSessions: [finishedA],
     recordedMinutes: 25,
   })
+  assert.equal(studySessionLifecycle(cancelledA), 'CANCELLED')
+  assert.equal(cancelledA.durationMinutes, null)
 })
 
 test('normal start delegates the target and restores the returned active state', async () => {
@@ -115,26 +131,65 @@ test('finish delegates server-timed completion and clears matching active state'
   assert.deepEqual(upsertStudySession([activeA], result), [finishedA])
 })
 
+test('cancel delegates recovery and clears matching central active state', async () => {
+  const cancelledA = session(
+    activeA.id,
+    activeA.dailyTaskId ?? 'task-a',
+    activeA.startedAt,
+    null,
+    '2026-09-13T08:00:00.000Z',
+  )
+  const requested: string[] = []
+  const result = await executeCancel(activeA.id, async (id) => {
+    requested.push(id)
+    return cancelledA
+  })
+  assert.deepEqual(requested, [activeA.id])
+  assert.equal(activeSessionAfterCancel(activeA, result), null)
+  assert.equal(studySessionLifecycle(result), 'CANCELLED')
+})
+
+test('cancel confirmation explains the consequence and switching exposes Finish, Cancel, Continue', () => {
+  assert.match(cancelStudyConsequenceMessage, /حساب نمی‌شود/)
+  assert.match(cancelStudyConsequenceMessage, /وضعیت کار تغییری نمی‌کند/)
+  assert.deepEqual(switchExecutionChoices, {
+    CANCEL: 'CANCEL',
+    CONTINUE: 'CONTINUE',
+    FINISH: 'FINISH',
+  })
+})
+
 test('A to B and B to A switching replaces central state with new sessions', async () => {
   const activeB = session('session-b1', 'task-b', '2026-09-12T08:25:00.000Z')
   const secondActiveA = session('session-a2', 'task-a', '2026-09-12T08:50:00.000Z')
-  const firstSwitch = await executeSwitch('task-b', async () => ({
+  const actions: string[] = []
+  const firstSwitch = await executeSwitch('task-b', 'FINISH', async (_id, action) => {
+    actions.push(action)
+    return {
     activeSession: activeB,
+    cancelledSession: null,
     finishedSession: { ...activeA, endedAt: activeB.startedAt, durationMinutes: 25 },
-  }))
+    }
+  })
   assert.equal(activeSessionAfterSwitch(firstSwitch), activeB)
 
-  const secondSwitch = await executeSwitch('task-a', async () => ({
+  const secondSwitch = await executeSwitch('task-a', 'FINISH', async (_id, action) => {
+    actions.push(action)
+    return {
     activeSession: secondActiveA,
+    cancelledSession: null,
     finishedSession: { ...activeB, endedAt: secondActiveA.startedAt, durationMinutes: 25 },
-  }))
+    }
+  })
   assert.equal(activeSessionAfterSwitch(secondSwitch), secondActiveA)
   assert.notEqual(secondActiveA.id, activeA.id)
+  assert.deepEqual(actions, ['FINISH', 'FINISH'])
 })
 
 test('switching to an already-active target reuses its state', async () => {
-  const result = await executeSwitch('task-a', async () => ({
+  const result = await executeSwitch('task-a', 'CANCEL', async () => ({
     activeSession: activeA,
+    cancelledSession: null,
     finishedSession: null,
   }))
   assert.equal(result.activeSession, activeA)
@@ -144,7 +199,7 @@ test('switching to an already-active target reuses its state', async () => {
 test('switch failure leaves current active state untouched', async () => {
   const current: StudySession | null = activeA
   await assert.rejects(
-    executeSwitch('task-b', async () => {
+    executeSwitch('task-b', 'CANCEL', async () => {
       throw new Error('request failed')
     }),
     /request failed/,
@@ -152,8 +207,35 @@ test('switch failure leaves current active state untouched', async () => {
   assert.equal(current, activeA)
 })
 
+test('CANCEL switch sends the controlled action and returns cancelled history plus a new active session', async () => {
+  const activeB = session('session-b2', 'task-b', '2026-09-13T08:00:00.000Z')
+  const cancelledA = session(
+    activeA.id,
+    'task-a',
+    activeA.startedAt,
+    null,
+    activeB.startedAt,
+  )
+  const requests: Array<[string, string]> = []
+  const result = await executeSwitch('task-b', 'CANCEL', async (id, action) => {
+    requests.push([id, action])
+    return {
+      activeSession: activeB,
+      cancelledSession: cancelledA,
+      finishedSession: null,
+    }
+  })
+
+  assert.deepEqual(requests, [['task-b', 'CANCEL']])
+  assert.equal(result.activeSession, activeB)
+  assert.equal(result.cancelledSession, cancelledA)
+  assert.equal(result.finishedSession, null)
+  assert.equal(completedStudySummary([cancelledA]).recordedMinutes, 0)
+})
+
 test('execution API conflicts have safe user-facing messages', () => {
   assert.notEqual(executionErrorCodeMessage('ACTIVE_STUDY_SESSION_EXISTS'), null)
   assert.notEqual(executionErrorCodeMessage('LIVE_SESSION_CONFLICT'), null)
+  assert.notEqual(executionErrorCodeMessage('SESSION_ALREADY_CANCELLED'), null)
   assert.equal(executionErrorCodeMessage('UNKNOWN'), null)
 })

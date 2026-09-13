@@ -237,7 +237,7 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                     <label htmlFor={`counselor-task-schedule-${task.id}`}>
                       تغییر تاریخ
                       <input
-                        disabled={task.studySessionCount > 0}
+                        disabled={task.completedStudySessionCount > 0 || task.hasActiveStudySession}
                         id={`counselor-task-schedule-${task.id}`}
                         onChange={(event) => setScheduleDrafts((current) => ({
                           ...current,
@@ -249,7 +249,8 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                     </label>
                     <Button
                       disabled={
-                        task.studySessionCount > 0
+                        task.completedStudySessionCount > 0
+                        || task.hasActiveStudySession
                         || schedulingTaskId === task.id
                         || (scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)) === task.scheduledFor.slice(0, 10)
                       }
@@ -258,7 +259,9 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                     >
                       {schedulingTaskId === task.id ? 'در حال جابه‌جایی…' : 'ثبت تاریخ جدید'}
                     </Button>
-                    {task.studySessionCount > 0 && <small>به‌دلیل ثبت مطالعه، تاریخ این کار قفل است.</small>}
+                    {(task.completedStudySessionCount > 0 || task.hasActiveStudySession) && (
+                      <small>به‌دلیل مطالعه فعال یا پایان‌یافته، تاریخ این کار قفل است.</small>
+                    )}
                   </form>
                 )}
               </article>

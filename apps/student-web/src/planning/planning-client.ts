@@ -36,6 +36,7 @@ export type DailyTask = {
 }
 
 export type StudySession = {
+  cancelledAt: string | null
   createdAt: string
   dailyTaskId: string | null
   durationMinutes: number | null
@@ -49,8 +50,11 @@ export type StudySession = {
 
 export type SwitchStudySessionResult = {
   activeSession: StudySession
+  cancelledSession: StudySession | null
   finishedSession: StudySession | null
 }
+
+export type CurrentSessionAction = 'FINISH' | 'CANCEL'
 
 type Page<T> = {
   items: T[]
@@ -164,13 +168,18 @@ class PlanningClient {
   }
 
   async hasTaskSessions(taskId: string): Promise<boolean> {
-    const page = await authClient.authorizedRequest<Page<StudySession>>(
-      withQuery('/student/study-sessions', {
-        dailyTaskId: taskId,
-        limit: 1,
-      }),
-    )
-    return page.items.length > 0
+    const seenCursors = new Set<string>()
+    let cursor: string | undefined
+
+    do {
+      const page = await this.listTaskSessions(taskId, cursor)
+      if (page.items.some((session) => session.cancelledAt === null)) return true
+      cursor = page.nextCursor ?? undefined
+      if (cursor && seenCursors.has(cursor)) return false
+      if (cursor) seenCursors.add(cursor)
+    } while (cursor)
+
+    return false
   }
 
   createTaskSession(
@@ -199,10 +208,13 @@ class PlanningClient {
     )
   }
 
-  switchTask(taskId: string): Promise<SwitchStudySessionResult> {
+  switchTask(
+    taskId: string,
+    currentSessionAction: CurrentSessionAction = 'FINISH',
+  ): Promise<SwitchStudySessionResult> {
     return authClient.authorizedRequest<SwitchStudySessionResult>(
       `/student/tasks/${encodeURIComponent(taskId)}/switch`,
-      { body: JSON.stringify({}), method: 'POST' },
+      { body: JSON.stringify({ currentSessionAction }), method: 'POST' },
     )
   }
 
@@ -210,6 +222,13 @@ class PlanningClient {
     return authClient.authorizedRequest<StudySession>(
       `/student/study-sessions/${encodeURIComponent(sessionId)}/finish`,
       { body: JSON.stringify({ notes }), method: 'PATCH' },
+    )
+  }
+
+  cancelStudySession(sessionId: string): Promise<StudySession> {
+    return authClient.authorizedRequest<StudySession>(
+      `/student/study-sessions/${encodeURIComponent(sessionId)}/cancel`,
+      { body: JSON.stringify({}), method: 'PATCH' },
     )
   }
 

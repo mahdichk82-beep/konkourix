@@ -22,7 +22,10 @@ export const createTaskStudySessionSchema = z.object({
 }).strict()
 
 export const startStudyTaskSchema = z.object({}).strict()
-export const switchStudyTaskSchema = z.object({}).strict()
+export const switchStudyTaskSchema = z.object({
+  currentSessionAction: z.enum(['FINISH', 'CANCEL']).optional().default('FINISH'),
+}).strict()
+export const cancelStudySessionSchema = z.object({}).strict()
 
 export const finishStudySessionSchema = z.object({
   notes: z.string().trim().max(4000).nullable().optional(),

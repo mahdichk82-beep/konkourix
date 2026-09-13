@@ -3,6 +3,7 @@ import { calculateStudySessionDurationMinutes } from './duration.js'
 import type { StudyTrackingStore } from './store.js'
 import type {
   GoalListQuery,
+  CurrentSessionAction,
   SessionListQuery,
   StudentGoalRecord,
   StudySessionRecord,
@@ -49,7 +50,7 @@ const toSessionView = (record: StudySessionRecord): StudySessionView => {
   const { studentProfileId: _studentProfileId, ...safeRecord } = record
   return {
     ...safeRecord,
-    durationMinutes: record.endedAt
+    durationMinutes: record.endedAt && !record.cancelledAt
       ? calculateStudySessionDurationMinutes(record.startedAt, record.endedAt)
       : null,
   }
@@ -123,6 +124,7 @@ const createSession = async (
   }
   try {
     const record = await store.createSession({
+      cancelledAt: null,
       dailyTaskId: input.dailyTaskId,
       endedAt,
       notes: input.notes ?? null,
@@ -198,13 +200,20 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
       if (!result.ok) return throwLiveTaskFailure(result.reason)
       return toSessionView(result.value)
     },
-    async switchTask(actor: StudyTrackingActor, taskId: string): Promise<SwitchStudySessionView> {
+    async switchTask(
+      actor: StudyTrackingActor,
+      taskId: string,
+      currentSessionAction: CurrentSessionAction = 'FINISH',
+    ): Promise<SwitchStudySessionView> {
       const profile = await requireProfile(store, actor)
       const result = await liveOperation(() =>
-        store.switchTaskSession(profile.id, taskId, now()))
+        store.switchTaskSession(profile.id, taskId, now(), currentSessionAction))
       if (!result.ok) return throwLiveTaskFailure(result.reason)
       return {
         activeSession: toSessionView(result.value.activeSession),
+        cancelledSession: result.value.cancelledSession
+          ? toSessionView(result.value.cancelledSession)
+          : null,
         finishedSession: result.value.finishedSession
           ? toSessionView(result.value.finishedSession)
           : null,
@@ -216,7 +225,8 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
       input: { notes?: string | null },
     ): Promise<StudySessionView> {
       const profile = await requireProfile(store, actor)
-      const result = await store.finishSession(profile.id, id, now(), input.notes)
+      const result = await liveOperation(() =>
+        store.finishSession(profile.id, id, now(), input.notes))
       if (!result.ok) {
         if (result.reason === 'SESSION_NOT_FOUND') {
           throw new ApiError(404, 'SESSION_NOT_FOUND', 'Study session not found')
@@ -224,7 +234,25 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
         if (result.reason === 'SESSION_ALREADY_FINISHED') {
           throw new ApiError(409, 'SESSION_ALREADY_FINISHED', 'Study session is already finished')
         }
+        if (result.reason === 'SESSION_ALREADY_CANCELLED') {
+          throw new ApiError(409, 'SESSION_ALREADY_CANCELLED', 'Study session is already cancelled')
+        }
         throw new ApiError(400, 'SESSION_TIME_INVALID', 'Study session must end after it starts')
+      }
+      return toSessionView(result.value)
+    },
+    async cancel(actor: StudyTrackingActor, id: string): Promise<StudySessionView> {
+      const profile = await requireProfile(store, actor)
+      const result = await liveOperation(() =>
+        store.cancelSession(profile.id, id, now()))
+      if (!result.ok) {
+        if (result.reason === 'SESSION_NOT_FOUND') {
+          throw new ApiError(404, 'SESSION_NOT_FOUND', 'Study session not found')
+        }
+        if (result.reason === 'SESSION_ALREADY_FINISHED') {
+          throw new ApiError(409, 'SESSION_ALREADY_FINISHED', 'Study session is already finished')
+        }
+        throw new ApiError(409, 'SESSION_ALREADY_CANCELLED', 'Study session is already cancelled')
       }
       return toSessionView(result.value)
     },
@@ -232,6 +260,9 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
       const profile = await requireProfile(store, actor)
       const current = await store.findSessionById(profile.id, id)
       if (!current) throw new ApiError(404, 'SESSION_NOT_FOUND', 'Study session not found')
+      if (current.cancelledAt !== null) {
+        throw new ApiError(409, 'SESSION_CANCELLED_UPDATE_FORBIDDEN', 'Cancelled sessions cannot be edited')
+      }
       if (current.endedAt === null) {
         throw new ApiError(409, 'SESSION_ACTIVE_UPDATE_FORBIDDEN', 'Active sessions must use the finish operation')
       }

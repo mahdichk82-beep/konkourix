@@ -52,6 +52,7 @@ const store: StudyTrackingStore = {
         ok: true,
         reused: false,
         value: {
+          cancelledAt: null,
           createdAt: startedAt,
           dailyTaskId: taskId,
           endedAt: null,
@@ -69,6 +70,7 @@ const store: StudyTrackingStore = {
         ok: true,
         value: {
           activeSession: {
+            cancelledAt: null,
             createdAt: transitionAt,
             dailyTaskId: taskId,
             endedAt: null,
@@ -79,11 +81,13 @@ const store: StudyTrackingStore = {
             subjectId,
             updatedAt: transitionAt,
           },
+          cancelledSession: null,
           finishedSession: null,
         },
       }
     : { ok: false, reason: 'TASK_NOT_FOUND' },
   finishSession: async () => ({ ok: false, reason: 'SESSION_NOT_FOUND' }),
+  cancelSession: async () => ({ ok: false, reason: 'SESSION_NOT_FOUND' }),
   listGoals: async () => [],
   findGoalById: async () => null,
   createGoal: async (input) => ({ id: '00000000-0000-4000-8000-000000000020', ...input, createdAt: new Date('2026-09-03T09:00:00.000Z'), updatedAt: new Date('2026-09-03T09:00:00.000Z') }),
@@ -186,6 +190,7 @@ test('student starts an owned task with a server-owned active session', async ()
 
 test('student finishes an owned active session through the finish route', async () => {
   const activeSession = {
+    cancelledAt: null,
     createdAt: new Date('2026-09-03T08:00:00.000Z'),
     dailyTaskId: taskId,
     endedAt: null,
@@ -220,6 +225,7 @@ test('student finishes an owned active session through the finish route', async 
 
 test('active-session route is static, owner derived, and returns a safe session or null', async () => {
   const activeSession = {
+    cancelledAt: null,
     createdAt: new Date('2026-09-03T08:00:00.000Z'),
     dailyTaskId: taskId,
     endedAt: null,
@@ -258,6 +264,7 @@ test('active-session route is static, owner derived, and returns a safe session 
 
 test('switch route returns finished and active sessions without changing task lifecycle', async () => {
   const previous = {
+    cancelledAt: null,
     createdAt: new Date('2026-09-03T08:00:00.000Z'),
     dailyTaskId: '00000000-0000-4000-8000-000000000099',
     endedAt: new Date('2026-09-03T09:00:00.000Z'),
@@ -279,7 +286,7 @@ test('switch route returns finished and active sessions without changing task li
     ...store,
     switchTaskSession: async () => ({
       ok: true,
-      value: { activeSession: next, finishedSession: previous },
+      value: { activeSession: next, cancelledSession: null, finishedSession: previous },
     }),
   })
   const response = await app.inject({
@@ -308,6 +315,7 @@ test('switch route returns finished and active sessions without changing task li
 
 test('raw start reports an active-session conflict and generic update cannot edit a live session', async () => {
   const activeSession = {
+    cancelledAt: null,
     createdAt: new Date('2026-09-03T08:00:00.000Z'),
     dailyTaskId: foreignTaskId,
     endedAt: null,
@@ -343,6 +351,134 @@ test('raw start reports an active-session conflict and generic update cannot edi
   })
   assert.equal(updateResponse.statusCode, 409)
   assert.equal(updateResponse.json().error.code, 'SESSION_ACTIVE_UPDATE_FORBIDDEN')
+  await app.close()
+})
+
+test('cancel route is owner scoped, strict, server timed, and returns safe recovery metadata', async () => {
+  const activeSession = {
+    cancelledAt: null,
+    createdAt: new Date('2026-09-03T08:00:00.000Z'),
+    dailyTaskId: taskId,
+    endedAt: null,
+    id: '00000000-0000-4000-8000-000000000016',
+    notes: null,
+    startedAt: new Date('2026-09-03T08:00:00.000Z'),
+    studentProfileId: 'student-profile-1',
+    subjectId,
+    updatedAt: new Date('2026-09-03T08:00:00.000Z'),
+  }
+  let receivedCancellationTime: Date | null = null
+  const app = createApp(user, {
+    ...store,
+    cancelSession: async (profileId, id, cancelledAt) => {
+      assert.equal(profileId, 'student-profile-1')
+      assert.equal(id, activeSession.id)
+      receivedCancellationTime = cancelledAt
+      return { ok: true, value: { ...activeSession, cancelledAt } }
+    },
+  })
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: {},
+    url: `/api/v1/student/study-sessions/${activeSession.id}/cancel`,
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(receivedCancellationTime?.toISOString(), '2026-09-03T09:00:00.000Z')
+  assert.equal(response.json().data.cancelledAt, '2026-09-03T09:00:00.000Z')
+  assert.equal(response.json().data.endedAt, null)
+  assert.equal(response.json().data.durationMinutes, null)
+  assert.equal('studentProfileId' in response.json().data, false)
+
+  const forged = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { cancelledAt: '2026-09-03T08:30:00.000Z' },
+    url: `/api/v1/student/study-sessions/${activeSession.id}/cancel`,
+  })
+  assert.equal(forged.statusCode, 400)
+  assert.equal(forged.json().error.code, 'VALIDATION_ERROR')
+  await app.close()
+
+  const counselorApp = createApp(counselor)
+  const forbidden = await counselorApp.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: {},
+    url: `/api/v1/student/study-sessions/${activeSession.id}/cancel`,
+  })
+  assert.equal(forbidden.statusCode, 403)
+  await counselorApp.close()
+
+  const anonymousApp = createApp()
+  const anonymous = await anonymousApp.inject({
+    method: 'PATCH',
+    payload: {},
+    url: `/api/v1/student/study-sessions/${activeSession.id}/cancel`,
+  })
+  assert.equal(anonymous.statusCode, 401)
+  await anonymousApp.close()
+})
+
+test('switch accepts controlled CANCEL action and rejects invalid actions or fields', async () => {
+  const transitionAt = new Date('2026-09-03T09:00:00.000Z')
+  const previous = {
+    cancelledAt: transitionAt,
+    createdAt: new Date('2026-09-03T08:00:00.000Z'),
+    dailyTaskId: foreignTaskId,
+    endedAt: null,
+    id: '00000000-0000-4000-8000-000000000017',
+    notes: null,
+    startedAt: new Date('2026-09-03T08:00:00.000Z'),
+    studentProfileId: 'student-profile-1',
+    subjectId,
+    updatedAt: transitionAt,
+  }
+  const next = {
+    ...previous,
+    cancelledAt: null,
+    dailyTaskId: taskId,
+    id: '00000000-0000-4000-8000-000000000018',
+    startedAt: transitionAt,
+  }
+  let receivedAction: string | undefined
+  const app = createApp(user, {
+    ...store,
+    switchTaskSession: async (_profileId, _taskId, _time, action) => {
+      receivedAction = action
+      return {
+        ok: true,
+        value: { activeSession: next, cancelledSession: previous, finishedSession: null },
+      }
+    },
+  })
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'POST',
+    payload: { currentSessionAction: 'CANCEL' },
+    url: `/api/v1/student/tasks/${taskId}/switch`,
+  })
+
+  assert.equal(response.statusCode, 200)
+  assert.equal(receivedAction, 'CANCEL')
+  assert.equal(response.json().data.finishedSession, null)
+  assert.equal(response.json().data.cancelledSession.id, previous.id)
+  assert.equal(response.json().data.cancelledSession.durationMinutes, null)
+
+  for (const payload of [
+    { currentSessionAction: 'PAUSE' },
+    { currentSessionAction: 'FINISH', cancelledAt: transitionAt.toISOString() },
+  ]) {
+    const invalid = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'POST',
+      payload,
+      url: `/api/v1/student/tasks/${taskId}/switch`,
+    })
+    assert.equal(invalid.statusCode, 400)
+    assert.equal(invalid.json().error.code, 'VALIDATION_ERROR')
+  }
   await app.close()
 })
 

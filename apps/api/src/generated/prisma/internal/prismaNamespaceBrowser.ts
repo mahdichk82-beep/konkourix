@@ -220,6 +220,7 @@ export const StudySessionScalarFieldEnum = {
   dailyTaskId: 'dailyTaskId',
   startedAt: 'startedAt',
   endedAt: 'endedAt',
+  cancelledAt: 'cancelledAt',
   notes: 'notes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

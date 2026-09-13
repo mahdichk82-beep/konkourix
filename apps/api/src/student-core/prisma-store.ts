@@ -152,7 +152,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
         where: {
           id,
           studentProfileId,
-          studySessions: { none: { endedAt: null } },
+          studySessions: { none: { cancelledAt: null, endedAt: null } },
         },
       })
       if (updated.count !== 1) {
@@ -182,7 +182,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
           id,
           source: 'PERSONAL',
           studentProfileId,
-          studySessions: { none: {} },
+          studySessions: { none: { cancelledAt: null } },
         },
       })
       if (updated.count !== 1) {

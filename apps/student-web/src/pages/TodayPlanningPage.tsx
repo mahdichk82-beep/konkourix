@@ -6,6 +6,7 @@ import { Card } from '../components/ui/Card'
 import { ContentState } from '../components/ui/ContentState'
 import {
   planningClient,
+  type CurrentSessionAction,
   type DailyTask,
   type DailyTaskSkipReason,
   type DailyTaskStatus,
@@ -15,13 +16,18 @@ import {
 } from '../planning/planning-client'
 import { TaskExecutionPanel } from '../planning/TaskExecutionPanel'
 import {
+  activeSessionAfterCancel,
   activeSessionAfterFinish,
   activeSessionAfterSwitch,
+  cancelStudyConsequenceMessage,
   elapsedStudyMilliseconds,
   executeActiveRestore,
+  executeCancel,
+  executeSwitch,
   executionErrorCodeMessage,
   executionStartDecision,
   formatElapsedStudyTime,
+  switchExecutionChoices,
 } from '../planning/task-execution'
 
 type StatusFilter = DailyTaskStatus | 'ALL'
@@ -120,11 +126,13 @@ function ActiveStudyExecutionCard({
   activeSession,
   activeTaskTitle,
   busy,
+  onCancel,
   onFinish,
 }: {
   activeSession: StudySession
   activeTaskTitle: string | null
   busy: boolean
+  onCancel(): void
   onFinish(): Promise<void>
 }) {
   const [currentTimeMs, setCurrentTimeMs] = useState(() => Date.now())
@@ -146,9 +154,14 @@ function ActiveStudyExecutionCard({
         <p>زمان سپری‌شده از شروع ثبت‌شده در سرور</p>
       </div>
       <strong className="active-study-card__timer" dir="ltr">{elapsed}</strong>
-      <Button disabled={busy} onClick={() => void onFinish()} variant="secondary">
-        {busy ? 'در حال ثبت…' : 'پایان مطالعه فعال'}
-      </Button>
+      <div className="active-study-card__actions">
+        <Button disabled={busy} onClick={() => void onFinish()} variant="secondary">
+          {busy ? 'در حال ثبت…' : 'پایان مطالعه فعال'}
+        </Button>
+        <Button disabled={busy} onClick={onCancel} variant="ghost">
+          لغو این بازه
+        </Button>
+      </div>
     </Card>
   )
 }
@@ -206,6 +219,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
   const [executionError, setExecutionError] = useState<string | null>(null)
   const [executionRevision, setExecutionRevision] = useState(0)
   const [switchTarget, setSwitchTarget] = useState<{ id: string; title: string } | null>(null)
+  const [cancelConfirmationOpen, setCancelConfirmationOpen] = useState(false)
 
   const currentQueryKey = `${todayKey}:${statusFilter}:${subjectFilter}`
   const currentQueryKeyRef = useRef(currentQueryKey)
@@ -230,6 +244,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         planningClient.getActiveStudySession.bind(planningClient),
       )
       setActiveSession(session)
+      setCancelConfirmationOpen(false)
       setActiveTaskTitle(null)
       if (session?.dailyTaskId) {
         try {
@@ -401,6 +416,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     if (decision === 'CONTINUE') return 'CONTINUED'
     if (decision === 'SWITCH') {
       setSwitchTarget({ id: taskId, title: taskTitle })
+      setCancelConfirmationOpen(false)
       setExecutionError(null)
       return 'SWITCH_PENDING'
     }
@@ -411,6 +427,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       const session = await planningClient.startTask(taskId)
       setActiveSession(session)
       setActiveTaskTitle(taskTitle)
+      setCancelConfirmationOpen(false)
       setExecutionRevision((current) => current + 1)
       return 'STARTED'
     } catch (error) {
@@ -433,6 +450,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
       const session = await planningClient.finishStudySession(sessionId, notes)
       setActiveSession((current) => activeSessionAfterFinish(current, session))
       setActiveTaskTitle((current) => activeSession?.id === sessionId ? null : current)
+      setCancelConfirmationOpen(false)
       setExecutionRevision((current) => current + 1)
       return session
     } catch (error) {
@@ -448,15 +466,52 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
     }
   }
 
-  const confirmExecutionSwitch = async () => {
+  const confirmExecutionCancel = async () => {
+    if (!activeSession || executionBusy) return
+    const sessionId = activeSession.id
+    setExecutionBusy(true)
+    setExecutionError(null)
+    try {
+      const session = await executeCancel(
+        sessionId,
+        planningClient.cancelStudySession.bind(planningClient),
+      )
+      setActiveSession((current) => activeSessionAfterCancel(current, session))
+      setActiveTaskTitle((current) => activeSession?.id === sessionId ? null : current)
+      setCancelConfirmationOpen(false)
+      setSwitchTarget(null)
+      setExecutionRevision((current) => current + 1)
+    } catch (error) {
+      setExecutionError(planningErrorMessage(error))
+      if (
+        error instanceof AuthApiError
+        && (
+          error.code === 'SESSION_ALREADY_CANCELLED'
+          || error.code === 'SESSION_ALREADY_FINISHED'
+          || error.code === 'SESSION_NOT_FOUND'
+        )
+      ) {
+        await restoreActiveExecution()
+      }
+    } finally {
+      setExecutionBusy(false)
+    }
+  }
+
+  const confirmExecutionSwitch = async (currentSessionAction: CurrentSessionAction) => {
     if (!switchTarget || executionBusy) return
     const target = switchTarget
     setExecutionBusy(true)
     setExecutionError(null)
     try {
-      const result = await planningClient.switchTask(target.id)
+      const result = await executeSwitch(
+        target.id,
+        currentSessionAction,
+        planningClient.switchTask.bind(planningClient),
+      )
       setActiveSession(activeSessionAfterSwitch(result))
       setActiveTaskTitle(target.title)
+      setCancelConfirmationOpen(false)
       setSwitchTarget(null)
       setExecutionRevision((current) => current + 1)
     } catch (error) {
@@ -610,6 +665,11 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
           activeTaskTitle={activeTaskTitle}
           busy={executionBusy}
           key={activeSession.id}
+          onCancel={() => {
+            setCancelConfirmationOpen(true)
+            setSwitchTarget(null)
+            setExecutionError(null)
+          }}
           onFinish={async () => {
             try {
               await handleExecutionFinish(activeSession.id, null)
@@ -620,23 +680,60 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
         />
       )}
 
+      {cancelConfirmationOpen && activeSession && (
+        <Card className="study-switch-card">
+          <div>
+            <p className="eyebrow">لغو بازه مطالعه</p>
+            <h2>این بازه از سابقه حذف نمی‌شود</h2>
+            <p>
+              {cancelStudyConsequenceMessage}
+            </p>
+          </div>
+          <div className="study-switch-card__actions">
+            <Button disabled={executionBusy} onClick={() => void confirmExecutionCancel()}>
+              {executionBusy ? 'در حال لغو…' : 'تأیید لغو این بازه'}
+            </Button>
+            <Button
+              disabled={executionBusy}
+              onClick={() => setCancelConfirmationOpen(false)}
+              variant="ghost"
+            >
+              ادامه مطالعه فعلی
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {switchTarget && activeSession && (
         <Card className="study-switch-card">
           <div>
             <p className="eyebrow">تغییر مطالعه</p>
             <h2>{activeTaskTitle ?? 'مطالعه فعلی'} اکنون فعال است</h2>
             <p>
-              برای شروع «{switchTarget.title}»، بازه فعلی پایان می‌یابد و یک جلسه تازه برای کار جدید آغاز می‌شود.
+              برای شروع «{switchTarget.title}»، انتخاب کنید بازه فعلی ثبت شود یا بدون محاسبه زمان لغو شود.
             </p>
           </div>
           <div className="study-switch-card__actions">
-            <Button disabled={executionBusy} onClick={() => void confirmExecutionSwitch()}>
+            <Button
+              disabled={executionBusy}
+              onClick={() => void confirmExecutionSwitch(switchExecutionChoices.FINISH)}
+            >
               {executionBusy
                 ? 'در حال تغییر…'
                 : `پایان ${activeTaskTitle ?? 'مطالعه فعلی'} و شروع ${switchTarget.title}`}
             </Button>
             <Button
               disabled={executionBusy}
+              onClick={() => void confirmExecutionSwitch(switchExecutionChoices.CANCEL)}
+              variant="secondary"
+            >
+              {executionBusy
+                ? 'در حال تغییر…'
+                : `لغو این بازه و شروع ${switchTarget.title}`}
+            </Button>
+            <Button
+              disabled={executionBusy}
+              data-choice={switchExecutionChoices.CONTINUE}
               onClick={() => setSwitchTarget(null)}
               variant="ghost"
             >

@@ -5,6 +5,7 @@ import { successResponse } from '../contracts/api-response.js'
 import { ApiError } from '../errors/api-error.js'
 import { authenticateRequest } from '../plugins/authentication.js'
 import {
+  cancelStudySessionSchema,
   createStudentGoalSchema,
   createStudySessionSchema,
   createTaskStudySessionSchema,
@@ -93,11 +94,12 @@ export const registerStudyTrackingRoutes = (
   })
 
   app.post('/student/tasks/:id/switch', studentOnly, async (request) => {
-    parseInput(switchStudyTaskSchema.safeParse(request.body ?? {}))
+    const input = parseInput(switchStudyTaskSchema.safeParse(request.body ?? {}))
     return successResponse(
       await options.studyTracking.sessions.switchTask(
         request.user!,
         parseId(request.params),
+        input.currentSessionAction,
       ),
       request.context.requestId,
     )
@@ -142,6 +144,17 @@ export const registerStudyTrackingRoutes = (
       request.context.requestId,
     ),
   )
+
+  app.patch('/student/study-sessions/:id/cancel', studentOnly, async (request) => {
+    parseInput(cancelStudySessionSchema.safeParse(request.body ?? {}))
+    return successResponse(
+      await options.studyTracking.sessions.cancel(
+        request.user!,
+        parseId(request.params),
+      ),
+      request.context.requestId,
+    )
+  })
 
   app.get('/student/goals', studentOnly, async (request) =>
     successResponse(

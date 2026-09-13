@@ -6,6 +6,7 @@ import {
   completedStudySummary,
   executeFinish,
   executionErrorCodeMessage,
+  studySessionLifecycle,
   taskExecutionAction,
   upsertStudySession,
 } from './task-execution'
@@ -166,6 +167,26 @@ export function TaskExecutionPanel({
                   <small>آخرین ثبت: {dateTimeFormatter.format(new Date(completedSessions[0].endedAt))}</small>
                 )}
               </div>
+
+              {sessions.length > 0 && (
+                <ul className="task-execution__history" aria-label="سابقه بازه‌های مطالعه">
+                  {sessions.map((session) => {
+                    const lifecycle = studySessionLifecycle(session)
+                    return (
+                      <li key={session.id}>
+                        <span>{dateTimeFormatter.format(new Date(session.startedAt))}</span>
+                        {lifecycle === 'CANCELLED' ? (
+                          <strong className="task-execution__cancelled">لغوشده</strong>
+                        ) : lifecycle === 'ACTIVE' ? (
+                          <strong>در حال اجرا</strong>
+                        ) : (
+                          <strong>{session.durationMinutes?.toLocaleString('fa-IR')} دقیقه</strong>
+                        )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
 
               {action === 'FINISH' && taskActiveSession ? (
                 <div className="task-execution__active">

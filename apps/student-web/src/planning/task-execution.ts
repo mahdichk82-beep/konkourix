@@ -1,10 +1,20 @@
 import type {
   DailyTaskStatus,
+  CurrentSessionAction,
   StudySession,
   SwitchStudySessionResult,
 } from './planning-client'
 
 export type TaskExecutionAction = 'START' | 'FINISH' | 'NONE'
+
+export const cancelStudyConsequenceMessage =
+  'با لغو، این بازه در زمان مطالعه ثبت‌شده حساب نمی‌شود و وضعیت کار تغییری نمی‌کند.'
+
+export const switchExecutionChoices = {
+  CANCEL: 'CANCEL',
+  CONTINUE: 'CONTINUE',
+  FINISH: 'FINISH',
+} as const
 
 export const taskExecutionAction = (
   taskStatus: DailyTaskStatus,
@@ -45,7 +55,9 @@ export const formatElapsedStudyTime = (milliseconds: number): string => {
 }
 
 export const completedStudySummary = (sessions: StudySession[]) => {
-  const completedSessions = sessions.filter((session) => session.endedAt !== null)
+  const completedSessions = sessions.filter(
+    (session) => session.cancelledAt === null && session.endedAt !== null,
+  )
   return {
     completedSessions,
     recordedMinutes: completedSessions.reduce(
@@ -75,15 +87,33 @@ export const executeFinish = (
   request: (id: string, value: string | null) => Promise<StudySession>,
 ): Promise<StudySession> => request(sessionId, notes)
 
+export const executeCancel = (
+  sessionId: string,
+  request: (id: string) => Promise<StudySession>,
+): Promise<StudySession> => request(sessionId)
+
 export const executeSwitch = (
   taskId: string,
-  request: (id: string) => Promise<SwitchStudySessionResult>,
-): Promise<SwitchStudySessionResult> => request(taskId)
+  currentSessionAction: CurrentSessionAction,
+  request: (id: string, action: CurrentSessionAction) => Promise<SwitchStudySessionResult>,
+): Promise<SwitchStudySessionResult> => request(taskId, currentSessionAction)
 
 export const activeSessionAfterFinish = (
   current: StudySession | null,
   finished: StudySession,
 ): StudySession | null => current?.id === finished.id ? null : current
+
+export const activeSessionAfterCancel = (
+  current: StudySession | null,
+  cancelled: StudySession,
+): StudySession | null => current?.id === cancelled.id ? null : current
+
+export const studySessionLifecycle = (
+  session: StudySession,
+): 'ACTIVE' | 'FINISHED' | 'CANCELLED' => {
+  if (session.cancelledAt !== null) return 'CANCELLED'
+  return session.endedAt === null ? 'ACTIVE' : 'FINISHED'
+}
 
 export const activeSessionAfterSwitch = (
   result: SwitchStudySessionResult,
@@ -96,6 +126,7 @@ export const executionErrorCodeMessage = (code: string): string | null => {
   }
   if (code === 'SESSION_TIME_INVALID') return 'زمان پایان باید بعد از زمان شروع باشد.'
   if (code === 'SESSION_ALREADY_FINISHED') return 'این جلسه قبلاً پایان یافته است.'
+  if (code === 'SESSION_ALREADY_CANCELLED') return 'این بازه قبلاً لغو شده است.'
   if (code === 'TASK_NOT_EXECUTABLE') return 'فقط کارهای در انتظار قابل شروع هستند.'
   if (code === 'SESSION_NOT_FOUND') return 'این جلسه دیگر در دسترس نیست.'
   if (code === 'ACTIVE_STUDY_SESSION_EXISTS') {
@@ -106,6 +137,9 @@ export const executionErrorCodeMessage = (code: string): string | null => {
   }
   if (code === 'SESSION_ACTIVE_UPDATE_FORBIDDEN') {
     return 'جلسه فعال فقط از مسیر پایان مطالعه قابل تغییر است.'
+  }
+  if (code === 'SESSION_CANCELLED_UPDATE_FORBIDDEN') {
+    return 'بازه لغوشده از مسیر ویرایش دستی قابل تغییر نیست.'
   }
   return null
 }

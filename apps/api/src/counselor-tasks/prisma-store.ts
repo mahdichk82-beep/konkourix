@@ -37,7 +37,9 @@ export const createPrismaCounselorTaskStore = (
           skippedAt: true,
           source: true,
           status: true,
-          studySessions: { select: { endedAt: true, startedAt: true } },
+          studySessions: {
+            select: { cancelledAt: true, endedAt: true, startedAt: true },
+          },
           studentProfileId: true,
           studyPlanId: true,
           subjectId: true,
@@ -58,13 +60,13 @@ export const createPrismaCounselorTaskStore = (
         ok: true,
         value: tasks.map(({ studySessions, ...task }) => {
           const completedSessions = studySessions.filter(
-            (session) => session.endedAt !== null,
+            (session) => session.cancelledAt === null && session.endedAt !== null,
           )
           return {
             ...task,
             completedStudySessionCount: completedSessions.length,
             hasActiveStudySession: studySessions.some(
-              (session) => session.endedAt === null,
+              (session) => session.cancelledAt === null && session.endedAt === null,
             ),
             recordedMinutes: completedSessions.reduce(
               (total, session) => total + calculateStudySessionDurationMinutes(
@@ -246,7 +248,7 @@ export const createPrismaCounselorTaskStore = (
           id: taskId,
           source: 'COUNSELOR',
           studentProfileId,
-          studySessions: { none: {} },
+          studySessions: { none: { cancelledAt: null } },
         },
       })
       if (updated.count !== 1) {

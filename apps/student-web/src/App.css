@@ -107,6 +107,7 @@
 .active-study-card h2, .study-switch-card h2 { margin: 0.2rem 0 0.4rem; font-size: 1.1rem; }
 .active-study-card p:last-child, .study-switch-card p:last-child { margin: 0; color: var(--text-muted); font-size: 0.84rem; line-height: 1.7; }
 .active-study-card__timer { flex: 0 0 auto; color: var(--accent-strong); font-size: clamp(1.5rem, 4vw, 2.2rem); font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
+.active-study-card__actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
 .study-switch-card { align-items: flex-start; flex-direction: column; background: color-mix(in srgb, var(--accent-soft) 55%, var(--surface)); }
 .study-switch-card__actions { display: flex; flex-wrap: wrap; gap: 0.65rem; }
 .planning-create-card { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); box-shadow: none; }
@@ -162,6 +163,10 @@
 .task-execution__summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.4rem 0.7rem; }
 .task-execution__summary strong { color: var(--accent-strong); font-size: 1.05rem; }
 .task-execution__summary span, .task-execution__summary small { color: var(--text-muted); font-size: 0.78rem; }
+.task-execution__history { width: 100%; margin: 0; padding: 0; display: grid; gap: 0.45rem; list-style: none; }
+.task-execution__history li { display: flex; justify-content: space-between; gap: 0.75rem; color: var(--text-muted); font-size: 0.78rem; }
+.task-execution__history strong { color: var(--text); }
+.task-execution__history .task-execution__cancelled { color: var(--danger); }
 .task-execution__active, .task-execution__start { display: grid; gap: 0.75rem; }
 .task-execution__active p, .task-execution__start p { margin: 0; color: var(--text-muted); font-size: 0.82rem; line-height: 1.7; }
 .task-execution__active label { display: grid; gap: 0.45rem; font-size: 0.82rem; font-weight: 700; }
@@ -255,7 +260,7 @@
   .planning-hero .button, .task-actions .button, .weekly-planning-toolbar__actions .button { width: 100%; }
   .planning-form__row, .planning-filters, .inline-subject__form { grid-template-columns: 1fr; }
   .planning-form__actions .button { width: 100%; }
-  .active-study-card .button, .study-switch-card__actions, .study-switch-card__actions .button { width: 100%; }
+  .active-study-card__actions, .active-study-card .button, .study-switch-card__actions, .study-switch-card__actions .button { width: 100%; }
   .task-actions { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .task-skip-reason { grid-column: 1 / -1; }
   .task-execution, .task-execution > .button, .task-execution__actions .button { width: 100%; }

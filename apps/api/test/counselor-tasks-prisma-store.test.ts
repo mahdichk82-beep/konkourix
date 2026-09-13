@@ -42,16 +42,24 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
           status: 'PENDING',
           studySessions: [
             {
+              cancelledAt: null,
               endedAt: new Date('2026-09-11T09:30:00.000Z'),
               startedAt: new Date('2026-09-11T09:00:00.000Z'),
             },
             {
+              cancelledAt: null,
               endedAt: new Date('2026-09-11T10:45:00.000Z'),
               startedAt: new Date('2026-09-11T10:00:00.000Z'),
             },
             {
+              cancelledAt: null,
               endedAt: null,
               startedAt: new Date('2026-09-11T11:00:00.000Z'),
+            },
+            {
+              cancelledAt: new Date('2026-09-11T12:10:00.000Z'),
+              endedAt: null,
+              startedAt: new Date('2026-09-11T12:00:00.000Z'),
             },
           ],
           studentProfileId: ids.student,
@@ -103,7 +111,9 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
       skippedAt: true,
       source: true,
       status: true,
-      studySessions: { select: { endedAt: true, startedAt: true } },
+      studySessions: {
+        select: { cancelledAt: true, endedAt: true, startedAt: true },
+      },
       studentProfileId: true,
       studyPlanId: true,
       subjectId: true,
@@ -117,7 +127,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
   }])
   assert.equal(result.items[0]?.source, 'PERSONAL')
   assert.equal(result.items[0]?.recordedMinutes, 75)
-  assert.equal(result.items[0]?.studySessionCount, 3)
+  assert.equal(result.items[0]?.studySessionCount, 4)
   assert.equal(result.items[0]?.completedStudySessionCount, 2)
   assert.equal(result.items[0]?.hasActiveStudySession, true)
   assert.equal('createdByUserId' in (result.items[0] ?? {}), false)
@@ -485,7 +495,7 @@ test('Prisma counselor batch creation requires a persisted counselor profile', a
   assert.equal(insertCalled, false)
 })
 
-test('Prisma counselor rescheduling atomically rechecks assignment, ownership, source, and sessions', async () => {
+test('Prisma counselor rescheduling ignores cancelled-only history but excludes active or finished sessions', async () => {
   const profileQueries: unknown[] = []
   const taskFindQueries: unknown[] = []
   const taskUpdateQueries: unknown[] = []
@@ -561,7 +571,7 @@ test('Prisma counselor rescheduling atomically rechecks assignment, ownership, s
       id: ids.task,
       source: 'COUNSELOR',
       studentProfileId: ids.student,
-      studySessions: { none: {} },
+      studySessions: { none: { cancelledAt: null } },
     },
   }])
 })
