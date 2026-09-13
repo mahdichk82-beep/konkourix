@@ -61,6 +61,7 @@ export const ModelName = {
   StudyPlan: 'StudyPlan',
   DailyTask: 'DailyTask',
   StudySession: 'StudySession',
+  AssessmentAttempt: 'AssessmentAttempt',
   StudentGoal: 'StudentGoal'
 } as const
 
@@ -229,6 +230,26 @@ export const StudySessionScalarFieldEnum = {
 } as const
 
 export type StudySessionScalarFieldEnum = (typeof StudySessionScalarFieldEnum)[keyof typeof StudySessionScalarFieldEnum]
+
+
+export const AssessmentAttemptScalarFieldEnum = {
+  id: 'id',
+  studentProfileId: 'studentProfileId',
+  dailyTaskId: 'dailyTaskId',
+  subjectId: 'subjectId',
+  topicId: 'topicId',
+  title: 'title',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt',
+  correctCount: 'correctCount',
+  incorrectCount: 'incorrectCount',
+  blankCount: 'blankCount',
+  invalidatedAt: 'invalidatedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AssessmentAttemptScalarFieldEnum = (typeof AssessmentAttemptScalarFieldEnum)[keyof typeof AssessmentAttemptScalarFieldEnum]
 
 
 export const StudentGoalScalarFieldEnum = {

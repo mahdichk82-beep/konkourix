@@ -1,6 +1,7 @@
 import type { DragEvent } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { AuthApiError } from '../auth/auth-client'
+import { assessmentClient } from '../assessments/assessment-client'
 import { Button } from '../components/ui/Button'
 import { Card } from '../components/ui/Card'
 import { ContentState } from '../components/ui/ContentState'
@@ -80,7 +81,7 @@ const movementErrorMessage = (error: unknown): string => {
   }
 
   const messages: Record<string, string> = {
-    TASK_ALREADY_EXECUTED: 'این کار سابقه مطالعه دارد؛ جابه‌جایی انجام نشد.',
+    TASK_ALREADY_EXECUTED: 'این کار سابقه اجرای مطالعه یا آزمون دارد؛ جابه‌جایی انجام نشد.',
     TASK_NOT_FOUND: 'این کار دیگر در دسترس نیست؛ جابه‌جایی انجام نشد.',
     TASK_RESCHEDULE_FORBIDDEN: 'اجازه جابه‌جایی این کار را ندارید.',
     VALIDATION_ERROR: 'روز مقصد معتبر نیست؛ جابه‌جایی انجام نشد.',
@@ -134,8 +135,11 @@ const loadExecutionChecks = async (
   const personalTasks = tasks.filter((task) => task.source === 'PERSONAL')
   const results = await Promise.all(personalTasks.map(async (task) => {
     try {
-      const hasSessions = await planningClient.hasTaskSessions(task.id)
-      return [task.id, hasSessions ? 'EXECUTED' : 'CLEAR'] as const
+      const [hasSessions, hasAssessmentAttempts] = await Promise.all([
+        planningClient.hasTaskSessions(task.id),
+        assessmentClient.hasValidTaskAttempt(task.id),
+      ])
+      return [task.id, hasSessions || hasAssessmentAttempts ? 'EXECUTED' : 'CLEAR'] as const
     } catch {
       return [task.id, 'UNAVAILABLE'] as const
     }

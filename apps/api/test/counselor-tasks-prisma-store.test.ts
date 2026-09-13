@@ -35,6 +35,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
           estimatedMinutes: 30,
           id: ids.task,
           plannedTestCount: 0,
+          assessmentAttempts: [],
           scheduledFor: timestamp,
           skipReason: null,
           skippedAt: null,
@@ -106,6 +107,11 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
       estimatedMinutes: true,
       id: true,
       plannedTestCount: true,
+      assessmentAttempts: {
+        select: { id: true },
+        take: 1,
+        where: { invalidatedAt: null },
+      },
       scheduledFor: true,
       skipReason: true,
       skippedAt: true,
@@ -130,6 +136,7 @@ test('Prisma counselor task visibility is assignment-scoped and does not select 
   assert.equal(result.items[0]?.studySessionCount, 4)
   assert.equal(result.items[0]?.completedStudySessionCount, 2)
   assert.equal(result.items[0]?.hasActiveStudySession, true)
+  assert.equal(result.items[0]?.hasValidAssessmentAttempt, false)
   assert.equal('createdByUserId' in (result.items[0] ?? {}), false)
 })
 
@@ -517,6 +524,7 @@ test('Prisma counselor rescheduling ignores cancelled-only history but excludes 
     updatedAt: timestamp,
   }
   const transaction = {
+    async $queryRawUnsafe() { return [{ id: ids.student }] },
     studentProfile: {
       async findFirst(query: unknown) {
         profileQueries.push(query)
@@ -571,6 +579,7 @@ test('Prisma counselor rescheduling ignores cancelled-only history but excludes 
       id: ids.task,
       source: 'COUNSELOR',
       studentProfileId: ids.student,
+      assessmentAttempts: { none: { invalidatedAt: null } },
       studySessions: { none: { cancelledAt: null } },
     },
   }])

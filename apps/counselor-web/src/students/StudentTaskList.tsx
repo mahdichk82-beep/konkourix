@@ -219,6 +219,7 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                       : 'مطالعه پایان‌یافته‌ای ثبت نشده'}
                   </span>
                   {task.hasActiveStudySession && <span>مطالعه زنده اکنون در حال اجراست</span>}
+                  {task.hasValidAssessmentAttempt && <span>این کار نتیجه آزمون معتبر دارد</span>}
                   {task.estimatedMinutes !== null && (
                     <span>{task.estimatedMinutes.toLocaleString('fa-IR')} دقیقه</span>
                   )}
@@ -237,7 +238,7 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                     <label htmlFor={`counselor-task-schedule-${task.id}`}>
                       تغییر تاریخ
                       <input
-                        disabled={task.completedStudySessionCount > 0 || task.hasActiveStudySession}
+                        disabled={task.completedStudySessionCount > 0 || task.hasActiveStudySession || task.hasValidAssessmentAttempt}
                         id={`counselor-task-schedule-${task.id}`}
                         onChange={(event) => setScheduleDrafts((current) => ({
                           ...current,
@@ -251,6 +252,7 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                       disabled={
                         task.completedStudySessionCount > 0
                         || task.hasActiveStudySession
+                        || task.hasValidAssessmentAttempt
                         || schedulingTaskId === task.id
                         || (scheduleDrafts[task.id] ?? task.scheduledFor.slice(0, 10)) === task.scheduledFor.slice(0, 10)
                       }
@@ -259,8 +261,8 @@ export function StudentTaskList({ refreshKey, studentId }: StudentTaskListProps)
                     >
                       {schedulingTaskId === task.id ? 'در حال جابه‌جایی…' : 'ثبت تاریخ جدید'}
                     </Button>
-                    {(task.completedStudySessionCount > 0 || task.hasActiveStudySession) && (
-                      <small>به‌دلیل مطالعه فعال یا پایان‌یافته، تاریخ این کار قفل است.</small>
+                    {(task.completedStudySessionCount > 0 || task.hasActiveStudySession || task.hasValidAssessmentAttempt) && (
+                      <small>به‌دلیل اجرای مطالعه یا آزمون، تاریخ این کار قفل است.</small>
                     )}
                   </form>
                 )}

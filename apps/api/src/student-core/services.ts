@@ -340,7 +340,7 @@ export const createStudentCoreServices = (store: StudentCoreStore, now = () => n
           case 'TASK_SOURCE_FORBIDDEN':
             throw new ApiError(403, 'TASK_RESCHEDULE_FORBIDDEN', 'Counselor-created tasks cannot be rescheduled by students')
           case 'TASK_EXECUTED':
-            throw new ApiError(409, 'TASK_ALREADY_EXECUTED', 'Tasks with recorded study sessions cannot be rescheduled')
+            throw new ApiError(409, 'TASK_ALREADY_EXECUTED', 'Tasks with recorded execution cannot be rescheduled')
         }
       }
       return toTaskView(result.value)

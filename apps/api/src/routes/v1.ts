@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify'
+import type { AssessmentAttemptServices } from '../assessment-attempts/services.js'
 import type { AuthService } from '../auth/auth-service.js'
 import type { CounselorTaskServices } from '../counselor-tasks/services.js'
 import type { DomainService } from '../domain/domain-service.js'
@@ -16,8 +17,10 @@ import { registerStudyTrackingRoutes } from './study-tracking.js'
 import { registerRoleBoundaryRoutes } from './role-boundaries.js'
 import { registerCounselorStudentRoutes } from './counselor-students.js'
 import { registerCounselorTaskRoutes } from './counselor-tasks.js'
+import { registerAssessmentAttemptRoutes } from './assessment-attempts.js'
 
 type V1RouteOptions = {
+  assessmentAttempts?: AssessmentAttemptServices
   auth?: AuthService
   counselorTasks?: CounselorTaskServices
   domain?: DomainService
@@ -44,6 +47,13 @@ export const registerV1Routes: FastifyPluginAsync<V1RouteOptions> = async (
       refreshTokenTtlSeconds: options.refreshTokenTtlSeconds ?? 2_592_000,
     })
     registerRoleBoundaryRoutes(app, { auth: options.auth })
+
+    if (options.assessmentAttempts) {
+      registerAssessmentAttemptRoutes(app, {
+        assessmentAttempts: options.assessmentAttempts,
+        auth: options.auth,
+      })
+    }
 
     if (options.counselorTasks) {
       registerCounselorTaskRoutes(app, {

@@ -1,5 +1,6 @@
 import Fastify, { LogController, type FastifyInstance } from 'fastify'
 import cookie from '@fastify/cookie'
+import type { AssessmentAttemptServices } from './assessment-attempts/services.js'
 import type { AuthService } from './auth/auth-service.js'
 import type { CounselorTaskServices } from './counselor-tasks/services.js'
 import type { DomainService } from './domain/domain-service.js'
@@ -18,6 +19,7 @@ import { registerV1Routes } from './routes/v1.js'
 import type { TrustProxyConfig } from './config/runtime.js'
 
 export type BuildAppOptions = {
+  assessmentAttempts?: AssessmentAttemptServices
   auth?: AuthService
   authRateLimit?: AuthRateLimitOptions | false
   counselorTasks?: CounselorTaskServices
@@ -36,6 +38,7 @@ export type BuildAppOptions = {
 
 export const buildApp = ({
   environment,
+  assessmentAttempts,
   auth,
   authRateLimit,
   counselorTasks,
@@ -97,6 +100,7 @@ export const buildApp = ({
   }
 
   const routeOptions = {
+    assessmentAttempts,
     auth,
     counselorTasks,
     domain,

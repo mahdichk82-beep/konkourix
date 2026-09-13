@@ -127,6 +127,7 @@ test('Prisma student rescheduling ignores cancelled-only history but excludes ac
     updatedAt: new Date('2026-09-03T00:00:00.000Z'),
   }
   const transaction = {
+    async $queryRawUnsafe() { return [{ id: 'student-profile-1' }] },
     dailyTask: {
       async findFirst(query: unknown) {
         findQueries.push(query)
@@ -163,6 +164,7 @@ test('Prisma student rescheduling ignores cancelled-only history but excludes ac
       id: 'task-1',
       source: 'PERSONAL',
       studentProfileId: 'student-profile-1',
+      assessmentAttempts: { none: { invalidatedAt: null } },
       studySessions: { none: { cancelledAt: null } },
     },
   }])

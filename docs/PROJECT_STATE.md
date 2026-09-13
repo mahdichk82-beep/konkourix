@@ -1084,7 +1084,7 @@ These items are not authorization to implement all remaining Phase 0 work in one
 - Full counselor product UI
 - Advanced profile and account-recovery workflows
 - Complete task/planning UX beyond the current today/weekly views and subject/topic slices
-- Test sessions
+- Live assessment execution, question-level attempts, and exam sessions
 - Pomodoro, pause/resume, focus modes, and timer product expansion beyond the live elapsed display
 - Habits and streaks
 - Persian calendar and daily evaluations
@@ -1107,6 +1107,15 @@ These items are not authorization to implement all remaining Phase 0 work in one
 - End every meaningful milestone with proportionate verification and a focused Git checkpoint.
 - Do not continue automatically into another milestone without explicit authorization.
 
+## Phase 2 Milestone 19 — Completed Assessment Attempt Foundation
+
+- `AssessmentAttempt` is the independent, student-owned record for one completed assessment result bundle. It has no relationship to `StudySession` and no live lifecycle, timer, pause, resume, cancellation, or execution lock of its own.
+- One additive migration creates `assessment_attempts` with optional `DailyTask`, subject, and topic provenance; required start/end timestamps; raw correct, incorrect, and blank counts; server-owned nullable invalidation metadata; ownership relations; indexes; and database checks for ordered time, non-negative counts, a positive derived question total, and topic-requires-subject consistency.
+- Student-only APIs create, list, read, correct, and invalidate owned attempts. Strict request schemas reject ownership and immutable provenance changes. Safe responses omit the internal student profile ID and derive `questionCount` and `durationMinutes` without adding scoring or accuracy.
+- Creation never changes `DailyTask` lifecycle or `plannedTestCount`. Valid linked attempts block both student and counselor task rescheduling; invalidated-only attempt history does not. Creation, invalidation, and rescheduling reuse the stable StudentProfile PostgreSQL row-lock boundary.
+- Student Web provides a compact RTL completed-attempt form and history with raw counts, derived total/duration, and confirmed soft invalidation. Counselor Web remains mutation-free and only receives the minimal valid-attempt signal needed to disable an impossible reschedule.
+- No score, percentage, accuracy, report, analytic, chart, AI interpretation, question bank, question-level answer, exam template, live assessment flow, or automatic task outcome was introduced.
+
 ## Next Work
 
-Phase 2 Milestone 17 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin automatic stale detection, pause/resume, automatic task completion, batch editing, batch rescheduling, task groups, planning templates, Pomodoro/focus mode, counselor execution mutation or task lifecycle/content editing, full weekly editing, manual within-day ordering, recurring tasks, calendar or hourly scheduling, automatic or AI planning, broader task permissions, revisions, approval workflows, audit or drag history, undo, reports, analytics, mastery, calculated scoring, counselor evaluation, streaks, gamification, messaging, notifications, search, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 19 is implemented but uncommitted pending validation and an explicitly authorized checkpoint. Any next milestone requires explicit controller authorization; this work does not begin live assessment execution, question-level tracking, exams, scoring, reports, analytics, AI, Pomodoro/focus mode, automatic task outcomes, or later product work.

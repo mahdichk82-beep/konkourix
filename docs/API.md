@@ -131,3 +131,52 @@ The existing completed-session creation routes remain available for compatibilit
 Manual/generic StudySession creation still requires both client timestamps and may record only a completed historical interval with `startedAt < endedAt`; valid optional ratings may accompany that completed interval. It cannot create an open live session or assign `cancelledAt`. Generic updates cannot assign ratings, edit active or cancelled sessions, reopen a finished session, or clear server-owned cancellation metadata. Feedback edits use the focused endpoint. Live start, finish, and cancellation timestamps remain exclusive to the server-backed start, switch, finish, and cancel operations.
 
 Changing a linked `DailyTask` to `COMPLETED` or `SKIPPED` returns HTTP `409` with `TASK_ACTIVE_SESSION_EXISTS` while that task has an active session. A cancelled session does not block this independent outcome choice. Task rescheduling is blocked by active or finished execution, while cancelled-only history does not block it. No execution endpoint changes `DailyTask.status`.
+
+## Completed assessment attempts
+
+`AssessmentAttempt` is a completed assessment result bundle and is independent of `StudySession`. It has no live start, finish, pause, resume, or cancellation operations. Its question total and elapsed duration are derived from raw counts and timestamps; no score, percentage, or accuracy is calculated.
+
+### Create a completed attempt
+
+`POST /api/v1/student/assessment-attempts`
+
+```json
+{
+  "title": "آزمون زیست فصل سوم",
+  "dailyTaskId": "60000000-0000-4000-8000-000000000001",
+  "subjectId": null,
+  "topicId": null,
+  "startedAt": "2026-09-13T10:30:00.000Z",
+  "endedAt": "2026-09-13T11:00:00.000Z",
+  "correctCount": 20,
+  "incorrectCount": 5,
+  "blankCount": 5
+}
+```
+
+The strict request accepts no student/profile ownership field. The authenticated student's profile is authoritative. A linked task, subject, or topic must belong to that profile; a topic requires its matching subject. When omitted, subject/topic provenance may be derived from an owned linked task. Archived resources cannot receive new attempts.
+
+Both timestamps are required and `endedAt` must be after `startedAt`. Counts are non-negative integers and their sum must be positive. `questionCount` is derived as `correctCount + incorrectCount + blankCount`, and `durationMinutes` is derived from the timestamps. Creation never changes `DailyTask.status` or `plannedTestCount`.
+
+### List and read attempts
+
+```text
+GET /api/v1/student/assessment-attempts
+GET /api/v1/student/assessment-attempts/:id
+```
+
+Lists and reads are owner-scoped. The list supports cursor pagination and an optional `dailyTaskId` filter. Safe responses omit `studentProfileId` and expose the immutable provenance, raw counts, `questionCount`, timestamps, `durationMinutes`, and nullable `invalidatedAt`.
+
+### Correct attempt facts
+
+`PATCH /api/v1/student/assessment-attempts/:id`
+
+The strict body requires at least one of `startedAt`, `endedAt`, `correctCount`, `incorrectCount`, or `blankCount`. Ownership, title, task, subject, topic, creation metadata, and invalidation metadata cannot be changed. The complete updated record must continue satisfying the timestamp and count invariants. Invalidated attempts return `ATTEMPT_INVALIDATED`.
+
+### Invalidate an attempt
+
+`PATCH /api/v1/student/assessment-attempts/:id/invalidate`
+
+The endpoint accepts only an empty object and assigns `invalidatedAt` from the server clock. It does not delete the record or change its linked task. Repeated invalidation returns `ATTEMPT_ALREADY_INVALIDATED`; foreign and missing attempts return `ATTEMPT_NOT_FOUND`.
+
+A valid attempt linked to a task blocks student and counselor rescheduling. Invalidated-only assessment history does not. Assessment creation/invalidation and rescheduling share the authenticated student's PostgreSQL row-lock boundary so concurrent operations produce one serialized result.

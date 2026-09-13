@@ -124,6 +124,7 @@ export type CounselorTaskView = DailyTaskView
 export type CounselorVisibleTaskView = CounselorTaskView & {
   completedStudySessionCount: number
   hasActiveStudySession: boolean
+  hasValidAssessmentAttempt: boolean
   recordedMinutes: number
   studySessionCount: number
 }

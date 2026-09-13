@@ -407,6 +407,7 @@ export const ModelName = {
   StudyPlan: 'StudyPlan',
   DailyTask: 'DailyTask',
   StudySession: 'StudySession',
+  AssessmentAttempt: 'AssessmentAttempt',
   StudentGoal: 'StudentGoal'
 } as const
 
@@ -423,7 +424,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor" | "studySubject" | "topic" | "studyPlan" | "dailyTask" | "studySession" | "studentGoal"
+    modelProps: "user" | "authSession" | "studentProfile" | "counselorProfile" | "studentCounselor" | "studySubject" | "topic" | "studyPlan" | "dailyTask" | "studySession" | "assessmentAttempt" | "studentGoal"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -1167,6 +1168,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         }
       }
     }
+    AssessmentAttempt: {
+      payload: Prisma.$AssessmentAttemptPayload<ExtArgs>
+      fields: Prisma.AssessmentAttemptFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.AssessmentAttemptFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.AssessmentAttemptFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload>
+        }
+        findFirst: {
+          args: Prisma.AssessmentAttemptFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.AssessmentAttemptFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload>
+        }
+        findMany: {
+          args: Prisma.AssessmentAttemptFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload>[]
+        }
+        create: {
+          args: Prisma.AssessmentAttemptCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload>
+        }
+        createMany: {
+          args: Prisma.AssessmentAttemptCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.AssessmentAttemptCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload>[]
+        }
+        delete: {
+          args: Prisma.AssessmentAttemptDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload>
+        }
+        update: {
+          args: Prisma.AssessmentAttemptUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload>
+        }
+        deleteMany: {
+          args: Prisma.AssessmentAttemptDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.AssessmentAttemptUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.AssessmentAttemptUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload>[]
+        }
+        upsert: {
+          args: Prisma.AssessmentAttemptUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$AssessmentAttemptPayload>
+        }
+        aggregate: {
+          args: Prisma.AssessmentAttemptAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateAssessmentAttempt>
+        }
+        groupBy: {
+          args: Prisma.AssessmentAttemptGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AssessmentAttemptGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.AssessmentAttemptCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AssessmentAttemptCountAggregateOutputType> | number
+        }
+      }
+    }
     StudentGoal: {
       payload: Prisma.$StudentGoalPayload<ExtArgs>
       fields: Prisma.StudentGoalFieldRefs
@@ -1429,6 +1504,26 @@ export const StudySessionScalarFieldEnum = {
 } as const
 
 export type StudySessionScalarFieldEnum = (typeof StudySessionScalarFieldEnum)[keyof typeof StudySessionScalarFieldEnum]
+
+
+export const AssessmentAttemptScalarFieldEnum = {
+  id: 'id',
+  studentProfileId: 'studentProfileId',
+  dailyTaskId: 'dailyTaskId',
+  subjectId: 'subjectId',
+  topicId: 'topicId',
+  title: 'title',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt',
+  correctCount: 'correctCount',
+  incorrectCount: 'incorrectCount',
+  blankCount: 'blankCount',
+  invalidatedAt: 'invalidatedAt',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+} as const
+
+export type AssessmentAttemptScalarFieldEnum = (typeof AssessmentAttemptScalarFieldEnum)[keyof typeof AssessmentAttemptScalarFieldEnum]
 
 
 export const StudentGoalScalarFieldEnum = {
@@ -1805,6 +1900,7 @@ export type GlobalOmitConfig = {
   studyPlan?: Prisma.StudyPlanOmit
   dailyTask?: Prisma.DailyTaskOmit
   studySession?: Prisma.StudySessionOmit
+  assessmentAttempt?: Prisma.AssessmentAttemptOmit
   studentGoal?: Prisma.StudentGoalOmit
 }
 

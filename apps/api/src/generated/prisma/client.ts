@@ -92,6 +92,11 @@ export type DailyTask = Prisma.DailyTaskModel
  */
 export type StudySession = Prisma.StudySessionModel
 /**
+ * Model AssessmentAttempt
+ *
+ */
+export type AssessmentAttempt = Prisma.AssessmentAttemptModel
+/**
  * Model StudentGoal
  * 
  */

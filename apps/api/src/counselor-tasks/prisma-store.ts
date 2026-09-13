@@ -2,6 +2,9 @@ import type { PrismaClient } from '../generated/prisma/client.js'
 import { calculateStudySessionDurationMinutes } from '../study-tracking/duration.js'
 import type { CounselorTaskStore } from './store.js'
 
+const lockStudentProfileSql =
+  'SELECT "id" FROM "student_profiles" WHERE "id" = $1::uuid FOR UPDATE'
+
 const assignedStudentWhere = (counselorUserId: string, studentProfileId: string) => ({
   id: studentProfileId,
   user: {
@@ -32,6 +35,11 @@ export const createPrismaCounselorTaskStore = (
           estimatedMinutes: true,
           id: true,
           plannedTestCount: true,
+          assessmentAttempts: {
+            select: { id: true },
+            take: 1,
+            where: { invalidatedAt: null },
+          },
           scheduledFor: true,
           skipReason: true,
           skippedAt: true,
@@ -58,7 +66,7 @@ export const createPrismaCounselorTaskStore = (
       })
       return {
         ok: true,
-        value: tasks.map(({ studySessions, ...task }) => {
+        value: tasks.map(({ assessmentAttempts, studySessions, ...task }) => {
           const completedSessions = studySessions.filter(
             (session) => session.cancelledAt === null && session.endedAt !== null,
           )
@@ -68,6 +76,7 @@ export const createPrismaCounselorTaskStore = (
             hasActiveStudySession: studySessions.some(
               (session) => session.cancelledAt === null && session.endedAt === null,
             ),
+            hasValidAssessmentAttempt: assessmentAttempts.length > 0,
             recordedMinutes: completedSessions.reduce(
               (total, session) => total + calculateStudySessionDurationMinutes(
                 session.startedAt,
@@ -234,6 +243,8 @@ export const createPrismaCounselorTaskStore = (
       })
       if (!student) return { ok: false, reason: 'STUDENT_NOT_FOUND' as const }
 
+      await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
+
       const current = await transaction.dailyTask.findFirst({
         where: { id: taskId, studentProfileId },
       })
@@ -248,6 +259,7 @@ export const createPrismaCounselorTaskStore = (
           id: taskId,
           source: 'COUNSELOR',
           studentProfileId,
+          assessmentAttempts: { none: { invalidatedAt: null } },
           studySessions: { none: { cancelledAt: null } },
         },
       })

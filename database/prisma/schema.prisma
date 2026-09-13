@@ -81,11 +81,12 @@ model StudentProfile {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  studySubjects StudySubject[]
-  studyPlans    StudyPlan[]
-  dailyTasks    DailyTask[]
-  studySessions StudySession[]
-  goals         StudentGoal[]
+  studySubjects      StudySubject[]
+  studyPlans         StudyPlan[]
+  dailyTasks         DailyTask[]
+  studySessions      StudySession[]
+  assessmentAttempts AssessmentAttempt[]
+  goals              StudentGoal[]
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -159,11 +160,12 @@ model StudySubject {
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
-  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
-  dailyTasks     DailyTask[]
-  studySessions  StudySession[]
-  goals          StudentGoal[]
-  topics         Topic[]
+  studentProfile     StudentProfile      @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  dailyTasks         DailyTask[]
+  studySessions      StudySession[]
+  assessmentAttempts AssessmentAttempt[]
+  goals              StudentGoal[]
+  topics             Topic[]
 
   @@unique([studentProfileId, normalizedName])
   @@index([studentProfileId, archivedAt])
@@ -179,8 +181,9 @@ model Topic {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
-  subject StudySubject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  dailyTasks DailyTask[]
+  subject            StudySubject        @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  dailyTasks         DailyTask[]
+  assessmentAttempts AssessmentAttempt[]
 
   @@unique([subjectId, normalizedTitle])
   @@index([subjectId])
@@ -207,31 +210,32 @@ model StudyPlan {
 }
 
 model DailyTask {
-  id               String          @id @default(uuid()) @db.Uuid
-  studentProfileId String          @db.Uuid
-  createdByUserId  String          @db.Uuid
+  id               String               @id @default(uuid()) @db.Uuid
+  studentProfileId String               @db.Uuid
+  createdByUserId  String               @db.Uuid
   source           DailyTaskSource
-  studyPlanId      String?         @db.Uuid
-  subjectId        String?         @db.Uuid
-  topicId          String?         @db.Uuid
+  studyPlanId      String?              @db.Uuid
+  subjectId        String?              @db.Uuid
+  topicId          String?              @db.Uuid
   title            String
   description      String?
-  scheduledFor     DateTime        @db.Date
+  scheduledFor     DateTime             @db.Date
   estimatedMinutes Int?
-  plannedTestCount Int             @default(0)
-  status           DailyTaskStatus @default(PENDING)
+  plannedTestCount Int                  @default(0)
+  status           DailyTaskStatus      @default(PENDING)
   completedAt      DateTime?
   skipReason       DailyTaskSkipReason?
   skippedAt        DateTime?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
-  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
-  createdBy      User           @relation("DailyTaskCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
-  studyPlan      StudyPlan?     @relation(fields: [studyPlanId], references: [id], onDelete: SetNull)
-  subject        StudySubject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
-  topic          Topic?         @relation(fields: [topicId], references: [id], onDelete: SetNull)
-  studySessions  StudySession[]
+  studentProfile     StudentProfile      @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  createdBy          User                @relation("DailyTaskCreator", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  studyPlan          StudyPlan?          @relation(fields: [studyPlanId], references: [id], onDelete: SetNull)
+  subject            StudySubject?       @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  topic              Topic?              @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  studySessions      StudySession[]
+  assessmentAttempts AssessmentAttempt[]
 
   @@index([studentProfileId, scheduledFor])
   @@index([studentProfileId, status, scheduledFor])
@@ -243,18 +247,18 @@ model DailyTask {
 }
 
 model StudySession {
-  id               String   @id @default(uuid()) @db.Uuid
-  studentProfileId String   @db.Uuid
-  subjectId        String?  @db.Uuid
-  dailyTaskId      String?  @db.Uuid
-  startedAt        DateTime
-  endedAt          DateTime?
-  cancelledAt      DateTime?
-  focusRating      Int?
+  id                 String    @id @default(uuid()) @db.Uuid
+  studentProfileId   String    @db.Uuid
+  subjectId          String?   @db.Uuid
+  dailyTaskId        String?   @db.Uuid
+  startedAt          DateTime
+  endedAt            DateTime?
+  cancelledAt        DateTime?
+  focusRating        Int?
   studyQualityRating Int?
-  notes            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  notes              String?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
   subject        StudySubject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
@@ -264,6 +268,34 @@ model StudySession {
   @@index([studentProfileId, subjectId, startedAt])
   @@index([dailyTaskId])
   @@map("study_sessions")
+}
+
+model AssessmentAttempt {
+  id               String    @id @default(uuid()) @db.Uuid
+  studentProfileId String    @db.Uuid
+  dailyTaskId      String?   @db.Uuid
+  subjectId        String?   @db.Uuid
+  topicId          String?   @db.Uuid
+  title            String
+  startedAt        DateTime
+  endedAt          DateTime
+  correctCount     Int
+  incorrectCount   Int
+  blankCount       Int
+  invalidatedAt    DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  studentProfile StudentProfile @relation(fields: [studentProfileId], references: [id], onDelete: Cascade)
+  dailyTask      DailyTask?     @relation(fields: [dailyTaskId], references: [id], onDelete: SetNull)
+  subject        StudySubject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  topic          Topic?         @relation(fields: [topicId], references: [id], onDelete: SetNull)
+
+  @@index([studentProfileId, endedAt])
+  @@index([dailyTaskId])
+  @@index([subjectId, endedAt])
+  @@index([topicId, endedAt])
+  @@map("assessment_attempts")
 }
 
 enum StudentGoalStatus {

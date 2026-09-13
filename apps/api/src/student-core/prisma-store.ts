@@ -168,6 +168,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
 
   async reschedulePersonalTask(studentProfileId, id, scheduledFor) {
     return prisma.$transaction(async (transaction) => {
+      await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
       const current = await transaction.dailyTask.findFirst({
         where: { id, studentProfileId },
       })
@@ -182,6 +183,7 @@ export const createPrismaStudentCoreStore = (prisma: PrismaClient): StudentCoreS
           id,
           source: 'PERSONAL',
           studentProfileId,
+          assessmentAttempts: { none: { invalidatedAt: null } },
           studySessions: { none: { cancelledAt: null } },
         },
       })

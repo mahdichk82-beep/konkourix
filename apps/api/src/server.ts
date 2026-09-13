@@ -1,4 +1,6 @@
 import { buildApp } from './app.js'
+import { createPrismaAssessmentAttemptStore } from './assessment-attempts/prisma-store.js'
+import { createAssessmentAttemptServices } from './assessment-attempts/services.js'
 import { createAuthService } from './auth/auth-service.js'
 import { createPrismaAuthStore } from './auth/prisma-auth-store.js'
 import { createPrismaCounselorTaskStore } from './counselor-tasks/prisma-store.js'
@@ -15,6 +17,9 @@ import { prisma } from './lib/prisma.js'
 import { operationalErrorFields } from './lib/operational-logging.js'
 
 const app = buildApp({
+  assessmentAttempts: createAssessmentAttemptServices(
+    createPrismaAssessmentAttemptStore(prisma),
+  ),
   auth: createAuthService({
     config: {
       accessToken: {

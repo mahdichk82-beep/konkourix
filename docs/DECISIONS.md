@@ -231,3 +231,13 @@ This lightweight decision log records architectural constraints established by t
 **Separation policy:** Feedback does not change `DailyTask` lifecycle, schedule, provenance, or ownership. It is not counselor evaluation, analytics, an aggregate, or a calculated performance score.
 
 **Status:** Accepted
+
+## ADR-022 — Completed Assessment Attempts
+
+**Decision:** `AssessmentAttempt` is the independent student-owned record for one completed assessment submission/result bundle. It is separate from `DailyTask` planned intent and `StudySession` study execution, has no StudySession relation, and stores only completed intervals with raw correct, incorrect, and blank counts. Question count and duration are derived; score, accuracy, percentage, ranking, and other interpretations are not persisted or calculated by this foundation.
+
+**Relationship policy:** An attempt may optionally reference an owned `DailyTask`, subject, and topic. These references are immutable provenance after creation, and a topic requires its matching subject. Attempt creation never changes task lifecycle or `plannedTestCount`. A valid linked attempt blocks rescheduling like finished study execution, while invalidated-only attempt history does not.
+
+**Lifecycle and ownership policy:** There is no live assessment lifecycle, timer, start, finish, pause, resume, or cancellation. The authenticated student owns creation, reading, correction of raw facts, and server-timestamped soft invalidation; normal product APIs do not hard-delete attempts. Counselor access remains mutation-free. Creation, invalidation, and rescheduling serialize on the student's stable PostgreSQL profile row where their ordering affects scheduling integrity.
+
+**Status:** Accepted

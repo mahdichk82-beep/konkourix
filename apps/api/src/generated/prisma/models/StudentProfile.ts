@@ -194,6 +194,7 @@ export type StudentProfileWhereInput = {
   studyPlans?: Prisma.StudyPlanListRelationFilter
   dailyTasks?: Prisma.DailyTaskListRelationFilter
   studySessions?: Prisma.StudySessionListRelationFilter
+  assessmentAttempts?: Prisma.AssessmentAttemptListRelationFilter
   goals?: Prisma.StudentGoalListRelationFilter
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
@@ -209,6 +210,7 @@ export type StudentProfileOrderByWithRelationInput = {
   studyPlans?: Prisma.StudyPlanOrderByRelationAggregateInput
   dailyTasks?: Prisma.DailyTaskOrderByRelationAggregateInput
   studySessions?: Prisma.StudySessionOrderByRelationAggregateInput
+  assessmentAttempts?: Prisma.AssessmentAttemptOrderByRelationAggregateInput
   goals?: Prisma.StudentGoalOrderByRelationAggregateInput
   user?: Prisma.UserOrderByWithRelationInput
 }
@@ -227,6 +229,7 @@ export type StudentProfileWhereUniqueInput = Prisma.AtLeast<{
   studyPlans?: Prisma.StudyPlanListRelationFilter
   dailyTasks?: Prisma.DailyTaskListRelationFilter
   studySessions?: Prisma.StudySessionListRelationFilter
+  assessmentAttempts?: Prisma.AssessmentAttemptListRelationFilter
   goals?: Prisma.StudentGoalListRelationFilter
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id" | "userId">
@@ -265,6 +268,7 @@ export type StudentProfileCreateInput = {
   studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalCreateNestedManyWithoutStudentProfileInput
   user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
 }
@@ -280,6 +284,7 @@ export type StudentProfileUncheckedCreateInput = {
   studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalUncheckedCreateNestedManyWithoutStudentProfileInput
 }
 
@@ -293,6 +298,7 @@ export type StudentProfileUpdateInput = {
   studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUpdateManyWithoutStudentProfileNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
 }
@@ -308,6 +314,7 @@ export type StudentProfileUncheckedUpdateInput = {
   studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUncheckedUpdateManyWithoutStudentProfileNestedInput
 }
 
@@ -462,6 +469,20 @@ export type StudentProfileUpdateOneRequiredWithoutStudySessionsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.StudentProfileUpdateToOneWithWhereWithoutStudySessionsInput, Prisma.StudentProfileUpdateWithoutStudySessionsInput>, Prisma.StudentProfileUncheckedUpdateWithoutStudySessionsInput>
 }
 
+export type StudentProfileCreateNestedOneWithoutAssessmentAttemptsInput = {
+  create?: Prisma.XOR<Prisma.StudentProfileCreateWithoutAssessmentAttemptsInput, Prisma.StudentProfileUncheckedCreateWithoutAssessmentAttemptsInput>
+  connectOrCreate?: Prisma.StudentProfileCreateOrConnectWithoutAssessmentAttemptsInput
+  connect?: Prisma.StudentProfileWhereUniqueInput
+}
+
+export type StudentProfileUpdateOneRequiredWithoutAssessmentAttemptsNestedInput = {
+  create?: Prisma.XOR<Prisma.StudentProfileCreateWithoutAssessmentAttemptsInput, Prisma.StudentProfileUncheckedCreateWithoutAssessmentAttemptsInput>
+  connectOrCreate?: Prisma.StudentProfileCreateOrConnectWithoutAssessmentAttemptsInput
+  upsert?: Prisma.StudentProfileUpsertWithoutAssessmentAttemptsInput
+  connect?: Prisma.StudentProfileWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.StudentProfileUpdateToOneWithWhereWithoutAssessmentAttemptsInput, Prisma.StudentProfileUpdateWithoutAssessmentAttemptsInput>, Prisma.StudentProfileUncheckedUpdateWithoutAssessmentAttemptsInput>
+}
+
 export type StudentProfileCreateNestedOneWithoutGoalsInput = {
   create?: Prisma.XOR<Prisma.StudentProfileCreateWithoutGoalsInput, Prisma.StudentProfileUncheckedCreateWithoutGoalsInput>
   connectOrCreate?: Prisma.StudentProfileCreateOrConnectWithoutGoalsInput
@@ -486,6 +507,7 @@ export type StudentProfileCreateWithoutUserInput = {
   studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalCreateNestedManyWithoutStudentProfileInput
 }
 
@@ -499,6 +521,7 @@ export type StudentProfileUncheckedCreateWithoutUserInput = {
   studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalUncheckedCreateNestedManyWithoutStudentProfileInput
 }
 
@@ -528,6 +551,7 @@ export type StudentProfileUpdateWithoutUserInput = {
   studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUpdateManyWithoutStudentProfileNestedInput
 }
 
@@ -541,6 +565,7 @@ export type StudentProfileUncheckedUpdateWithoutUserInput = {
   studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUncheckedUpdateManyWithoutStudentProfileNestedInput
 }
 
@@ -553,6 +578,7 @@ export type StudentProfileCreateWithoutStudySubjectsInput = {
   studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalCreateNestedManyWithoutStudentProfileInput
   user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
 }
@@ -567,6 +593,7 @@ export type StudentProfileUncheckedCreateWithoutStudySubjectsInput = {
   studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalUncheckedCreateNestedManyWithoutStudentProfileInput
 }
 
@@ -595,6 +622,7 @@ export type StudentProfileUpdateWithoutStudySubjectsInput = {
   studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUpdateManyWithoutStudentProfileNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
 }
@@ -609,6 +637,7 @@ export type StudentProfileUncheckedUpdateWithoutStudySubjectsInput = {
   studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUncheckedUpdateManyWithoutStudentProfileNestedInput
 }
 
@@ -621,6 +650,7 @@ export type StudentProfileCreateWithoutStudyPlansInput = {
   studySubjects?: Prisma.StudySubjectCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalCreateNestedManyWithoutStudentProfileInput
   user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
 }
@@ -635,6 +665,7 @@ export type StudentProfileUncheckedCreateWithoutStudyPlansInput = {
   studySubjects?: Prisma.StudySubjectUncheckedCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalUncheckedCreateNestedManyWithoutStudentProfileInput
 }
 
@@ -663,6 +694,7 @@ export type StudentProfileUpdateWithoutStudyPlansInput = {
   studySubjects?: Prisma.StudySubjectUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUpdateManyWithoutStudentProfileNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
 }
@@ -677,6 +709,7 @@ export type StudentProfileUncheckedUpdateWithoutStudyPlansInput = {
   studySubjects?: Prisma.StudySubjectUncheckedUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUncheckedUpdateManyWithoutStudentProfileNestedInput
 }
 
@@ -689,6 +722,7 @@ export type StudentProfileCreateWithoutDailyTasksInput = {
   studySubjects?: Prisma.StudySubjectCreateNestedManyWithoutStudentProfileInput
   studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalCreateNestedManyWithoutStudentProfileInput
   user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
 }
@@ -703,6 +737,7 @@ export type StudentProfileUncheckedCreateWithoutDailyTasksInput = {
   studySubjects?: Prisma.StudySubjectUncheckedCreateNestedManyWithoutStudentProfileInput
   studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalUncheckedCreateNestedManyWithoutStudentProfileInput
 }
 
@@ -731,6 +766,7 @@ export type StudentProfileUpdateWithoutDailyTasksInput = {
   studySubjects?: Prisma.StudySubjectUpdateManyWithoutStudentProfileNestedInput
   studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUpdateManyWithoutStudentProfileNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
 }
@@ -745,6 +781,7 @@ export type StudentProfileUncheckedUpdateWithoutDailyTasksInput = {
   studySubjects?: Prisma.StudySubjectUncheckedUpdateManyWithoutStudentProfileNestedInput
   studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUncheckedUpdateManyWithoutStudentProfileNestedInput
 }
 
@@ -757,6 +794,7 @@ export type StudentProfileCreateWithoutStudySessionsInput = {
   studySubjects?: Prisma.StudySubjectCreateNestedManyWithoutStudentProfileInput
   studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalCreateNestedManyWithoutStudentProfileInput
   user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
 }
@@ -771,6 +809,7 @@ export type StudentProfileUncheckedCreateWithoutStudySessionsInput = {
   studySubjects?: Prisma.StudySubjectUncheckedCreateNestedManyWithoutStudentProfileInput
   studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutStudentProfileInput
   goals?: Prisma.StudentGoalUncheckedCreateNestedManyWithoutStudentProfileInput
 }
 
@@ -799,6 +838,7 @@ export type StudentProfileUpdateWithoutStudySessionsInput = {
   studySubjects?: Prisma.StudySubjectUpdateManyWithoutStudentProfileNestedInput
   studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUpdateManyWithoutStudentProfileNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
 }
@@ -813,6 +853,79 @@ export type StudentProfileUncheckedUpdateWithoutStudySessionsInput = {
   studySubjects?: Prisma.StudySubjectUncheckedUpdateManyWithoutStudentProfileNestedInput
   studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutStudentProfileNestedInput
+  goals?: Prisma.StudentGoalUncheckedUpdateManyWithoutStudentProfileNestedInput
+}
+
+export type StudentProfileCreateWithoutAssessmentAttemptsInput = {
+  id?: string
+  educationLevel?: string | null
+  schoolName?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studySubjects?: Prisma.StudySubjectCreateNestedManyWithoutStudentProfileInput
+  studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
+  dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
+  studySessions?: Prisma.StudySessionCreateNestedManyWithoutStudentProfileInput
+  goals?: Prisma.StudentGoalCreateNestedManyWithoutStudentProfileInput
+  user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
+}
+
+export type StudentProfileUncheckedCreateWithoutAssessmentAttemptsInput = {
+  id?: string
+  userId: string
+  educationLevel?: string | null
+  schoolName?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  studySubjects?: Prisma.StudySubjectUncheckedCreateNestedManyWithoutStudentProfileInput
+  studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
+  dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
+  studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutStudentProfileInput
+  goals?: Prisma.StudentGoalUncheckedCreateNestedManyWithoutStudentProfileInput
+}
+
+export type StudentProfileCreateOrConnectWithoutAssessmentAttemptsInput = {
+  where: Prisma.StudentProfileWhereUniqueInput
+  create: Prisma.XOR<Prisma.StudentProfileCreateWithoutAssessmentAttemptsInput, Prisma.StudentProfileUncheckedCreateWithoutAssessmentAttemptsInput>
+}
+
+export type StudentProfileUpsertWithoutAssessmentAttemptsInput = {
+  update: Prisma.XOR<Prisma.StudentProfileUpdateWithoutAssessmentAttemptsInput, Prisma.StudentProfileUncheckedUpdateWithoutAssessmentAttemptsInput>
+  create: Prisma.XOR<Prisma.StudentProfileCreateWithoutAssessmentAttemptsInput, Prisma.StudentProfileUncheckedCreateWithoutAssessmentAttemptsInput>
+  where?: Prisma.StudentProfileWhereInput
+}
+
+export type StudentProfileUpdateToOneWithWhereWithoutAssessmentAttemptsInput = {
+  where?: Prisma.StudentProfileWhereInput
+  data: Prisma.XOR<Prisma.StudentProfileUpdateWithoutAssessmentAttemptsInput, Prisma.StudentProfileUncheckedUpdateWithoutAssessmentAttemptsInput>
+}
+
+export type StudentProfileUpdateWithoutAssessmentAttemptsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studySubjects?: Prisma.StudySubjectUpdateManyWithoutStudentProfileNestedInput
+  studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
+  dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
+  studySessions?: Prisma.StudySessionUpdateManyWithoutStudentProfileNestedInput
+  goals?: Prisma.StudentGoalUpdateManyWithoutStudentProfileNestedInput
+  user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
+}
+
+export type StudentProfileUncheckedUpdateWithoutAssessmentAttemptsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  userId?: Prisma.StringFieldUpdateOperationsInput | string
+  educationLevel?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  schoolName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  studySubjects?: Prisma.StudySubjectUncheckedUpdateManyWithoutStudentProfileNestedInput
+  studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
+  dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
+  studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutStudentProfileNestedInput
   goals?: Prisma.StudentGoalUncheckedUpdateManyWithoutStudentProfileNestedInput
 }
 
@@ -826,6 +939,7 @@ export type StudentProfileCreateWithoutGoalsInput = {
   studyPlans?: Prisma.StudyPlanCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutStudentProfileInput
   user: Prisma.UserCreateNestedOneWithoutStudentProfileInput
 }
 
@@ -840,6 +954,7 @@ export type StudentProfileUncheckedCreateWithoutGoalsInput = {
   studyPlans?: Prisma.StudyPlanUncheckedCreateNestedManyWithoutStudentProfileInput
   dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutStudentProfileInput
   studySessions?: Prisma.StudySessionUncheckedCreateNestedManyWithoutStudentProfileInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutStudentProfileInput
 }
 
 export type StudentProfileCreateOrConnectWithoutGoalsInput = {
@@ -868,6 +983,7 @@ export type StudentProfileUpdateWithoutGoalsInput = {
   studyPlans?: Prisma.StudyPlanUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutStudentProfileNestedInput
   user?: Prisma.UserUpdateOneRequiredWithoutStudentProfileNestedInput
 }
 
@@ -882,6 +998,7 @@ export type StudentProfileUncheckedUpdateWithoutGoalsInput = {
   studyPlans?: Prisma.StudyPlanUncheckedUpdateManyWithoutStudentProfileNestedInput
   dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutStudentProfileNestedInput
   studySessions?: Prisma.StudySessionUncheckedUpdateManyWithoutStudentProfileNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutStudentProfileNestedInput
 }
 
 
@@ -894,6 +1011,7 @@ export type StudentProfileCountOutputType = {
   studyPlans: number
   dailyTasks: number
   studySessions: number
+  assessmentAttempts: number
   goals: number
 }
 
@@ -902,6 +1020,7 @@ export type StudentProfileCountOutputTypeSelect<ExtArgs extends runtime.Types.Ex
   studyPlans?: boolean | StudentProfileCountOutputTypeCountStudyPlansArgs
   dailyTasks?: boolean | StudentProfileCountOutputTypeCountDailyTasksArgs
   studySessions?: boolean | StudentProfileCountOutputTypeCountStudySessionsArgs
+  assessmentAttempts?: boolean | StudentProfileCountOutputTypeCountAssessmentAttemptsArgs
   goals?: boolean | StudentProfileCountOutputTypeCountGoalsArgs
 }
 
@@ -946,6 +1065,13 @@ export type StudentProfileCountOutputTypeCountStudySessionsArgs<ExtArgs extends 
 /**
  * StudentProfileCountOutputType without action
  */
+export type StudentProfileCountOutputTypeCountAssessmentAttemptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.AssessmentAttemptWhereInput
+}
+
+/**
+ * StudentProfileCountOutputType without action
+ */
 export type StudentProfileCountOutputTypeCountGoalsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   where?: Prisma.StudentGoalWhereInput
 }
@@ -962,6 +1088,7 @@ export type StudentProfileSelect<ExtArgs extends runtime.Types.Extensions.Intern
   studyPlans?: boolean | Prisma.StudentProfile$studyPlansArgs<ExtArgs>
   dailyTasks?: boolean | Prisma.StudentProfile$dailyTasksArgs<ExtArgs>
   studySessions?: boolean | Prisma.StudentProfile$studySessionsArgs<ExtArgs>
+  assessmentAttempts?: boolean | Prisma.StudentProfile$assessmentAttemptsArgs<ExtArgs>
   goals?: boolean | Prisma.StudentProfile$goalsArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.StudentProfileCountOutputTypeDefaultArgs<ExtArgs>
@@ -1002,6 +1129,7 @@ export type StudentProfileInclude<ExtArgs extends runtime.Types.Extensions.Inter
   studyPlans?: boolean | Prisma.StudentProfile$studyPlansArgs<ExtArgs>
   dailyTasks?: boolean | Prisma.StudentProfile$dailyTasksArgs<ExtArgs>
   studySessions?: boolean | Prisma.StudentProfile$studySessionsArgs<ExtArgs>
+  assessmentAttempts?: boolean | Prisma.StudentProfile$assessmentAttemptsArgs<ExtArgs>
   goals?: boolean | Prisma.StudentProfile$goalsArgs<ExtArgs>
   user?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   _count?: boolean | Prisma.StudentProfileCountOutputTypeDefaultArgs<ExtArgs>
@@ -1020,6 +1148,7 @@ export type $StudentProfilePayload<ExtArgs extends runtime.Types.Extensions.Inte
     studyPlans: Prisma.$StudyPlanPayload<ExtArgs>[]
     dailyTasks: Prisma.$DailyTaskPayload<ExtArgs>[]
     studySessions: Prisma.$StudySessionPayload<ExtArgs>[]
+    assessmentAttempts: Prisma.$AssessmentAttemptPayload<ExtArgs>[]
     goals: Prisma.$StudentGoalPayload<ExtArgs>[]
     user: Prisma.$UserPayload<ExtArgs>
   }
@@ -1428,6 +1557,7 @@ export interface Prisma__StudentProfileClient<T, Null = never, ExtArgs extends r
   studyPlans<T extends Prisma.StudentProfile$studyPlansArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentProfile$studyPlansArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StudyPlanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   dailyTasks<T extends Prisma.StudentProfile$dailyTasksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentProfile$dailyTasksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DailyTaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   studySessions<T extends Prisma.StudentProfile$studySessionsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentProfile$studySessionsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StudySessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  assessmentAttempts<T extends Prisma.StudentProfile$assessmentAttemptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentProfile$assessmentAttemptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AssessmentAttemptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   goals<T extends Prisma.StudentProfile$goalsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudentProfile$goalsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$StudentGoalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   user<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
@@ -1959,6 +2089,30 @@ export type StudentProfile$studySessionsArgs<ExtArgs extends runtime.Types.Exten
   take?: number
   skip?: number
   distinct?: Prisma.StudySessionScalarFieldEnum | Prisma.StudySessionScalarFieldEnum[]
+}
+
+/**
+ * StudentProfile.assessmentAttempts
+ */
+export type StudentProfile$assessmentAttemptsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the AssessmentAttempt
+   */
+  select?: Prisma.AssessmentAttemptSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the AssessmentAttempt
+   */
+  omit?: Prisma.AssessmentAttemptOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.AssessmentAttemptInclude<ExtArgs> | null
+  where?: Prisma.AssessmentAttemptWhereInput
+  orderBy?: Prisma.AssessmentAttemptOrderByWithRelationInput | Prisma.AssessmentAttemptOrderByWithRelationInput[]
+  cursor?: Prisma.AssessmentAttemptWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.AssessmentAttemptScalarFieldEnum | Prisma.AssessmentAttemptScalarFieldEnum[]
 }
 
 /**

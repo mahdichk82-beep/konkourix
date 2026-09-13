@@ -36,6 +36,7 @@ type CounselorTask = {
 export type CounselorVisibleTask = CounselorTask & {
   completedStudySessionCount: number
   hasActiveStudySession: boolean
+  hasValidAssessmentAttempt: boolean
   recordedMinutes: number
   studySessionCount: number
 }
