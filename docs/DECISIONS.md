@@ -221,3 +221,13 @@ This lightweight decision log records architectural constraints established by t
 **Planning policy:** Active or finished execution blocks rescheduling, while cancelled-only history does not. Active execution still blocks a terminal task outcome; cancelled history does not. The outcome remains an independent student decision.
 
 **Status:** Accepted
+
+## ADR-021 — Raw Finished Study Session Feedback
+
+**Decision:** `StudySession.focusRating` and `StudySession.studyQualityRating` are optional raw student self-report fields. They live directly on `StudySession`; no feedback, metric, review, or execution entity is introduced.
+
+**Lifecycle policy:** Ratings belong only to finished sessions (`endedAt != null`, `cancelledAt = null`). Active and cancelled sessions have null ratings. Each recorded value is an integer from 1 through 5, enforced at both request and database boundaries, and may be cleared later by the owning student.
+
+**Separation policy:** Feedback does not change `DailyTask` lifecycle, schedule, provenance, or ownership. It is not counselor evaluation, analytics, an aggregate, or a calculated performance score.
+
+**Status:** Accepted

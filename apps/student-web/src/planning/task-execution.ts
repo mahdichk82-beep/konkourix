@@ -1,7 +1,9 @@
 import type {
   DailyTaskStatus,
   CurrentSessionAction,
+  FinishStudySessionInput,
   StudySession,
+  StudySessionFeedbackInput,
   SwitchStudySessionResult,
 } from './planning-client'
 
@@ -72,6 +74,33 @@ export const upsertStudySession = (
   session: StudySession,
 ): StudySession[] => [session, ...sessions.filter(({ id }) => id !== session.id)]
 
+export const replaceStudySession = (
+  sessions: StudySession[],
+  session: StudySession,
+): StudySession[] => sessions.map((current) => current.id === session.id ? session : current)
+
+export const normalizeStudySessionRating = (
+  value: string,
+): number | undefined => {
+  if (value === '') return undefined
+  const rating = Number(value)
+  return Number.isInteger(rating) && rating >= 1 && rating <= 5
+    ? rating
+    : undefined
+}
+
+export const studySessionFeedbackLabels = (session: StudySession): string[] => {
+  if (studySessionLifecycle(session) !== 'FINISHED') return []
+  return [
+    session.focusRating === null || session.focusRating === undefined
+      ? null
+      : `تمرکز: ${session.focusRating.toLocaleString('fa-IR')}/۵`,
+    session.studyQualityRating === null || session.studyQualityRating === undefined
+      ? null
+      : `کیفیت مطالعه: ${session.studyQualityRating.toLocaleString('fa-IR')}/۵`,
+  ].filter((label): label is string => label !== null)
+}
+
 export const executeStart = (
   taskId: string,
   request: (id: string) => Promise<StudySession>,
@@ -83,9 +112,15 @@ export const executeActiveRestore = (
 
 export const executeFinish = (
   sessionId: string,
-  notes: string | null,
-  request: (id: string, value: string | null) => Promise<StudySession>,
-): Promise<StudySession> => request(sessionId, notes)
+  input: FinishStudySessionInput,
+  request: (id: string, value: FinishStudySessionInput) => Promise<StudySession>,
+): Promise<StudySession> => request(sessionId, input)
+
+export const executeFeedbackUpdate = (
+  sessionId: string,
+  input: StudySessionFeedbackInput,
+  request: (id: string, value: StudySessionFeedbackInput) => Promise<StudySession>,
+): Promise<StudySession> => request(sessionId, input)
 
 export const executeCancel = (
   sessionId: string,
@@ -129,6 +164,7 @@ export const executionErrorCodeMessage = (code: string): string | null => {
   if (code === 'SESSION_ALREADY_CANCELLED') return 'این بازه قبلاً لغو شده است.'
   if (code === 'TASK_NOT_EXECUTABLE') return 'فقط کارهای در انتظار قابل شروع هستند.'
   if (code === 'SESSION_NOT_FOUND') return 'این جلسه دیگر در دسترس نیست.'
+  if (code === 'SESSION_NOT_FINISHED') return 'بازخورد فقط برای جلسه پایان‌یافته ثبت می‌شود.'
   if (code === 'ACTIVE_STUDY_SESSION_EXISTS') {
     return 'یک مطالعه دیگر در حال اجراست. وضعیت فعال دوباره دریافت شد؛ برای جابه‌جایی از گزینه تغییر مطالعه استفاده کنید.'
   }

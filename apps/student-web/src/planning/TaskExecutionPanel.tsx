@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AuthApiError } from '../auth/auth-client'
 import { Button } from '../components/ui/Button'
-import { planningClient, type StudySession } from './planning-client'
+import {
+  planningClient,
+  type FinishStudySessionInput,
+  type StudySession,
+} from './planning-client'
 import {
   completedStudySummary,
+  executeFeedbackUpdate,
   executeFinish,
   executionErrorCodeMessage,
+  normalizeStudySessionRating,
+  replaceStudySession,
+  studySessionFeedbackLabels,
   studySessionLifecycle,
   taskExecutionAction,
   upsertStudySession,
@@ -18,9 +26,29 @@ type TaskExecutionPanelProps = {
   activeSession: StudySession | null
   executionReady: boolean
   executionRevision: number
-  onFinish(sessionId: string, notes: string | null): Promise<StudySession>
+  onFinish(sessionId: string, input: FinishStudySessionInput): Promise<StudySession>
   onStart(taskId: string, taskTitle: string): Promise<'STARTED' | 'CONTINUED' | 'SWITCH_PENDING'>
 }
+
+type RatingControlProps = {
+  id: string
+  label: string
+  onChange(value: string): void
+  value: string
+}
+
+const RatingControl = ({ id, label, onChange, value }: RatingControlProps) => (
+  <label className="task-execution__rating" htmlFor={id}>
+    <span>{label}</span>
+    <select id={id} onChange={(event) => onChange(event.target.value)} value={value}>
+      <option value="">بدون امتیاز</option>
+      {[1, 2, 3, 4, 5].map((rating) => (
+        <option key={rating} value={rating}>{rating.toLocaleString('fa-IR')}</option>
+      ))}
+    </select>
+    <small>۱ = کم، ۵ = عالی</small>
+  </label>
+)
 
 const dateTimeFormatter = new Intl.DateTimeFormat('fa-IR', {
   dateStyle: 'medium',
@@ -67,6 +95,12 @@ export function TaskExecutionPanel({
   const [submitting, setSubmitting] = useState(false)
   const [sessions, setSessions] = useState<StudySession[]>([])
   const [notes, setNotes] = useState('')
+  const [focusRating, setFocusRating] = useState('')
+  const [studyQualityRating, setStudyQualityRating] = useState('')
+  const [editingFeedbackId, setEditingFeedbackId] = useState<string | null>(null)
+  const [feedbackFocusRating, setFeedbackFocusRating] = useState('')
+  const [feedbackQualityRating, setFeedbackQualityRating] = useState('')
+  const [feedbackSubmitting, setFeedbackSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
 
@@ -127,19 +161,61 @@ export function TaskExecutionPanel({
     setError(null)
     setSuccess(null)
     try {
+      const normalizedFocusRating = normalizeStudySessionRating(focusRating)
+      const normalizedQualityRating = normalizeStudySessionRating(studyQualityRating)
       const session = await executeFinish(
         taskActiveSession.id,
-        notes.trim() || null,
+        {
+          ...(normalizedFocusRating === undefined ? {} : { focusRating: normalizedFocusRating }),
+          notes: notes.trim() || null,
+          ...(normalizedQualityRating === undefined
+            ? {}
+            : { studyQualityRating: normalizedQualityRating }),
+        },
         onFinish,
       )
       setSessions((current) => upsertStudySession(current, session))
       setLoaded(true)
       setNotes('')
+      setFocusRating('')
+      setStudyQualityRating('')
       setSuccess(`مطالعه «${taskTitle}» با ${(session.durationMinutes ?? 0).toLocaleString('fa-IR')} دقیقه ثبت شد. وضعیت کار جداگانه باقی ماند.`)
     } catch (submitError) {
       setError(executionErrorMessage(submitError))
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  const beginFeedbackEdit = (session: StudySession) => {
+    setEditingFeedbackId(session.id)
+    setFeedbackFocusRating(session.focusRating?.toString() ?? '')
+    setFeedbackQualityRating(session.studyQualityRating?.toString() ?? '')
+    setError(null)
+    setSuccess(null)
+  }
+
+  const saveFeedback = async (sessionId: string) => {
+    if (feedbackSubmitting) return
+    setFeedbackSubmitting(true)
+    setError(null)
+    setSuccess(null)
+    try {
+      const session = await executeFeedbackUpdate(
+        sessionId,
+        {
+          focusRating: normalizeStudySessionRating(feedbackFocusRating) ?? null,
+          studyQualityRating: normalizeStudySessionRating(feedbackQualityRating) ?? null,
+        },
+        planningClient.updateStudySessionFeedback.bind(planningClient),
+      )
+      setSessions((current) => replaceStudySession(current, session))
+      setEditingFeedbackId(null)
+      setSuccess('بازخورد جلسه ثبت شد.')
+    } catch (feedbackError) {
+      setError(executionErrorMessage(feedbackError))
+    } finally {
+      setFeedbackSubmitting(false)
     }
   }
 
@@ -172,15 +248,52 @@ export function TaskExecutionPanel({
                 <ul className="task-execution__history" aria-label="سابقه بازه‌های مطالعه">
                   {sessions.map((session) => {
                     const lifecycle = studySessionLifecycle(session)
+                    const feedbackLabels = studySessionFeedbackLabels(session)
                     return (
                       <li key={session.id}>
-                        <span>{dateTimeFormatter.format(new Date(session.startedAt))}</span>
-                        {lifecycle === 'CANCELLED' ? (
-                          <strong className="task-execution__cancelled">لغوشده</strong>
-                        ) : lifecycle === 'ACTIVE' ? (
-                          <strong>در حال اجرا</strong>
-                        ) : (
-                          <strong>{session.durationMinutes?.toLocaleString('fa-IR')} دقیقه</strong>
+                        <div className="task-execution__history-row">
+                          <span>{dateTimeFormatter.format(new Date(session.startedAt))}</span>
+                          {lifecycle === 'CANCELLED' ? (
+                            <strong className="task-execution__cancelled">لغوشده</strong>
+                          ) : lifecycle === 'ACTIVE' ? (
+                            <strong>در حال اجرا</strong>
+                          ) : (
+                            <strong>{session.durationMinutes?.toLocaleString('fa-IR')} دقیقه</strong>
+                          )}
+                        </div>
+                        {feedbackLabels.length > 0 && (
+                          <div className="task-execution__feedback-summary">
+                            {feedbackLabels.map((label) => <span key={label}>{label}</span>)}
+                          </div>
+                        )}
+                        {lifecycle === 'FINISHED' && editingFeedbackId !== session.id && (
+                          <Button onClick={() => beginFeedbackEdit(session)} variant="ghost">
+                            {feedbackLabels.length > 0 ? 'ویرایش بازخورد' : 'ثبت بازخورد'}
+                          </Button>
+                        )}
+                        {lifecycle === 'FINISHED' && editingFeedbackId === session.id && (
+                          <div className="task-execution__feedback-editor">
+                            <RatingControl
+                              id={`history-focus-${session.id}`}
+                              label="تمرکز"
+                              onChange={setFeedbackFocusRating}
+                              value={feedbackFocusRating}
+                            />
+                            <RatingControl
+                              id={`history-quality-${session.id}`}
+                              label="کیفیت مطالعه"
+                              onChange={setFeedbackQualityRating}
+                              value={feedbackQualityRating}
+                            />
+                            <div className="task-execution__actions">
+                              <Button disabled={feedbackSubmitting} onClick={() => void saveFeedback(session.id)}>
+                                {feedbackSubmitting ? 'در حال ثبت…' : 'ثبت بازخورد'}
+                              </Button>
+                              <Button disabled={feedbackSubmitting} onClick={() => setEditingFeedbackId(null)} variant="ghost">
+                                انصراف
+                              </Button>
+                            </div>
+                          </div>
                         )}
                       </li>
                     )
@@ -202,6 +315,20 @@ export function TaskExecutionPanel({
                       value={notes}
                     />
                   </label>
+                  <div className="task-execution__ratings" aria-label="بازخورد اختیاری جلسه">
+                    <RatingControl
+                      id={`session-focus-${taskId}`}
+                      label="تمرکز"
+                      onChange={setFocusRating}
+                      value={focusRating}
+                    />
+                    <RatingControl
+                      id={`session-quality-${taskId}`}
+                      label="کیفیت مطالعه"
+                      onChange={setStudyQualityRating}
+                      value={studyQualityRating}
+                    />
+                  </div>
                   <div className="task-execution__actions">
                     <Button disabled={submitting} onClick={() => void finish()}>
                       {submitting ? 'در حال ثبت…' : 'پایان و ثبت مطالعه'}

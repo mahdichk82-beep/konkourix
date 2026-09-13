@@ -6,19 +6,24 @@ const pagination = {
   cursor: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 }
+const studySessionRating = z.number().int().min(1).max(5)
 
 export const createStudySessionSchema = z.object({
   subjectId: z.string().uuid(),
   dailyTaskId: z.string().uuid().nullable().optional().default(null),
   startedAt: dateTime,
   endedAt: dateTime,
+  focusRating: studySessionRating.nullable().optional().default(null),
   notes: z.string().trim().max(4000).nullable().optional().default(null),
+  studyQualityRating: studySessionRating.nullable().optional().default(null),
 }).strict()
 
 export const createTaskStudySessionSchema = z.object({
   startedAt: dateTime,
   endedAt: dateTime,
+  focusRating: studySessionRating.nullable().optional().default(null),
   notes: z.string().trim().max(4000).nullable().optional().default(null),
+  studyQualityRating: studySessionRating.nullable().optional().default(null),
 }).strict()
 
 export const startStudyTaskSchema = z.object({}).strict()
@@ -28,8 +33,15 @@ export const switchStudyTaskSchema = z.object({
 export const cancelStudySessionSchema = z.object({}).strict()
 
 export const finishStudySessionSchema = z.object({
+  focusRating: studySessionRating.optional(),
   notes: z.string().trim().max(4000).nullable().optional(),
+  studyQualityRating: studySessionRating.optional(),
 }).strict()
+
+export const updateStudySessionFeedbackSchema = z.object({
+  focusRating: studySessionRating.nullable().optional(),
+  studyQualityRating: studySessionRating.nullable().optional(),
+}).strict().refine((value) => Object.keys(value).length > 0, 'At least one field is required')
 
 export const updateStudySessionSchema = z.object({
   subjectId: z.string().uuid().optional(),

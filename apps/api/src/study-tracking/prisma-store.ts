@@ -104,8 +104,10 @@ export const createPrismaStudyTrackingStore = (prisma: PrismaClient): StudyTrack
           cancelledAt: null,
           dailyTaskId: task.id,
           endedAt: null,
+          focusRating: null,
           notes: null,
           startedAt,
+          studyQualityRating: null,
           studentProfileId,
           subjectId: task.subjectId,
         },
@@ -191,8 +193,10 @@ export const createPrismaStudyTrackingStore = (prisma: PrismaClient): StudyTrack
           cancelledAt: null,
           dailyTaskId: task.id,
           endedAt: null,
+          focusRating: null,
           notes: null,
           startedAt: transitionAt,
+          studyQualityRating: null,
           studentProfileId,
           subjectId: task.subjectId,
         },
@@ -204,7 +208,7 @@ export const createPrismaStudyTrackingStore = (prisma: PrismaClient): StudyTrack
     })
   },
 
-  async finishSession(studentProfileId, id, endedAt, notes) {
+  async finishSession(studentProfileId, id, endedAt, input) {
     return prisma.$transaction(async (transaction) => {
       await transaction.$queryRawUnsafe(lockStudentProfileSql, studentProfileId)
       const current = await transaction.studySession.findFirst({
@@ -221,7 +225,14 @@ export const createPrismaStudyTrackingStore = (prisma: PrismaClient): StudyTrack
         return { ok: false, reason: 'SESSION_TIME_INVALID' as const }
       }
       const updated = await transaction.studySession.updateMany({
-        data: { endedAt, ...(notes === undefined ? {} : { notes }) },
+        data: {
+          endedAt,
+          ...(input.focusRating === undefined ? {} : { focusRating: input.focusRating }),
+          ...(input.notes === undefined ? {} : { notes: input.notes }),
+          ...(input.studyQualityRating === undefined
+            ? {}
+            : { studyQualityRating: input.studyQualityRating }),
+        },
         where: {
           cancelledAt: null,
           endedAt: null,
@@ -260,6 +271,38 @@ export const createPrismaStudyTrackingStore = (prisma: PrismaClient): StudyTrack
       })
       if (updated.count !== 1) {
         return { ok: false, reason: 'SESSION_ALREADY_CANCELLED' as const }
+      }
+      const session = await transaction.studySession.findFirst({
+        where: { id, studentProfileId },
+      })
+      if (!session) return { ok: false, reason: 'SESSION_NOT_FOUND' as const }
+      return { ok: true, value: session }
+    })
+  },
+
+  async updateSessionFeedback(studentProfileId, id, input) {
+    return prisma.$transaction(async (transaction) => {
+      const current = await transaction.studySession.findFirst({
+        where: { id, studentProfileId },
+      })
+      if (!current) return { ok: false, reason: 'SESSION_NOT_FOUND' as const }
+      if (current.cancelledAt) {
+        return { ok: false, reason: 'SESSION_ALREADY_CANCELLED' as const }
+      }
+      if (!current.endedAt) {
+        return { ok: false, reason: 'SESSION_NOT_FINISHED' as const }
+      }
+      const updated = await transaction.studySession.updateMany({
+        data: input,
+        where: {
+          cancelledAt: null,
+          endedAt: { not: null },
+          id,
+          studentProfileId,
+        },
+      })
+      if (updated.count !== 1) {
+        return { ok: false, reason: 'SESSION_NOT_FINISHED' as const }
       }
       const session = await transaction.studySession.findFirst({
         where: { id, studentProfileId },

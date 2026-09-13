@@ -17,6 +17,7 @@ import {
   trackingIdParamSchema,
   taskSessionParamSchema,
   updateStudentGoalSchema,
+  updateStudySessionFeedbackSchema,
   updateStudySessionSchema,
 } from '../schemas/study-tracking.js'
 import type { StudyTrackingServices } from '../study-tracking/services.js'
@@ -140,6 +141,17 @@ export const registerStudyTrackingRoutes = (
         request.user!,
         parseId(request.params),
         parseInput(finishStudySessionSchema.safeParse(request.body ?? {})),
+      ),
+      request.context.requestId,
+    ),
+  )
+
+  app.patch('/student/study-sessions/:id/feedback', studentOnly, async (request) =>
+    successResponse(
+      await options.studyTracking.sessions.updateFeedback(
+        request.user!,
+        parseId(request.params),
+        parseInput(updateStudySessionFeedbackSchema.safeParse(request.body)),
       ),
       request.context.requestId,
     ),

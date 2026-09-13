@@ -221,6 +221,8 @@ export const StudySessionScalarFieldEnum = {
   startedAt: 'startedAt',
   endedAt: 'endedAt',
   cancelledAt: 'cancelledAt',
+  focusRating: 'focusRating',
+  studyQualityRating: 'studyQualityRating',
   notes: 'notes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

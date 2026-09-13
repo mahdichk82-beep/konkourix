@@ -41,9 +41,11 @@ export type StudySession = {
   dailyTaskId: string | null
   durationMinutes: number | null
   endedAt: string | null
+  focusRating: number | null
   id: string
   notes: string | null
   startedAt: string
+  studyQualityRating: number | null
   subjectId: string | null
   updatedAt: string
 }
@@ -89,8 +91,19 @@ export type UpdateTaskInput = {
 
 export type CreateTaskSessionInput = {
   endedAt: string
+  focusRating?: number | null
   notes: string | null
   startedAt: string
+  studyQualityRating?: number | null
+}
+
+export type StudySessionFeedbackInput = {
+  focusRating?: number | null
+  studyQualityRating?: number | null
+}
+
+export type FinishStudySessionInput = StudySessionFeedbackInput & {
+  notes?: string | null
 }
 
 const withQuery = (
@@ -218,10 +231,20 @@ class PlanningClient {
     )
   }
 
-  finishStudySession(sessionId: string, notes: string | null): Promise<StudySession> {
+  finishStudySession(sessionId: string, input: FinishStudySessionInput): Promise<StudySession> {
     return authClient.authorizedRequest<StudySession>(
       `/student/study-sessions/${encodeURIComponent(sessionId)}/finish`,
-      { body: JSON.stringify({ notes }), method: 'PATCH' },
+      { body: JSON.stringify(input), method: 'PATCH' },
+    )
+  }
+
+  updateStudySessionFeedback(
+    sessionId: string,
+    input: StudySessionFeedbackInput,
+  ): Promise<StudySession> {
+    return authClient.authorizedRequest<StudySession>(
+      `/student/study-sessions/${encodeURIComponent(sessionId)}/feedback`,
+      { body: JSON.stringify(input), method: 'PATCH' },
     )
   }
 

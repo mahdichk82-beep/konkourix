@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import type { PrismaClient } from '../src/generated/prisma/client.js'
 import { createPrismaStudyTrackingStore } from '../src/study-tracking/prisma-store.js'
@@ -102,7 +103,7 @@ test('Prisma session finish atomically retains ownership and unfinished predicat
   } as unknown as PrismaClient
   const store = createPrismaStudyTrackingStore(prisma)
 
-  const result = await store.finishSession('student-profile-1', 'session-1', endedAt, 'Done')
+  const result = await store.finishSession('student-profile-1', 'session-1', endedAt, { notes: 'Done' })
 
   assert.equal(result.ok, true)
   assert.deepEqual(locks, [[
@@ -169,8 +170,10 @@ test('Prisma live start locks the student row before inspecting active sessions'
           cancelledAt: null,
           dailyTaskId: 'task-1',
           endedAt: null,
+          focusRating: null,
           notes: null,
           startedAt,
+          studyQualityRating: null,
           studentProfileId: 'student-profile-1',
           subjectId: 'subject-1',
         })
@@ -442,4 +445,67 @@ test('Prisma CANCEL switch cancels and starts at one logical timestamp', async (
     ok: true,
     value: { activeSession: next, cancelledSession: cancelled, finishedSession: null },
   })
+})
+
+test('Prisma feedback update retains owner and finished lifecycle predicates at the write boundary', async () => {
+  const startedAt = new Date('2026-09-03T08:00:00.000Z')
+  const endedAt = new Date('2026-09-03T09:00:00.000Z')
+  const session = {
+    cancelledAt: null,
+    createdAt: startedAt,
+    dailyTaskId: 'task-1',
+    endedAt,
+    focusRating: null,
+    id: 'session-feedback',
+    notes: null,
+    startedAt,
+    studentProfileId: 'student-profile-1',
+    studyQualityRating: null,
+    subjectId: null,
+    updatedAt: endedAt,
+  }
+  const updates: unknown[] = []
+  let finds = 0
+  const transaction = {
+    studySession: {
+      async findFirst() {
+        finds += 1
+        return finds === 1 ? session : { ...session, focusRating: 4 }
+      },
+      async updateMany(query: unknown) {
+        updates.push(query)
+        return { count: 1 }
+      },
+    },
+  }
+  const prisma = {
+    async $transaction<T>(operation: (client: typeof transaction) => Promise<T>) {
+      return operation(transaction)
+    },
+  } as unknown as PrismaClient
+
+  const result = await createPrismaStudyTrackingStore(prisma)
+    .updateSessionFeedback('student-profile-1', 'session-feedback', { focusRating: 4 })
+
+  assert.equal(result.ok, true)
+  assert.deepEqual(updates, [{
+    data: { focusRating: 4 },
+    where: {
+      cancelledAt: null,
+      endedAt: { not: null },
+      id: 'session-feedback',
+      studentProfileId: 'student-profile-1',
+    },
+  }])
+})
+
+test('feedback migration adds nullable columns with database rating range constraints', () => {
+  const migration = readFileSync(
+    '../../database/prisma/migrations/20260913200000_add_study_session_feedback/migration.sql',
+    'utf8',
+  )
+  assert.match(migration, /ADD COLUMN "focusRating" INTEGER/)
+  assert.match(migration, /ADD COLUMN "studyQualityRating" INTEGER/)
+  assert.match(migration, /"focusRating" IS NULL OR "focusRating" BETWEEN 1 AND 5/)
+  assert.match(migration, /"studyQualityRating" IS NULL OR "studyQualityRating" BETWEEN 1 AND 5/)
 })

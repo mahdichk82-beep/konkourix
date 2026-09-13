@@ -20,8 +20,20 @@ export type StudySessionModel = runtime.Types.Result.DefaultSelection<Prisma.$St
 
 export type AggregateStudySession = {
   _count: StudySessionCountAggregateOutputType | null
+  _avg: StudySessionAvgAggregateOutputType | null
+  _sum: StudySessionSumAggregateOutputType | null
   _min: StudySessionMinAggregateOutputType | null
   _max: StudySessionMaxAggregateOutputType | null
+}
+
+export type StudySessionAvgAggregateOutputType = {
+  focusRating: number | null
+  studyQualityRating: number | null
+}
+
+export type StudySessionSumAggregateOutputType = {
+  focusRating: number | null
+  studyQualityRating: number | null
 }
 
 export type StudySessionMinAggregateOutputType = {
@@ -32,6 +44,8 @@ export type StudySessionMinAggregateOutputType = {
   startedAt: Date | null
   endedAt: Date | null
   cancelledAt: Date | null
+  focusRating: number | null
+  studyQualityRating: number | null
   notes: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -45,6 +59,8 @@ export type StudySessionMaxAggregateOutputType = {
   startedAt: Date | null
   endedAt: Date | null
   cancelledAt: Date | null
+  focusRating: number | null
+  studyQualityRating: number | null
   notes: string | null
   createdAt: Date | null
   updatedAt: Date | null
@@ -58,12 +74,24 @@ export type StudySessionCountAggregateOutputType = {
   startedAt: number
   endedAt: number
   cancelledAt: number
+  focusRating: number
+  studyQualityRating: number
   notes: number
   createdAt: number
   updatedAt: number
   _all: number
 }
 
+
+export type StudySessionAvgAggregateInputType = {
+  focusRating?: true
+  studyQualityRating?: true
+}
+
+export type StudySessionSumAggregateInputType = {
+  focusRating?: true
+  studyQualityRating?: true
+}
 
 export type StudySessionMinAggregateInputType = {
   id?: true
@@ -73,6 +101,8 @@ export type StudySessionMinAggregateInputType = {
   startedAt?: true
   endedAt?: true
   cancelledAt?: true
+  focusRating?: true
+  studyQualityRating?: true
   notes?: true
   createdAt?: true
   updatedAt?: true
@@ -86,6 +116,8 @@ export type StudySessionMaxAggregateInputType = {
   startedAt?: true
   endedAt?: true
   cancelledAt?: true
+  focusRating?: true
+  studyQualityRating?: true
   notes?: true
   createdAt?: true
   updatedAt?: true
@@ -99,6 +131,8 @@ export type StudySessionCountAggregateInputType = {
   startedAt?: true
   endedAt?: true
   cancelledAt?: true
+  focusRating?: true
+  studyQualityRating?: true
   notes?: true
   createdAt?: true
   updatedAt?: true
@@ -143,6 +177,18 @@ export type StudySessionAggregateArgs<ExtArgs extends runtime.Types.Extensions.I
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
    * 
+   * Select which fields to average
+  **/
+  _avg?: StudySessionAvgAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   *
+   * Select which fields to sum
+  **/
+  _sum?: StudySessionSumAggregateInputType
+  /**
+   * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+   *
    * Select which fields to find the minimum value
   **/
   _min?: StudySessionMinAggregateInputType
@@ -173,6 +219,8 @@ export type StudySessionGroupByArgs<ExtArgs extends runtime.Types.Extensions.Int
   take?: number
   skip?: number
   _count?: StudySessionCountAggregateInputType | true
+  _avg?: StudySessionAvgAggregateInputType
+  _sum?: StudySessionSumAggregateInputType
   _min?: StudySessionMinAggregateInputType
   _max?: StudySessionMaxAggregateInputType
 }
@@ -185,10 +233,14 @@ export type StudySessionGroupByOutputType = {
   startedAt: Date
   endedAt: Date | null
   cancelledAt: Date | null
+  focusRating: number | null
+  studyQualityRating: number | null
   notes: string | null
   createdAt: Date
   updatedAt: Date
   _count: StudySessionCountAggregateOutputType | null
+  _avg: StudySessionAvgAggregateOutputType | null
+  _sum: StudySessionSumAggregateOutputType | null
   _min: StudySessionMinAggregateOutputType | null
   _max: StudySessionMaxAggregateOutputType | null
 }
@@ -219,6 +271,8 @@ export type StudySessionWhereInput = {
   startedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   endedAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
   cancelledAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
+  focusRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
+  studyQualityRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
   notes?: Prisma.StringNullableFilter<"StudySession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
@@ -235,6 +289,8 @@ export type StudySessionOrderByWithRelationInput = {
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   cancelledAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  focusRating?: Prisma.SortOrderInput | Prisma.SortOrder
+  studyQualityRating?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -254,6 +310,8 @@ export type StudySessionWhereUniqueInput = Prisma.AtLeast<{
   startedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   endedAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
   cancelledAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
+  focusRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
+  studyQualityRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
   notes?: Prisma.StringNullableFilter<"StudySession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
@@ -270,12 +328,16 @@ export type StudySessionOrderByWithAggregationInput = {
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   cancelledAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  focusRating?: Prisma.SortOrderInput | Prisma.SortOrder
+  studyQualityRating?: Prisma.SortOrderInput | Prisma.SortOrder
   notes?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.StudySessionCountOrderByAggregateInput
+  _avg?: Prisma.StudySessionAvgOrderByAggregateInput
   _max?: Prisma.StudySessionMaxOrderByAggregateInput
   _min?: Prisma.StudySessionMinOrderByAggregateInput
+  _sum?: Prisma.StudySessionSumOrderByAggregateInput
 }
 
 export type StudySessionScalarWhereWithAggregatesInput = {
@@ -289,6 +351,8 @@ export type StudySessionScalarWhereWithAggregatesInput = {
   startedAt?: Prisma.DateTimeWithAggregatesFilter<"StudySession"> | Date | string
   endedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"StudySession"> | Date | string | null
   cancelledAt?: Prisma.DateTimeNullableWithAggregatesFilter<"StudySession"> | Date | string | null
+  focusRating?: Prisma.IntNullableWithAggregatesFilter<"StudySession"> | number | null
+  studyQualityRating?: Prisma.IntNullableWithAggregatesFilter<"StudySession"> | number | null
   notes?: Prisma.StringNullableWithAggregatesFilter<"StudySession"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"StudySession"> | Date | string
@@ -299,6 +363,8 @@ export type StudySessionCreateInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -315,6 +381,8 @@ export type StudySessionUncheckedCreateInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -325,6 +393,8 @@ export type StudySessionUpdateInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -341,6 +411,8 @@ export type StudySessionUncheckedUpdateInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -354,6 +426,8 @@ export type StudySessionCreateManyInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -364,6 +438,8 @@ export type StudySessionUpdateManyMutationInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -377,6 +453,8 @@ export type StudySessionUncheckedUpdateManyInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -400,9 +478,16 @@ export type StudySessionCountOrderByAggregateInput = {
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
   cancelledAt?: Prisma.SortOrder
+  focusRating?: Prisma.SortOrder
+  studyQualityRating?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type StudySessionAvgOrderByAggregateInput = {
+  focusRating?: Prisma.SortOrder
+  studyQualityRating?: Prisma.SortOrder
 }
 
 export type StudySessionMaxOrderByAggregateInput = {
@@ -413,6 +498,8 @@ export type StudySessionMaxOrderByAggregateInput = {
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
   cancelledAt?: Prisma.SortOrder
+  focusRating?: Prisma.SortOrder
+  studyQualityRating?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
@@ -426,9 +513,16 @@ export type StudySessionMinOrderByAggregateInput = {
   startedAt?: Prisma.SortOrder
   endedAt?: Prisma.SortOrder
   cancelledAt?: Prisma.SortOrder
+  focusRating?: Prisma.SortOrder
+  studyQualityRating?: Prisma.SortOrder
   notes?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
+}
+
+export type StudySessionSumOrderByAggregateInput = {
+  focusRating?: Prisma.SortOrder
+  studyQualityRating?: Prisma.SortOrder
 }
 
 export type StudySessionCreateNestedManyWithoutStudentProfileInput = {
@@ -562,6 +656,8 @@ export type StudySessionCreateWithoutStudentProfileInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -576,6 +672,8 @@ export type StudySessionUncheckedCreateWithoutStudentProfileInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -618,6 +716,8 @@ export type StudySessionScalarWhereInput = {
   startedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   endedAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
   cancelledAt?: Prisma.DateTimeNullableFilter<"StudySession"> | Date | string | null
+  focusRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
+  studyQualityRating?: Prisma.IntNullableFilter<"StudySession"> | number | null
   notes?: Prisma.StringNullableFilter<"StudySession"> | string | null
   createdAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"StudySession"> | Date | string
@@ -628,6 +728,8 @@ export type StudySessionCreateWithoutSubjectInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -642,6 +744,8 @@ export type StudySessionUncheckedCreateWithoutSubjectInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -678,6 +782,8 @@ export type StudySessionCreateWithoutDailyTaskInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -692,6 +798,8 @@ export type StudySessionUncheckedCreateWithoutDailyTaskInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -730,6 +838,8 @@ export type StudySessionCreateManyStudentProfileInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -740,6 +850,8 @@ export type StudySessionUpdateWithoutStudentProfileInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -754,6 +866,8 @@ export type StudySessionUncheckedUpdateWithoutStudentProfileInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -766,6 +880,8 @@ export type StudySessionUncheckedUpdateManyWithoutStudentProfileInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -778,6 +894,8 @@ export type StudySessionCreateManySubjectInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -788,6 +906,8 @@ export type StudySessionUpdateWithoutSubjectInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -802,6 +922,8 @@ export type StudySessionUncheckedUpdateWithoutSubjectInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -814,6 +936,8 @@ export type StudySessionUncheckedUpdateManyWithoutSubjectInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -826,6 +950,8 @@ export type StudySessionCreateManyDailyTaskInput = {
   startedAt: Date | string
   endedAt?: Date | string | null
   cancelledAt?: Date | string | null
+  focusRating?: number | null
+  studyQualityRating?: number | null
   notes?: string | null
   createdAt?: Date | string
   updatedAt?: Date | string
@@ -836,6 +962,8 @@ export type StudySessionUpdateWithoutDailyTaskInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -850,6 +978,8 @@ export type StudySessionUncheckedUpdateWithoutDailyTaskInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -862,6 +992,8 @@ export type StudySessionUncheckedUpdateManyWithoutDailyTaskInput = {
   startedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   endedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   cancelledAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  focusRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  studyQualityRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   notes?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -877,6 +1009,8 @@ export type StudySessionSelect<ExtArgs extends runtime.Types.Extensions.Internal
   startedAt?: boolean
   endedAt?: boolean
   cancelledAt?: boolean
+  focusRating?: boolean
+  studyQualityRating?: boolean
   notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -893,6 +1027,8 @@ export type StudySessionSelectCreateManyAndReturn<ExtArgs extends runtime.Types.
   startedAt?: boolean
   endedAt?: boolean
   cancelledAt?: boolean
+  focusRating?: boolean
+  studyQualityRating?: boolean
   notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -909,6 +1045,8 @@ export type StudySessionSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.
   startedAt?: boolean
   endedAt?: boolean
   cancelledAt?: boolean
+  focusRating?: boolean
+  studyQualityRating?: boolean
   notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
@@ -925,12 +1063,14 @@ export type StudySessionSelectScalar = {
   startedAt?: boolean
   endedAt?: boolean
   cancelledAt?: boolean
+  focusRating?: boolean
+  studyQualityRating?: boolean
   notes?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type StudySessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentProfileId" | "subjectId" | "dailyTaskId" | "startedAt" | "endedAt" | "cancelledAt" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["studySession"]>
+export type StudySessionOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "studentProfileId" | "subjectId" | "dailyTaskId" | "startedAt" | "endedAt" | "cancelledAt" | "focusRating" | "studyQualityRating" | "notes" | "createdAt" | "updatedAt", ExtArgs["result"]["studySession"]>
 export type StudySessionInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   studentProfile?: boolean | Prisma.StudentProfileDefaultArgs<ExtArgs>
   subject?: boolean | Prisma.StudySession$subjectArgs<ExtArgs>
@@ -962,6 +1102,8 @@ export type $StudySessionPayload<ExtArgs extends runtime.Types.Extensions.Intern
     startedAt: Date
     endedAt: Date | null
     cancelledAt: Date | null
+    focusRating: number | null
+    studyQualityRating: number | null
     notes: string | null
     createdAt: Date
     updatedAt: Date
@@ -1398,6 +1540,8 @@ export interface StudySessionFieldRefs {
   readonly startedAt: Prisma.FieldRef<"StudySession", 'DateTime'>
   readonly endedAt: Prisma.FieldRef<"StudySession", 'DateTime'>
   readonly cancelledAt: Prisma.FieldRef<"StudySession", 'DateTime'>
+  readonly focusRating: Prisma.FieldRef<"StudySession", 'Int'>
+  readonly studyQualityRating: Prisma.FieldRef<"StudySession", 'Int'>
   readonly notes: Prisma.FieldRef<"StudySession", 'String'>
   readonly createdAt: Prisma.FieldRef<"StudySession", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"StudySession", 'DateTime'>

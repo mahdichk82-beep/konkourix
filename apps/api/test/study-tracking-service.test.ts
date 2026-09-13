@@ -72,8 +72,10 @@ const createStore = (): StudyTrackingStore & {
           cancelledAt: null,
           dailyTaskId: taskId,
           endedAt: null,
+          focusRating: null,
           notes: null,
           startedAt,
+          studyQualityRating: null,
           studentProfileId: profileId,
           subjectId: target.subjectId,
         })
@@ -117,8 +119,10 @@ const createStore = (): StudyTrackingStore & {
           cancelledAt: null,
           dailyTaskId: taskId,
           endedAt: null,
+          focusRating: null,
           notes: null,
           startedAt: transitionAt,
+          studyQualityRating: null,
           studentProfileId: profileId,
           subjectId: target.subjectId,
         })
@@ -128,7 +132,12 @@ const createStore = (): StudyTrackingStore & {
         }
       })
     },
-    async finishSession(profileId: string, id: string, endedAt: Date, notes?: string | null) {
+    async finishSession(
+      profileId: string,
+      id: string,
+      endedAt: Date,
+      input: { focusRating?: number | null; notes?: string | null; studyQualityRating?: number | null },
+    ) {
       return serializeLive(async () => {
         const record = store.sessions.find((item) => item.id === id && item.studentProfileId === profileId)
         if (!record) return { ok: false as const, reason: 'SESSION_NOT_FOUND' as const }
@@ -136,7 +145,9 @@ const createStore = (): StudyTrackingStore & {
         if (record.cancelledAt) return { ok: false as const, reason: 'SESSION_ALREADY_CANCELLED' as const }
         if (endedAt <= record.startedAt) return { ok: false as const, reason: 'SESSION_TIME_INVALID' as const }
         record.endedAt = endedAt
-        if (notes !== undefined) record.notes = notes
+        if (input.focusRating !== undefined) record.focusRating = input.focusRating
+        if (input.notes !== undefined) record.notes = input.notes
+        if (input.studyQualityRating !== undefined) record.studyQualityRating = input.studyQualityRating
         return { ok: true as const, value: record }
       })
     },
@@ -149,6 +160,18 @@ const createStore = (): StudyTrackingStore & {
         record.cancelledAt = cancelledAt
         return { ok: true as const, value: record }
       })
+    },
+    async updateSessionFeedback(
+      profileId: string,
+      id: string,
+      input: { focusRating?: number | null; studyQualityRating?: number | null },
+    ) {
+      const record = store.sessions.find((item) => item.id === id && item.studentProfileId === profileId)
+      if (!record) return { ok: false as const, reason: 'SESSION_NOT_FOUND' as const }
+      if (record.cancelledAt) return { ok: false as const, reason: 'SESSION_ALREADY_CANCELLED' as const }
+      if (!record.endedAt) return { ok: false as const, reason: 'SESSION_NOT_FINISHED' as const }
+      Object.assign(record, input, { updatedAt: timestamp })
+      return { ok: true as const, value: record }
     },
     async listGoals() { return store.goals },
     async findGoalById(_profileId: string, id: string) { return store.goals.find((item) => item.id === id) ?? null },
@@ -690,4 +713,84 @@ test('concurrent cancel with start or switch cannot leave duplicate live session
   assert.equal(active?.dailyTaskId, secondTask.id)
   assert.equal(store.sessions.filter((session) =>
     session.endedAt === null && session.cancelledAt === null).length, 1)
+})
+
+test('finished sessions accept optional raw ratings without changing task state or provenance', async () => {
+  const store = createStore()
+  const times = [new Date('2026-09-03T08:00:00.000Z'), timestamp]
+  const services = createStudyTrackingServices(store, () => times.shift()!)
+  const active = await services.sessions.startTask(student, task.id)
+
+  const finished = await services.sessions.finish(student, active.id, {
+    focusRating: 4,
+    notes: 'مرور فصل سوم',
+    studyQualityRating: 5,
+  })
+
+  assert.equal(finished.focusRating, 4)
+  assert.equal(finished.studyQualityRating, 5)
+  assert.equal(finished.notes, 'مرور فصل سوم')
+  assert.equal(finished.durationMinutes, 60)
+  assert.equal(task.status, 'PENDING')
+  assert.equal(task.studentProfileId, profile.id)
+})
+
+test('manual completed sessions support valid optional ratings and serialize absent feedback as null', async () => {
+  const store = createStore()
+  const services = createStudyTrackingServices(store)
+  const rated = await services.sessions.createForTask(student, task.id, {
+    endedAt: '2026-09-03T08:45:00.000Z',
+    focusRating: 3,
+    notes: null,
+    startedAt: '2026-09-03T08:00:00.000Z',
+    studyQualityRating: 4,
+  })
+  const unrated = await services.sessions.createForTask(student, task.id, {
+    endedAt: '2026-09-03T09:45:00.000Z',
+    notes: null,
+    startedAt: '2026-09-03T09:00:00.000Z',
+  })
+
+  assert.deepEqual([rated.focusRating, rated.studyQualityRating], [3, 4])
+  assert.deepEqual([unrated.focusRating, unrated.studyQualityRating], [null, null])
+})
+
+test('feedback can be added, changed, and cleared only on an owned finished session', async () => {
+  const store = createStore()
+  const times = [new Date('2026-09-03T08:00:00.000Z'), timestamp]
+  const services = createStudyTrackingServices(store, () => times.shift()!)
+  const active = await services.sessions.startTask(student, task.id)
+
+  await assert.rejects(
+    services.sessions.updateFeedback(student, active.id, { focusRating: 3 }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SESSION_NOT_FINISHED',
+  )
+
+  const finished = await services.sessions.finish(student, active.id, {})
+  const added = await services.sessions.updateFeedback(student, finished.id, { focusRating: 2 })
+  const changed = await services.sessions.updateFeedback(student, finished.id, {
+    focusRating: 5,
+    studyQualityRating: 4,
+  })
+  const cleared = await services.sessions.updateFeedback(student, finished.id, {
+    focusRating: null,
+    studyQualityRating: null,
+  })
+
+  assert.equal(added.focusRating, 2)
+  assert.deepEqual([changed.focusRating, changed.studyQualityRating], [5, 4])
+  assert.deepEqual([cleared.focusRating, cleared.studyQualityRating], [null, null])
+
+  const cancelledStore = createStore()
+  const cancelledServices = createStudyTrackingServices(cancelledStore, () => timestamp)
+  const cancelledActive = await cancelledServices.sessions.startTask(student, task.id)
+  await cancelledServices.sessions.cancel(student, cancelledActive.id)
+  await assert.rejects(
+    cancelledServices.sessions.updateFeedback(student, cancelledActive.id, { focusRating: 3 }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SESSION_ALREADY_CANCELLED',
+  )
+  await assert.rejects(
+    services.sessions.updateFeedback(student, 'foreign-session', { focusRating: 3 }),
+    (error: unknown) => error instanceof ApiError && error.code === 'SESSION_NOT_FOUND',
+  )
 })

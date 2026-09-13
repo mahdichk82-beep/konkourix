@@ -1421,6 +1421,8 @@ export const StudySessionScalarFieldEnum = {
   startedAt: 'startedAt',
   endedAt: 'endedAt',
   cancelledAt: 'cancelledAt',
+  focusRating: 'focusRating',
+  studyQualityRating: 'studyQualityRating',
   notes: 'notes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
@@ -1598,7 +1600,7 @@ export type EnumDailyTaskStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$
  * Reference to a field of type 'DailyTaskStatus[]'
  */
 export type ListEnumDailyTaskStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DailyTaskStatus[]'>
-    
+
 
 
 /**

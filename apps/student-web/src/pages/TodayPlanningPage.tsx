@@ -10,6 +10,7 @@ import {
   type DailyTask,
   type DailyTaskSkipReason,
   type DailyTaskStatus,
+  type FinishStudySessionInput,
   type StudySession,
   type StudySubject,
   type StudyTopic,
@@ -442,12 +443,12 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
 
   const handleExecutionFinish = async (
     sessionId: string,
-    notes: string | null,
+    input: FinishStudySessionInput,
   ): Promise<StudySession> => {
     setExecutionBusy(true)
     setExecutionError(null)
     try {
-      const session = await planningClient.finishStudySession(sessionId, notes)
+      const session = await planningClient.finishStudySession(sessionId, input)
       setActiveSession((current) => activeSessionAfterFinish(current, session))
       setActiveTaskTitle((current) => activeSession?.id === sessionId ? null : current)
       setCancelConfirmationOpen(false)
@@ -672,7 +673,7 @@ export function TodayPlanningPage({ navigate }: { navigate(path: string): void }
           }}
           onFinish={async () => {
             try {
-              await handleExecutionFinish(activeSession.id, null)
+              await handleExecutionFinish(activeSession.id, {})
             } catch (error) {
               setExecutionError(planningErrorMessage(error))
             }

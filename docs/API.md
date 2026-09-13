@@ -102,11 +102,21 @@ Optional request body:
 
 ```json
 {
-  "notes": "مرور فصل سوم"
+  "notes": "مرور فصل سوم",
+  "focusRating": 4,
+  "studyQualityRating": 5
 }
 ```
 
-The server resolves session ownership, assigns the finish time, and calculates `durationMinutes`. Only an owned active session can be finished. Foreign sessions return `SESSION_NOT_FOUND`, repeated finishes return `SESSION_ALREADY_FINISHED`, cancelled sessions return `SESSION_ALREADY_CANCELLED`, and a server finish time that is not after the start is rejected as `SESSION_TIME_INVALID`.
+All three fields are optional. Ratings are integer raw student self-reports from 1 through 5; finishing never requires feedback. The server resolves session ownership, assigns the finish time, and calculates `durationMinutes`. Only an owned active session can be finished. Foreign sessions return `SESSION_NOT_FOUND`, repeated finishes return `SESSION_ALREADY_FINISHED`, cancelled sessions return `SESSION_ALREADY_CANCELLED`, and a server finish time that is not after the start is rejected as `SESSION_TIME_INVALID`.
+
+### Add or edit finished-session feedback
+
+`PATCH /api/v1/student/study-sessions/:id/feedback`
+
+The strict body accepts at least one of `focusRating` or `studyQualityRating`. Each may be an integer from 1 through 5 or explicit `null` to clear that rating. Only the authenticated owner may edit a finished, non-cancelled session. Active sessions return `SESSION_NOT_FINISHED`; cancelled sessions return `SESSION_ALREADY_CANCELLED`; foreign or missing sessions return `SESSION_NOT_FOUND`. Notes, lifecycle timestamps, relationships, ownership fields, and unknown fields are rejected.
+
+Safe StudySession responses expose both ratings as `number | null`; sessions without feedback return null for each. Active and cancelled sessions have no feedback. Ratings are not task outcomes, counselor evaluations, aggregates, or calculated scores.
 
 ### Cancel a live interval
 
@@ -118,6 +128,6 @@ Cancellation is persisted recovery metadata, not deletion or task cancellation. 
 
 The existing completed-session creation routes remain available for compatibility. A task may have zero, one, or multiple sessions; no one-to-one constraint or new execution entity was introduced.
 
-Manual/generic StudySession creation still requires both client timestamps and may record only a completed historical interval with `startedAt < endedAt`; it cannot create an open live session or assign `cancelledAt`. Generic updates cannot edit active or cancelled sessions, reopen a finished session, or clear server-owned cancellation metadata. Live start, finish, and cancellation timestamps remain exclusive to the server-backed start, switch, finish, and cancel operations.
+Manual/generic StudySession creation still requires both client timestamps and may record only a completed historical interval with `startedAt < endedAt`; valid optional ratings may accompany that completed interval. It cannot create an open live session or assign `cancelledAt`. Generic updates cannot assign ratings, edit active or cancelled sessions, reopen a finished session, or clear server-owned cancellation metadata. Feedback edits use the focused endpoint. Live start, finish, and cancellation timestamps remain exclusive to the server-backed start, switch, finish, and cancel operations.
 
 Changing a linked `DailyTask` to `COMPLETED` or `SKIPPED` returns HTTP `409` with `TASK_ACTIVE_SESSION_EXISTS` while that task has an active session. A cancelled session does not block this independent outcome choice. Task rescheduling is blocked by active or finished execution, while cancelled-only history does not block it. No execution endpoint changes `DailyTask.status`.

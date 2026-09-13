@@ -1,6 +1,6 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 16, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 17, not a claim of overall product completion.
 
 ## Project
 
@@ -12,7 +12,7 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 16 — Stale Study Session Recovery Foundation**.
+The project has completed **Phase 2 Milestone 17 — Study Session Feedback Foundation**.
 
 Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, interactive student weekly planning, student-owned subject/topic management, optional task-topic assignment, server-owned task execution sessions, safe source-aware task rescheduling, meaningful task completion/skip metadata, read-only counselor access to assigned student profiles and task distribution, and atomic counselor batch task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
 
@@ -114,6 +114,14 @@ Study Tracking recovery checkpoint:
 - Starting working tree: **clean**
 - Development StudySession lifecycle preflight: **0 active, 0 finished, 0 total**
 - The accepted Milestone 15 checkpoint and all 11 existing migrations were preserved without reset, clean, checkout, history rewrite, or commit.
+
+## Phase 2 Milestone 17 Starting Checkpoint
+
+- HEAD: `b8f7593025c432532f368bc3861bc228a39eea92`
+- Message: `feat: add study session recovery foundation`
+- Starting working tree: **clean**
+- Development StudySession lifecycle preflight: **0 total, 0 active, 0 finished, 0 cancelled**
+- The accepted Milestone 15/16 checkpoint and all 12 existing migrations were preserved without reset, clean, checkout, history rewrite, or commit.
 
 ## Verified Baseline
 
@@ -883,6 +891,35 @@ Milestone verification:
 - Schema changed for Milestone 16: **YES; nullable `StudySession.cancelledAt` only**
 - Migration added and run for Milestone 16: **YES; local development database only**
 
+### Phase 2 Milestone 17 — Study Session Feedback Foundation
+
+**Status: COMPLETE**
+
+- `DailyTask` remains planned work and `StudySession` remains the sole actual-execution record. Optional integer `focusRating` and `studyQualityRating` fields live directly on finished sessions; no feedback, review, metric, score, or execution entity was added.
+- Additive migration `20260913200000_add_study_session_feedback` adds only the two nullable columns and database range checks requiring each non-null rating to be from 1 through 5. Existing rows remain null without backfill, and the M16 finish/cancel exclusivity constraint is unchanged.
+- `PATCH /api/v1/student/study-sessions/:id/finish` remains server-timed and may atomically store optional notes and ratings. Manual completed historical session creation accepts the same valid optional ratings while continuing to require a closed interval.
+- `PATCH /api/v1/student/study-sessions/:id/feedback` accepts at least one strict, nullable rating field so the authenticated owner can add, change, or clear feedback only on a finished, non-cancelled session. Owner-and-lifecycle predicates remain present at the database write boundary.
+- Safe session responses expose both ratings as `number | null` and never expose student-profile or creator identities. Generic session updates do not accept rating fields and remain limited to finished, non-cancelled history.
+- Student Today Planning offers optional accessible Persian 1–5 focus/quality controls at finish, renders only present ratings in completed history, and provides a small finished-session editor. Cancelled and active intervals show no feedback; the central M15/M16 timer, finish, cancel, and switch state remains authoritative and unchanged.
+- Feedback never changes task status, timestamps, schedule, source, creator, ownership, planned content, rescheduling behavior, or switch requirements. Counselor Web remains read-only and required no M17 change because its existing task summaries do not expose individual session detail.
+- No analytics, averages, reports, calculated scores, counselor evaluation, Pomodoro, pause/resume, focus/test session model, automatic task outcome, or new entity was introduced.
+
+Milestone verification:
+
+- API tests: **184/184 PASS**
+- Student Web unit tests: **19/19 PASS**
+- Counselor Web unit tests: **4/4 PASS**
+- API type-check and production build: **PASS**
+- Student Web lint and production build: **PASS**
+- Counselor Web lint and production build: **PASS**
+- Prisma schema validation: **PASS**
+- Canonical `pnpm.cmd validate`: **PASS**
+- Migration status: **PASS**; 13 migrations found and the database is up to date
+- Database rating CHECK smoke test: **PASS**; boundaries 1 and 5 accepted, invalid 0 and 6 rejected
+- `git diff --check`: **PASS**
+- Schema changed for Milestone 17: **YES; nullable `focusRating` and `studyQualityRating` only**
+- Migration added and run for Milestone 17: **YES; local development database only**
+
 ## Implemented Architecture
 
 Konkourix is a pnpm monorepo. Current repository structure includes:
@@ -1072,4 +1109,4 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Next Work
 
-Phase 2 Milestone 16 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin automatic stale detection, pause/resume, automatic task completion, batch editing, batch rescheduling, task groups, planning templates, Pomodoro/focus mode, counselor execution mutation or task lifecycle/content editing, full weekly editing, manual within-day ordering, recurring tasks, calendar or hourly scheduling, automatic or AI planning, broader task permissions, revisions, approval workflows, audit or drag history, undo, reports, analytics, mastery, scoring, feedback ratings, streaks, gamification, messaging, notifications, search, later product work, TLS, deployment execution, monitoring, or backup execution.
+Phase 2 Milestone 17 is complete. Any next milestone requires explicit controller authorization; this checkpoint does not begin automatic stale detection, pause/resume, automatic task completion, batch editing, batch rescheduling, task groups, planning templates, Pomodoro/focus mode, counselor execution mutation or task lifecycle/content editing, full weekly editing, manual within-day ordering, recurring tasks, calendar or hourly scheduling, automatic or AI planning, broader task permissions, revisions, approval workflows, audit or drag history, undo, reports, analytics, mastery, calculated scoring, counselor evaluation, streaks, gamification, messaging, notifications, search, later product work, TLS, deployment execution, monitoring, or backup execution.

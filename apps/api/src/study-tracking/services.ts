@@ -7,6 +7,7 @@ import type {
   SessionListQuery,
   StudentGoalRecord,
   StudySessionRecord,
+  StudySessionFeedbackInput,
   StudySessionView,
   StudyTrackingActor,
   SwitchStudySessionView,
@@ -50,6 +51,8 @@ const toSessionView = (record: StudySessionRecord): StudySessionView => {
   const { studentProfileId: _studentProfileId, ...safeRecord } = record
   return {
     ...safeRecord,
+    focusRating: record.focusRating ?? null,
+    studyQualityRating: record.studyQualityRating ?? null,
     durationMinutes: record.endedAt && !record.cancelledAt
       ? calculateStudySessionDurationMinutes(record.startedAt, record.endedAt)
       : null,
@@ -107,8 +110,10 @@ const throwLiveTaskFailure = (reason:
 type CreateSessionInput = {
   dailyTaskId: string | null
   endedAt: string
+  focusRating?: number | null
   notes?: string | null
   startedAt: string
+  studyQualityRating?: number | null
   subjectId: string | null
 }
 
@@ -127,8 +132,10 @@ const createSession = async (
       cancelledAt: null,
       dailyTaskId: input.dailyTaskId,
       endedAt,
+      focusRating: input.focusRating ?? null,
       notes: input.notes ?? null,
       startedAt,
+      studyQualityRating: input.studyQualityRating ?? null,
       studentProfileId: profileId,
       subjectId: input.subjectId,
     })
@@ -159,7 +166,7 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
       if (!record) throw new ApiError(404, 'SESSION_NOT_FOUND', 'Study session not found')
       return toSessionView(record)
     },
-    async create(actor: StudyTrackingActor, input: { subjectId: string; dailyTaskId?: string | null; startedAt: string; endedAt: string; notes?: string | null }): Promise<StudySessionView> {
+    async create(actor: StudyTrackingActor, input: { subjectId: string; dailyTaskId?: string | null; startedAt: string; endedAt: string; focusRating?: number | null; notes?: string | null; studyQualityRating?: number | null }): Promise<StudySessionView> {
       const profile = await requireProfile(store, actor)
       const subject = await store.findSubjectById(profile.id, input.subjectId)
       if (!subject) throw new ApiError(404, 'SUBJECT_NOT_FOUND', 'Study subject not found')
@@ -175,7 +182,7 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
     async createForTask(
       actor: StudyTrackingActor,
       taskId: string,
-      input: { startedAt: string; endedAt: string; notes?: string | null },
+      input: { startedAt: string; endedAt: string; focusRating?: number | null; notes?: string | null; studyQualityRating?: number | null },
     ): Promise<StudySessionView> {
       const profile = await requireProfile(store, actor)
       const task = await store.findTaskById(profile.id, taskId)
@@ -222,11 +229,11 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
     async finish(
       actor: StudyTrackingActor,
       id: string,
-      input: { notes?: string | null },
+      input: StudySessionFeedbackInput & { notes?: string | null },
     ): Promise<StudySessionView> {
       const profile = await requireProfile(store, actor)
       const result = await liveOperation(() =>
-        store.finishSession(profile.id, id, now(), input.notes))
+        store.finishSession(profile.id, id, now(), input))
       if (!result.ok) {
         if (result.reason === 'SESSION_NOT_FOUND') {
           throw new ApiError(404, 'SESSION_NOT_FOUND', 'Study session not found')
@@ -238,6 +245,24 @@ export const createStudyTrackingServices = (store: StudyTrackingStore, now = () 
           throw new ApiError(409, 'SESSION_ALREADY_CANCELLED', 'Study session is already cancelled')
         }
         throw new ApiError(400, 'SESSION_TIME_INVALID', 'Study session must end after it starts')
+      }
+      return toSessionView(result.value)
+    },
+    async updateFeedback(
+      actor: StudyTrackingActor,
+      id: string,
+      input: StudySessionFeedbackInput,
+    ): Promise<StudySessionView> {
+      const profile = await requireProfile(store, actor)
+      const result = await store.updateSessionFeedback(profile.id, id, input)
+      if (!result.ok) {
+        if (result.reason === 'SESSION_NOT_FOUND') {
+          throw new ApiError(404, 'SESSION_NOT_FOUND', 'Study session not found')
+        }
+        if (result.reason === 'SESSION_ALREADY_CANCELLED') {
+          throw new ApiError(409, 'SESSION_ALREADY_CANCELLED', 'Study session is already cancelled')
+        }
+        throw new ApiError(409, 'SESSION_NOT_FINISHED', 'Feedback belongs only to finished study sessions')
       }
       return toSessionView(result.value)
     },

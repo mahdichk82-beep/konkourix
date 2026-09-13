@@ -250,6 +250,8 @@ model StudySession {
   startedAt        DateTime
   endedAt          DateTime?
   cancelledAt      DateTime?
+  focusRating      Int?
+  studyQualityRating Int?
   notes            String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

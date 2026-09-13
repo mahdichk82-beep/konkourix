@@ -11,6 +11,8 @@ import type {
   StudySubjectRef,
   StartStudySessionResult,
   SwitchStudySessionResult,
+  StudySessionFeedbackInput,
+  UpdateStudySessionFeedbackResult,
 } from './types.js'
 
 export interface StudyTrackingStore {
@@ -37,13 +39,18 @@ export interface StudyTrackingStore {
     profileId: string,
     id: string,
     endedAt: Date,
-    notes?: string | null,
+    input: StudySessionFeedbackInput & { notes?: string | null },
   ): Promise<FinishStudySessionResult>
   cancelSession(
     profileId: string,
     id: string,
     cancelledAt: Date,
   ): Promise<CancelStudySessionResult>
+  updateSessionFeedback(
+    profileId: string,
+    id: string,
+    input: StudySessionFeedbackInput,
+  ): Promise<UpdateStudySessionFeedbackResult>
   listGoals(profileId: string, query?: GoalListQuery): Promise<StudentGoalRecord[]>
   findGoalById(profileId: string, id: string): Promise<StudentGoalRecord | null>
   createGoal(input: Omit<StudentGoalRecord, 'id' | 'createdAt' | 'updatedAt'>): Promise<StudentGoalRecord>

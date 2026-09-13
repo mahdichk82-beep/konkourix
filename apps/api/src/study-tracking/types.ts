@@ -22,6 +22,8 @@ export type StudySessionRecord = {
   startedAt: Date
   endedAt: Date | null
   cancelledAt: Date | null
+  focusRating: number | null
+  studyQualityRating: number | null
   notes: string | null
   createdAt: Date
   updatedAt: Date
@@ -78,6 +80,15 @@ export type FinishStudySessionResult =
 export type CancelStudySessionResult =
   | { ok: true; value: StudySessionRecord }
   | { ok: false; reason: 'SESSION_NOT_FOUND' | 'SESSION_ALREADY_FINISHED' | 'SESSION_ALREADY_CANCELLED' }
+
+export type StudySessionFeedbackInput = {
+  focusRating?: number | null
+  studyQualityRating?: number | null
+}
+
+export type UpdateStudySessionFeedbackResult =
+  | { ok: true; value: StudySessionRecord }
+  | { ok: false; reason: 'SESSION_NOT_FOUND' | 'SESSION_NOT_FINISHED' | 'SESSION_ALREADY_CANCELLED' }
 
 export type StudentGoalRecord = {
   id: string

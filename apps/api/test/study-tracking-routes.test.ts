@@ -56,9 +56,11 @@ const store: StudyTrackingStore = {
           createdAt: startedAt,
           dailyTaskId: taskId,
           endedAt: null,
+          focusRating: null,
           id: '00000000-0000-4000-8000-000000000010',
           notes: null,
           startedAt,
+          studyQualityRating: null,
           studentProfileId: profileId,
           subjectId,
           updatedAt: startedAt,
@@ -74,9 +76,11 @@ const store: StudyTrackingStore = {
             createdAt: transitionAt,
             dailyTaskId: taskId,
             endedAt: null,
+            focusRating: null,
             id: '00000000-0000-4000-8000-000000000011',
             notes: null,
             startedAt: transitionAt,
+            studyQualityRating: null,
             studentProfileId: profileId,
             subjectId,
             updatedAt: transitionAt,
@@ -88,6 +92,7 @@ const store: StudyTrackingStore = {
     : { ok: false, reason: 'TASK_NOT_FOUND' },
   finishSession: async () => ({ ok: false, reason: 'SESSION_NOT_FOUND' }),
   cancelSession: async () => ({ ok: false, reason: 'SESSION_NOT_FOUND' }),
+  updateSessionFeedback: async () => ({ ok: false, reason: 'SESSION_NOT_FOUND' }),
   listGoals: async () => [],
   findGoalById: async () => null,
   createGoal: async (input) => ({ id: '00000000-0000-4000-8000-000000000020', ...input, createdAt: new Date('2026-09-03T09:00:00.000Z'), updatedAt: new Date('2026-09-03T09:00:00.000Z') }),
@@ -203,11 +208,11 @@ test('student finishes an owned active session through the finish route', async 
   }
   const app = createApp(user, {
     ...store,
-    finishSession: async (profileId, id, endedAt, notes) => {
+    finishSession: async (profileId, id, endedAt, input) => {
       if (profileId !== activeSession.studentProfileId || id !== activeSession.id) {
         return { ok: false, reason: 'SESSION_NOT_FOUND' as const }
       }
-      return { ok: true, value: { ...activeSession, endedAt, notes: notes ?? null } }
+      return { ok: true, value: { ...activeSession, endedAt, notes: input.notes ?? null } }
     },
   })
   const response = await app.inject({
@@ -567,4 +572,183 @@ test('counselor and anonymous callers cannot create student task sessions', asyn
   assert.equal(anonymousResponse.statusCode, 401)
   assert.equal(anonymousResponse.json().error.code, 'TOKEN_MISSING')
   await studentApp.close()
+})
+
+test('finish accepts optional validated ratings and keeps lifecycle timestamps server-owned', async () => {
+  const active = {
+    cancelledAt: null,
+    createdAt: new Date('2026-09-03T08:00:00.000Z'),
+    dailyTaskId: taskId,
+    endedAt: null,
+    focusRating: null,
+    id: '00000000-0000-4000-8000-000000000030',
+    notes: null,
+    startedAt: new Date('2026-09-03T08:00:00.000Z'),
+    studentProfileId: 'student-profile-1',
+    studyQualityRating: null,
+    subjectId,
+    updatedAt: new Date('2026-09-03T08:00:00.000Z'),
+  }
+  let receivedInput: unknown
+  const app = createApp(user, {
+    ...store,
+    finishSession: async (_profileId, _id, endedAt, input) => {
+      receivedInput = input
+      return { ok: true, value: { ...active, ...input, endedAt } }
+    },
+  })
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { focusRating: 1, studyQualityRating: 5 },
+    url: `/api/v1/student/study-sessions/${active.id}/finish`,
+  })
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(receivedInput, { focusRating: 1, studyQualityRating: 5 })
+  assert.equal(response.json().data.focusRating, 1)
+  assert.equal(response.json().data.studyQualityRating, 5)
+  assert.equal(response.json().data.endedAt, '2026-09-03T09:00:00.000Z')
+  assert.equal('studentProfileId' in response.json().data, false)
+
+  for (const rating of [0, 6, -1, 1.5, '4', true, {}, []]) {
+    const invalid = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'PATCH',
+      payload: { focusRating: rating },
+      url: `/api/v1/student/study-sessions/${active.id}/finish`,
+    })
+    assert.equal(invalid.statusCode, 400)
+    assert.equal(invalid.json().error.code, 'VALIDATION_ERROR')
+  }
+  const unknown = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { focusRating: 4, endedAt: '2026-09-03T08:30:00.000Z' },
+    url: `/api/v1/student/study-sessions/${active.id}/finish`,
+  })
+  assert.equal(unknown.statusCode, 400)
+  await app.close()
+})
+
+test('manual completed creation accepts ratings while open or invalid feedback remains impossible', async () => {
+  const app = createApp()
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'POST',
+    payload: {
+      endedAt: '2026-09-03T08:45:00.000Z',
+      focusRating: 3,
+      startedAt: '2026-09-03T08:00:00.000Z',
+      studyQualityRating: 4,
+    },
+    url: `/api/v1/student/daily-tasks/${taskId}/sessions`,
+  })
+  assert.equal(response.statusCode, 201)
+  assert.equal(response.json().data.focusRating, 3)
+  assert.equal(response.json().data.studyQualityRating, 4)
+
+  const active = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'POST',
+    payload: { endedAt: null, focusRating: 3, startedAt: '2026-09-03T08:00:00.000Z' },
+    url: `/api/v1/student/daily-tasks/${taskId}/sessions`,
+  })
+  assert.equal(active.statusCode, 400)
+
+  const generic = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { focusRating: 3 },
+    url: '/api/v1/student/study-sessions/00000000-0000-4000-8000-000000000030',
+  })
+  assert.equal(generic.statusCode, 400)
+  assert.equal(generic.json().error.code, 'VALIDATION_ERROR')
+  await app.close()
+})
+
+test('focused feedback route is strict, owner scoped, clearable, and finished-only', async () => {
+  const finished = {
+    cancelledAt: null,
+    createdAt: new Date('2026-09-03T08:00:00.000Z'),
+    dailyTaskId: taskId,
+    endedAt: new Date('2026-09-03T09:00:00.000Z'),
+    focusRating: null,
+    id: '00000000-0000-4000-8000-000000000031',
+    notes: null,
+    startedAt: new Date('2026-09-03T08:00:00.000Z'),
+    studentProfileId: 'student-profile-1',
+    studyQualityRating: null,
+    subjectId,
+    updatedAt: new Date('2026-09-03T09:00:00.000Z'),
+  }
+  let received: unknown
+  const app = createApp(user, {
+    ...store,
+    updateSessionFeedback: async (profileId, id, input) => {
+      assert.equal(profileId, finished.studentProfileId)
+      assert.equal(id, finished.id)
+      received = input
+      return { ok: true, value: { ...finished, ...input } }
+    },
+  })
+  const response = await app.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { focusRating: 4, studyQualityRating: null },
+    url: `/api/v1/student/study-sessions/${finished.id}/feedback`,
+  })
+  assert.equal(response.statusCode, 200)
+  assert.deepEqual(received, { focusRating: 4, studyQualityRating: null })
+  assert.equal(response.json().data.focusRating, 4)
+  assert.equal(response.json().data.studyQualityRating, null)
+  assert.equal('studentProfileId' in response.json().data, false)
+
+  for (const payload of [{}, { notes: 'forged' }, { focusRating: 5, cancelledAt: null }]) {
+    const invalid = await app.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'PATCH',
+      payload,
+      url: `/api/v1/student/study-sessions/${finished.id}/feedback`,
+    })
+    assert.equal(invalid.statusCode, 400)
+  }
+  await app.close()
+
+  for (const [reason, code] of [
+    ['SESSION_NOT_FINISHED', 'SESSION_NOT_FINISHED'],
+    ['SESSION_ALREADY_CANCELLED', 'SESSION_ALREADY_CANCELLED'],
+    ['SESSION_NOT_FOUND', 'SESSION_NOT_FOUND'],
+  ] as const) {
+    const stateApp = createApp(user, {
+      ...store,
+      updateSessionFeedback: async () => ({ ok: false, reason }),
+    })
+    const stateResponse = await stateApp.inject({
+      headers: { authorization: 'Bearer access-token' },
+      method: 'PATCH',
+      payload: { focusRating: 3 },
+      url: `/api/v1/student/study-sessions/${finished.id}/feedback`,
+    })
+    assert.equal(stateResponse.json().error.code, code)
+    await stateApp.close()
+  }
+
+  const counselorApp = createApp(counselor)
+  const forbidden = await counselorApp.inject({
+    headers: { authorization: 'Bearer access-token' },
+    method: 'PATCH',
+    payload: { focusRating: 3 },
+    url: `/api/v1/student/study-sessions/${finished.id}/feedback`,
+  })
+  assert.equal(forbidden.statusCode, 403)
+  await counselorApp.close()
+
+  const anonymousApp = createApp()
+  const anonymous = await anonymousApp.inject({
+    method: 'PATCH',
+    payload: { focusRating: 3 },
+    url: `/api/v1/student/study-sessions/${finished.id}/feedback`,
+  })
+  assert.equal(anonymous.statusCode, 401)
+  await anonymousApp.close()
 })
