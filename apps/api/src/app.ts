@@ -3,6 +3,7 @@ import cookie from '@fastify/cookie'
 import type { AssessmentAttemptServices } from './assessment-attempts/services.js'
 import type { AuthService } from './auth/auth-service.js'
 import type { CounselorTaskServices } from './counselor-tasks/services.js'
+import type { CurriculumServices } from './curriculum/services.js'
 import type { DomainService } from './domain/domain-service.js'
 import type { StudentCoreServices } from './student-core/services.js'
 import type { StudyTrackingServices } from './study-tracking/services.js'
@@ -23,6 +24,9 @@ export type BuildAppOptions = {
   auth?: AuthService
   authRateLimit?: AuthRateLimitOptions | false
   counselorTasks?: CounselorTaskServices
+  curriculum?: CurriculumServices
+  curriculumAdminEnabled?: boolean
+  curriculumReadEnabled?: boolean
   domain?: DomainService
   studentCore?: StudentCoreServices
   studyTracking?: StudyTrackingServices
@@ -42,6 +46,9 @@ export const buildApp = ({
   auth,
   authRateLimit,
   counselorTasks,
+  curriculum,
+  curriculumAdminEnabled = true,
+  curriculumReadEnabled = true,
   domain,
   studentCore,
   studyTracking,
@@ -103,6 +110,9 @@ export const buildApp = ({
     assessmentAttempts,
     auth,
     counselorTasks,
+    curriculum,
+    curriculumAdminEnabled,
+    curriculumReadEnabled,
     domain,
     studentCore,
     studyTracking,

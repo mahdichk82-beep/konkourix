@@ -1,10 +1,10 @@
 # Konkourix Project State
 
-This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 17, not a claim of overall product completion.
+This document is the canonical operational memory for resuming work on the Konkourix repository. It records verified repository reality through Phase 2 Milestone 19 and the 2026-09-15 curriculum architecture synchronization, not a claim of overall product completion.
 
 ## Project
 
-Konkourix is a multi-user educational planning platform with independent public entry points:
+Konkourix is a specialized exam-preparation ecosystem with independent public entry points:
 
 - Student application: `app.konkourix.ir`
 - Counselor application: `counselor.konkourix.ir`
@@ -12,13 +12,34 @@ Konkourix is a multi-user educational planning platform with independent public 
 
 ## Current Phase
 
-The project has completed **Phase 2 Milestone 17 — Study Session Feedback Foundation**.
+The project has completed **Phase 2 Milestone 19 — AssessmentAttempt Foundation**.
 
-Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, interactive student weekly planning, student-owned subject/topic management, optional task-topic assignment, server-owned task execution sessions, safe source-aware task rescheduling, meaningful task completion/skip metadata, read-only counselor access to assigned student profiles and task distribution, and atomic counselor batch task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
+Phase 1 is closed and complete. Phase 0 remains partially complete while explicitly authorized product work proceeds. Authentication, independent browser application shells, base account settings, interactive student weekly planning, student-owned subject/topic management, optional task-topic assignment, server-owned study execution, execution recovery/cancellation and feedback, completed assessment-attempt recording, safe source-aware task rescheduling, meaningful task completion/skip metadata, read-only counselor access to assigned student profiles and task distribution, and atomic counselor batch task creation for assigned students are verified; later student and counselor product capabilities are not implied complete.
 
 - Phase 0 completion estimate: **50%**
 - Confidence: **HIGH**
-- Audit and baseline re-verification date: **2026-09-13**
+- Audit and architecture synchronization date: **2026-09-15**
+
+## Current Architecture Baseline
+
+- M19 implementation baseline: `76bc4d7` (`feat: add assessment attempt foundation`); the Phase 20 foundation and authoring tooling are checkpointed in this revision
+- Working tree before the documentation-only synchronization: **clean**
+- M19 baseline Prisma migrations: **14**; four additive Phase 20 migrations are now tracked (18 total). The 2026-09-14 local database status check predates these migrations and does not prove they were applied.
+- Product loop: **Plan → Execute → Measure → Improve**
+- Planning domain: `DailyTask` records planned educational intention
+- Execution domain: `StudySession` records actual study intervals
+- Assessment domain: `AssessmentAttempt` records completed assessment submissions
+- `StudySession` and `AssessmentAttempt` are independent. Neither automatically completes a task, and an assessment never requires a fake study session.
+- Architecture style: modular monolith with Student Web, Counselor Web, one Fastify API, PostgreSQL, and Prisma
+- Finalized target curriculum: one centrally managed deep canonical tree curated by domain experts; users and AI cannot create or modify it
+- Student customization target: Student Topic Progress linked to canonical nodes, including mastery 1–5, learning status, notes, review dates, strengths, weaknesses, and last activity
+- Current mismatch: student-owned `StudySubject`/`Topic` records and creation/editing workflows remain implemented and transitional; the canonical curriculum governance/runtime foundation exists in this checkpoint, but no Curriculum Version has been imported, reviewed, or published and no progress layer exists yet
+- Target task model: a planned learning execution unit with canonical curriculum, activity type, planned duration/questions, and expected outcome; full task-level completed/incomplete quality feedback is not yet implemented
+- Testing direction: practice activity, external-exam reporting, and future internal online-exam delivery are separate; M19 implements only the completed-attempt foundation
+- Future dependency order: canonical curriculum → student progress → question bank → online exam engine → advanced analytics
+- Approved documentation-only target designs now cover canonical releases and legacy compatibility, versioned counselor planning, separated assessment domains, multi-node question linkage, communication boundaries, counselor acquisition, private notes, and visual direction; none changes runtime behavior.
+
+The synchronized documentation authority is [PRODUCT_VISION.md](PRODUCT_VISION.md), [DOMAIN_MAP.md](DOMAIN_MAP.md), [ARCHITECTURE.md](ARCHITECTURE.md), [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md), [UX_PRINCIPLES.md](UX_PRINCIPLES.md), [FUTURE_EXPANSION.md](FUTURE_EXPANSION.md), and [ROADMAP.md](ROADMAP.md). Historical milestone sections below are preserved as records of their time.
 
 ## Phase 1 Milestone 3 Starting Checkpoint
 
@@ -123,9 +144,9 @@ Study Tracking recovery checkpoint:
 - Development StudySession lifecycle preflight: **0 total, 0 active, 0 finished, 0 cancelled**
 - The accepted Milestone 15/16 checkpoint and all 12 existing migrations were preserved without reset, clean, checkout, history rewrite, or commit.
 
-## Verified Baseline
+## Historical Verified Baseline
 
-Re-verified on 2026-09-09 after successful local dependency-state recovery:
+This earlier Phase 0 snapshot was re-verified on 2026-09-09 after successful local dependency-state recovery. It is retained as history and does not override the current architecture baseline above.
 
 - Working tree before this documentation update: clean
 - API tests: **49/49 PASS**
@@ -144,8 +165,8 @@ Re-verified on 2026-09-09 after successful local dependency-state recovery:
 | Backend foundation | MOSTLY COMPLETE |
 | Database foundation | MOSTLY COMPLETE |
 | Environment and security | HARDENED BASELINE; PRODUCTION VERIFICATION PENDING |
-| Student Web | SCAFFOLDED ONLY |
-| Counselor Web | SCAFFOLDED ONLY |
+| Student Web | PRODUCT FOUNDATION IMPLEMENTED; UX INCOMPLETE |
+| Counselor Web | PRODUCT FOUNDATION IMPLEMENTED; UX INCOMPLETE |
 | Shared packages | SCAFFOLDED ONLY |
 | Development workflow | HARDENED; LOCAL VALIDATION COMPLETE |
 | Container image definitions | COMPLETE; RUNTIME UNVERIFIED |
@@ -154,7 +175,7 @@ Re-verified on 2026-09-09 after successful local dependency-state recovery:
 | Deployment | PREPARATION COMPLETE; EXECUTION NOT STARTED |
 | Backup/Restore | DESIGN COMPLETE; EXECUTION UNVERIFIED |
 | CI/CD | NOT STARTED |
-| Documentation | PARTIAL |
+| Documentation | ARCHITECTURE BASELINE SYNCHRONIZED; OPERATIONAL DOCUMENTATION ONGOING |
 
 ## Completed Phase 0 Milestones
 
@@ -922,7 +943,7 @@ Milestone verification:
 
 ## Implemented Architecture
 
-Konkourix is a pnpm monorepo. Current repository structure includes:
+Konkourix is a modular monolith in a pnpm monorepo. Student Web and Counselor Web are separate browser applications; core domain logic currently runs in one Fastify API backed by one PostgreSQL database. Current repository structure includes:
 
 - `apps/api`: Node.js, TypeScript, Fastify 5, Prisma 7, PostgreSQL, and Zod
 - `apps/student-web`: separate React, TypeScript, and Vite application
@@ -956,6 +977,7 @@ The following capabilities are present and covered by the current API baseline:
 - Student and assigned-counselor weekly task distribution derived from DailyTask dates without duplicate storage
 - Student-owned task lifecycle outcomes with optional localized skip-reason codes and server-controlled completion/skip timestamps
 - Study Sessions, including serialized server-started active execution, active-session restoration, atomic task switching, owner-checked finishing, task-linked manual historical recording, and owned task filtering, and Student Goals
+- Completed student-owned Assessment Attempts with optional task/subject/topic provenance, raw result correction, derived totals/duration, and soft invalidation, independent of Study Sessions
 - Backend role and ownership enforcement foundations; student resources are resolved from the authenticated user's StudentProfile
 
 Study Tracking recovery is committed in `8905e381fdcf820bc058a7acd81fc794c7cbfc08` and retained by the current checkpoint.
@@ -973,8 +995,11 @@ Commit `5fffa805d99e1fc870410c3b5115b2924059399f` records four verified repairs:
 
 - Persistent storage: PostgreSQL
 - ORM and migration system: Prisma
-- Known migrations: 11
-- Migration status at this checkpoint: applied and up to date
+- Known migrations: 14
+- Migration status at the 2026-09-14 documentation checkpoint: applied and up to date in the local development database
+- Assessment Attempt migration: `20260913230000_add_assessment_attempt_foundation`
+- Study Session Feedback migration: `20260913200000_add_study_session_feedback`
+- Study Session Cancellation migration: `20260913140000_add_study_session_cancellation`
 - Counselor batch planning migration: `20260912203000_add_daily_task_planned_test_count`
 - Counselor batch planning migration state: included in the validated Milestone 13–15 checkpoint and applied locally
 - Task Execution migration: `20260912220000_allow_active_study_sessions`
@@ -1003,7 +1028,8 @@ Never rewrite, rename, delete, or silently replace applied migration history. Us
 - Its authenticated shell provides responsive desktop/mobile navigation, page headers, dashboard skeletons, placeholder destinations, reusable states, and light/dark theme foundations.
 - Its settings page provides current account information, the existing student profile fields, theme selection, password change, current logout, and logout-all.
 - Its planning area provides persistent today-task listing and creation with optional subject/topic assignment, completion and reason-aware skipping, status and subject filters, cursor pagination, inline subject creation, counselor-supplied planned test-count visibility, a safe counselor-source indicator, central server-backed active StudySession restoration/start/finish/seamless switching with a live elapsed display, execution history and feedback, controlled personal-task date changes, and an interactive Saturday-to-Friday view derived from the same tasks.
-- Its study page provides persistent student-owned subject listing/creation and topic listing/creation/rename/archive/restore through the authenticated backend contracts.
+- Its study page provides persistent student-owned subject listing/creation and topic listing/creation/rename/archive/restore through the authenticated backend contracts. This is implemented reality but transitional under ADR-024; it is not the finalized canonical curriculum UX.
+- Its assessment area provides completed-attempt entry and history with raw correct/incorrect/blank counts, derived total/duration, and soft invalidation. It is not a live online exam engine.
 - It remains an application foundation rather than a complete student product UI.
 
 ### Counselor application
@@ -1073,27 +1099,40 @@ The implemented container-image and Compose configuration is statically checked 
 - Deployment execution and any separately authorized automation
 - Backup automation and isolated restore execution; upload backup design only if uploads are introduced
 - CI/CD validation foundation
-- Broader product and operational documentation
+- Ongoing product, API, and operational documentation maintenance
 - Distributed abuse protection, security monitoring, and environment-specific hardening verification
 
 These items are not authorization to implement all remaining Phase 0 work in one task.
 
-## Known Product Work Not Yet Implemented
+## Known Product Work Not Implemented
+
+This is a preserved inventory of absent capabilities, not an approved roadmap. [ROADMAP.md](ROADMAP.md) and [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md) govern current direction; older ideas that are not listed there must not be inferred as planned.
 
 - Full student product UI
 - Full counselor product UI
 - Advanced profile and account-recovery workflows
 - Complete task/planning UX beyond the current today/weekly views and subject/topic slices
+- Published canonical curriculum operation and transition from student-owned subjects/topics
+- Student Topic Progress with mastery/status/review and learning context
+- Counselor-authored plan drafts, immutable published versions, future revisions, and planning audit history
+- Explicit practice-activity classification and full task-level learning-result feedback
+- Fast professional block-planning workflows, repeat/copy operations, and canonical curriculum assignment
+- Question bank with canonical-node linkage and moderated teacher contribution
 - Live assessment execution, question-level attempts, and exam sessions
 - Pomodoro, pause/resume, focus modes, and timer product expansion beyond the live elapsed display
-- Habits and streaks
+- Habits and streaks (historical idea; Konkourix is not a habit tracker and this is not on the current roadmap)
 - Persian calendar and daily evaluations
 - Reports and analytics
 - Exams and comparisons
 - Messaging and notifications
+- Separated General Chat, Ticket/Thread, and Suggestions workflows
+- Counselor invitation-code and Super-Admin-reviewed acquisition workflows
+- Private Counselor Notes with counselor/admin-only visibility
 - File uploads and storage integration
 - Subscriptions and payment readiness
 - Later production hardening and operational verification
+
+The following remain explicitly **not current**: a published/consumer-integrated canonical curriculum, Student Topic Progress, AI analysis, an analytics platform, ranking, a question bank, online exams, live classes, school management, a payment system, a marketplace, and a post-exam ecosystem. Improved planning UX, external-exam report ingestion, content, subscriptions, and schools are future directions requiring separate approval.
 
 ## Current Safety Rules
 
@@ -1109,6 +1148,8 @@ These items are not authorization to implement all remaining Phase 0 work in one
 
 ## Phase 2 Milestone 19 — Completed Assessment Attempt Foundation
 
+**Status: COMPLETE**
+
 - `AssessmentAttempt` is the independent, student-owned record for one completed assessment result bundle. It has no relationship to `StudySession` and no live lifecycle, timer, pause, resume, cancellation, or execution lock of its own.
 - One additive migration creates `assessment_attempts` with optional `DailyTask`, subject, and topic provenance; required start/end timestamps; raw correct, incorrect, and blank counts; server-owned nullable invalidation metadata; ownership relations; indexes; and database checks for ordered time, non-negative counts, a positive derived question total, and topic-requires-subject consistency.
 - Student-only APIs create, list, read, correct, and invalidate owned attempts. Strict request schemas reject ownership and immutable provenance changes. Safe responses omit the internal student profile ID and derive `questionCount` and `durationMinutes` without adding scoring or accuracy.
@@ -1116,6 +1157,156 @@ These items are not authorization to implement all remaining Phase 0 work in one
 - Student Web provides a compact RTL completed-attempt form and history with raw counts, derived total/duration, and confirmed soft invalidation. Counselor Web remains mutation-free and only receives the minimal valid-attempt signal needed to disable an impossible reschedule.
 - No score, percentage, accuracy, report, analytic, chart, AI interpretation, question bank, question-level answer, exam template, live assessment flow, or automatic task outcome was introduced.
 
+## 2026-09-17 Documentation Design Checkpoint
+
+**Status: COMPLETE — DOCUMENTATION ONLY**
+
+The target architecture is now formally specified in:
+
+- [CANONICAL_CURRICULUM_SPECIFICATION.md](CANONICAL_CURRICULUM_SPECIFICATION.md)
+- [PLANNING_ARCHITECTURE.md](PLANNING_ARCHITECTURE.md)
+- [ASSESSMENT_ARCHITECTURE.md](ASSESSMENT_ARCHITECTURE.md)
+- [QUESTION_BANK_ARCHITECTURE.md](QUESTION_BANK_ARCHITECTURE.md)
+- [COMMUNICATION_ARCHITECTURE.md](COMMUNICATION_ARCHITECTURE.md)
+- [COUNSELOR_ECOSYSTEM.md](COUNSELOR_ECOSYSTEM.md)
+
+ADRs 025 through 032 record the accepted lifecycle, compatibility, planning, assessment, question, communication, relationship, private-note, and experience decisions. This checkpoint changes no application code, Prisma schema, migration, API contract, UI, test, dependency, generated client, or database state. It does not authorize implementation. The next implementation proposal must begin with canonical curriculum data/API/UX design and a concrete compatibility plan derived from the approved specification.
+
+## Phase 20.8 — Human Sciences Curriculum Structural Import
+
+**Status: IMPLEMENTED AND VALIDATED; DATABASE EXECUTION BLOCKED BY MISSING SOURCE ARTIFACT**
+
+- A provenance-bound catalog contains 420 nodes: one root, four source scopes, 12 grades, 32 subjects, 86 explicit chapters/sections, and 285 explicit lessons. It contains no concepts or sub-concepts.
+- The 20 Human Sciences-specific subjects use their exact official matrix labels and grade ownership. The four selected shared course families are represented once per grade under the shared scope, not cloned under Human Sciences.
+- Thirty-six applicability relationships connect the 12 shared subject nodes to the corresponding Mathematics-Physics, Experimental Sciences, and Human Sciences grade nodes without adding canonical parents.
+- `نگارش`, `آمادگی دفاعی`, `هویت اجتماعی`, and `سلامت و بهداشت` are not included. Alternate thematic trees and unlabeled lower branches are not inferred or imported.
+- The import command performs exact transcription drift checks, builds the checksummed manifest in memory, validates provenance, imports only into an authorized draft, reuses stable source-key matches, creates only missing applicability relationships, runs final validation, emits reports, and never publishes.
+- No Prisma schema or migration was required because the implementation uses the existing CurriculumVersion, node, source-record, import, and relationship model. Existing `TOPIC` is the structural code for explicit source `درس`/`Lesson` nodes; lower topic/concept detail remains deferred.
+- Focused verification: API type-check passed; all 6 Human Sciences catalog/import tests passed through a compiler-bundled Node test run. The native `tsx` launcher is currently blocked on this Windows host by `uv_os_get_passwd` returning `ENOMEM` before test startup.
+- The database import was not executed. The original `cori.docx` required by the provenance contract is absent from the workspace, and no authorized operator/database import context was supplied. Public curriculum API queryability therefore remains pending the normal import, review, and publication workflow.
+
+Operational instructions and exact counts are in [curriculum/HUMAN_SCIENCES_IMPORT.md](curriculum/HUMAN_SCIENCES_IMPORT.md).
+
+## Phase 20.9 — Mathematics & Physics Curriculum Structural Import
+
+**Status: IMPLEMENTED AND VALIDATED; DATABASE EXECUTION NOT AUTHORIZED**
+
+- The Mathematics & Physics catalog reuses the exact stable-key theoretical foundation already used by Human Sciences, including the root, shared scope, all branch/grade skeletons, 12 shared subjects, their explicit structural detail, and 36 applicability relationships.
+- Eleven field-specific subjects are represented under their exact source grades: three in Grade 10, four in Grade 11, and four in Grade 12.
+- The field-specific source contains 49 explicit chapter/section headings and no explicit `درس` or `Lesson` headings. Lower unlabeled branches were not inferred or promoted, so the Mathematics-specific catalog adds zero lesson-level `TOPIC` nodes and no concepts/sub-concepts.
+- The complete import manifest contains 232 nodes: one root, four fields, 12 grades, 23 subjects, 73 chapters, and 119 shared explicit lessons. Of those, 60 records are new Mathematics & Physics content and 172 are stable shared-foundation records.
+- Human Sciences and Mathematics & Physics commands now use one structural-import runner, keeping authorization, provenance validation, idempotency, source-key reuse, applicability creation, final validation, reporting, and no-publication behavior identical.
+- Focused regression verification passed 12/12 tests across both field catalogs. API type-check and production build passed. No Prisma schema or migration change was required.
+- No database import or publication was executed because no authorized draft/version/admin context was supplied. The workspace also still lacks the original reviewed `cori.docx` required by the provenance contract.
+
+Operational instructions and exact counts are in [curriculum/MATHEMATICS_PHYSICS_IMPORT.md](curriculum/MATHEMATICS_PHYSICS_IMPORT.md).
+
+## Phase 20.10 — Experimental Sciences Curriculum Structural Import
+
+**Status: IMPLEMENTED AND VALIDATED; DATABASE EXECUTION NOT AUTHORIZED**
+
+- The Experimental Sciences catalog reuses the exact stable-key theoretical foundation and 36 shared-subject applicability relationships used by the Human Sciences and Mathematics & Physics imports.
+- Thirteen field-specific subjects are represented under their exact source grades: four in Grade 10, five in Grade 11, and four in Grade 12. Shared Persian, Arabic/Quran Language, Religion and Life, and English subjects are not cloned.
+- The accepted field-specific structure contains 42 explicit chapters: 10 Chemistry, 11 Physics, and 21 Mathematics chapters. It adds no field-specific lesson `TOPIC`, concept, sub-concept, skill, weight, planning, question, or analytics data.
+- Biology's three unheaded chapter sequences, absent detailed Geology structure, and the cross-grade Experimental Mathematics thematic tree remain explicitly excluded pending educational-administrator ownership decisions. No parent or missing lesson was inferred.
+- The complete valid manifest contains 227 nodes: one root, four fields, 12 grades, 25 subjects, 66 chapters, and 119 shared explicit lessons. Fifty-five records are Experimental Sciences-specific and 172 are reused foundation records.
+- The import command uses the shared structural runner and preserves the same authorization, provenance, idempotency, validation, reporting, and no-publication boundaries.
+- No database import or publication was executed because the reviewed source artifact, authorized Admin UUID, and draft Curriculum Version were not supplied.
+
+Operational instructions, exact counts, and unresolved source boundaries are in [curriculum/EXPERIMENTAL_SCIENCES_IMPORT.md](curriculum/EXPERIMENTAL_SCIENCES_IMPORT.md).
+
+## Phase 20.11 — Curriculum Freeze and Audit Layer
+
+**Status: IMPLEMENTED AND VALIDATED; CANDIDATE NOT DATABASE-FROZEN OR PUBLISHED**
+
+- A deterministic aggregate combines the stable shared foundation with the Human Sciences, Mathematics & Physics, and Experimental Sciences-specific catalogs without duplicating common records.
+- The offline audit validates source-key uniqueness, provenance, parent integrity, allowed structural depth, exact scope/grade ownership, subject ownership, branch isolation, shared-subject applicability, explicit chapter order, and the absence of inferred or unsupported node types.
+- The accepted structural candidate contains 535 nodes: four scopes, 12 grades, 56 subjects, 177 chapters/sections, and 285 explicit structural lessons. Twelve subjects are shared, 44 are scope-specific, and 36 applicability relationships connect shared subjects to branch grades.
+- Twelve known source limitations remain explicit manual-review items. They are neither silently resolved nor converted into curriculum nodes.
+- The checked-in audit report and freeze-candidate manifest pin counts, the full subject list, unresolved review items, and the aggregate catalog SHA-256. Source artifact/transcription checksums and the database Curriculum Version identifier remain null placeholders.
+- The audit command is read-only and has no Prisma/database dependency. It cannot import, review, freeze, or publish a Curriculum Version.
+
+The approval process and audit command are documented in [curriculum/CURRICULUM_FREEZE.md](curriculum/CURRICULUM_FREEZE.md).
+
+## Phase 20.12 — Curriculum Knowledge Graph Foundation
+
+**Status: FOUNDATION IMPLEMENTED; PRODUCTION TAXONOMY EMPTY**
+
+- A persistence-neutral taxonomy domain defines future `TOPIC → SUBTOPIC → CONCEPT → SKILL → QUESTION_PATTERN` knowledge records anchored to exact existing structural Curriculum nodes and Curriculum Versions.
+- Knowledge taxonomy kinds are separate from structural Curriculum Node Type codes. Existing structural `TOPIC` nodes remain source-explicit `درس`/`Lesson` records and are not reinterpreted or duplicated.
+- The validator enforces registry/version pins, valid structural anchors, subject ownership, strict taxonomy parent types, stable unique taxonomy keys, provenance, and same-subject/same-version parentage.
+- The production taxonomy registry and knowledge-node collection are empty. No catalog reference is misrepresented as a database node ID before governed import assigns real identifiers.
+- Focused tests cover valid future hierarchy fixtures and rejection of missing anchors, orphan Concepts, duplicate keys, cross-subject ownership, and populated `EMPTY` registries. The frozen structural catalog and its checksum remain unchanged.
+- No Prisma schema, migration, database import, API, frontend, question, analytics, planning, or scheduling behavior was added.
+
+The domain boundary, future source import, and review workflow are documented in [curriculum/TAXONOMY_DESIGN.md](curriculum/TAXONOMY_DESIGN.md).
+
+## Phase 20.13 — Curriculum Content Ingestion Foundation
+
+**Status: FOUNDATION IMPLEMENTED; CONTENT AND MAPPINGS EMPTY**
+
+- A persistence-neutral content domain defines controlled source types, explanation/example/exercise/note/definition content kinds, source provenance, and `UNVERIFIED → REVIEWED → APPROVED` verification lifecycle rules.
+- Every future Content Item requires its source type/reference, accountable creator, creation timestamp, and verification state. Reviewed or approved items require reviewer evidence.
+- Future mappings pin an exact Curriculum Version, existing structural Curriculum node, and existing taxonomy node while enforcing same-subject ownership.
+- Validators reject missing provenance, invalid review evidence, duplicate keys, nonexistent targets, version mismatches, and cross-subject mappings.
+- Production content and mapping registries remain empty. No textbook, OCR output, question, concept, taxonomy node, or educational content was created.
+- The frozen structural checksum and empty taxonomy production state remain unchanged. No Prisma schema, migration, database, API, frontend, scheduling, or analytics behavior was added.
+
+The content boundary, ownership requirements, future import pipeline, and review workflow are documented in [curriculum/CONTENT_INGESTION_DESIGN.md](curriculum/CONTENT_INGESTION_DESIGN.md).
+
+## Phase 20.14 — Physics 12 Motion Curriculum Knowledge Pilot
+
+**Status: ISOLATED CODE PILOT IMPLEMENTED; UNVERIFIED AND NOT DATABASE-IMPORTED**
+
+- The pilot is anchored only to Mathematics & Physics `فیزیک ۳` and structural chapter `فصل ۱ ـ حرکت بر خط راست` (`mathematics.g12.physics3.chapter.4278`).
+- One `DRAFT` registry entry references the frozen catalog candidate snapshot provisionally. It is not a database Curriculum Version ID.
+- Thirty manual taxonomy records exercise the full hierarchy: one Topic, five Subtopics, eight Concepts, eight Skills, and eight Question Pattern classifications.
+- Twelve short Persian manual Content Items—Definitions, Explanations, and Examples only—carry `MANUAL_ENTRY` provenance and remain `UNVERIFIED`. No Exercise or Question record exists.
+- Twelve non-owning mappings pin each Content Item to the exact structural chapter and one existing pilot Concept or Skill.
+- Validation confirms hierarchy, Concept ownership, mapping targets, provenance, version/subject isolation, the 20-item limit, and no impact on the frozen structural checksum.
+- No unrelated subject is populated. No PostgreSQL import, Prisma schema, migration, API, frontend, analytics, scheduling, recommendation, or broader Physics ingestion was introduced.
+
+Pilot inventory, limitations, and required review steps are documented in [curriculum/PILOT_PHYSICS12_MOTION.md](curriculum/PILOT_PHYSICS12_MOTION.md).
+
+## Phase 20.15 — Arabic 10 Lesson 1 Cross-Domain Knowledge Pilot
+
+**Status: ISOLATED CODE PILOT IMPLEMENTED; UNVERIFIED AND NOT DATABASE-IMPORTED**
+
+- The pilot reuses canonical shared subject `عربی، زبان قرآن ۱` and explicit structural node `درس ۱ ـ ذاکَ هُوَ الله` (`shared.g10.arabic.lesson.186`). Human Sciences access remains represented by the existing applicability relationship to `human.g10`; no Human-specific subject or lesson clone was created.
+- One `DRAFT` registry entry and 27 lesson-scoped taxonomy records cover three Topics, five Subtopics, seven Concepts, seven Skills, and five Question Pattern classification labels.
+- Twelve original manual Content Items—four Definitions, three Explanations, four Examples, and one Note—carry `MANUAL_ENTRY` provenance and remain `UNVERIFIED`.
+- Twelve mappings pin content to the exact shared structural lesson and an existing Arabic pilot Concept or Skill without changing structural ownership.
+- Combined Arabic and Physics registries validate without duplicate keys, version mismatch, or cross-subject ownership conflict. Physics pilot records remain unchanged and the frozen structural checksum is unchanged.
+- No Question Bank, question, answer, option, difficulty, analytics, scheduling, planning, frontend, Prisma migration, database import, publication, or broader Arabic ingestion was introduced.
+
+Pilot scope, cross-domain findings, inventory, and exclusions are documented in [curriculum/PILOT_ARABIC10_LESSON1.md](curriculum/PILOT_ARABIC10_LESSON1.md).
+
+## Phase 20.16 — Curriculum Scaling Architecture
+
+**Status: DRAFT PACKAGE AND VALIDATION TOOLING IMPLEMENTED; NO IMPORT OR PUBLICATION**
+
+- A persistence-neutral Draft Knowledge Import Package model defines stable package identity, subject, structural scope, Curriculum Version pin, source type, package status, and review metadata.
+- Knowledge Expansion Manifest schema version `1.0.0` carries one exact structural anchor, taxonomy nodes, Content Items, and mappings.
+- Read-only package validation composes the existing taxonomy and content validators, then enforces package/anchor alignment, source-type consistency, review metadata, and package-scope ownership.
+- Package-set validation rejects duplicate package IDs and taxonomy, content, or mapping keys across future packages.
+- The existing Physics 12 Motion and Arabic 10 Lesson 1 pilots are registered as two `DRAFT`, `PENDING` review packages without copying or changing pilot records.
+- Validation never advances `DRAFT → VALIDATED → REVIEWED → APPROVED`; review and status changes remain explicit future governance actions.
+- The registered inventory remains 57 taxonomy nodes, 24 Content Items, and 24 mappings. The frozen structural checksum is unchanged.
+- No bulk import, OCR, AI generation, Question Bank, analytics, scheduling, database, migration, API, or frontend behavior was added.
+
+Package format, lifecycle, manual review points, and future automation boundaries are documented in [curriculum/SCALING_ARCHITECTURE.md](curriculum/SCALING_ARCHITECTURE.md).
+
+## Phase 20 Authoring Tooling Checkpoints
+
+**Status: PHASE 20.7 AUTHORING VALIDATION AND PHASE 20.8 AUTHORING-TO-MANIFEST CONVERSION IMPLEMENTED; NO IMPORT OR PUBLICATION**
+
+- The authoring validator audits the 25 Experimental Sciences YAML files without changing them. They remain `DRAFT`/`PARTIAL` with zero source records; the current audit has zero validation failures and 125 readiness warnings.
+- The offline conversion tool requires reviewed, complete, source-bound authoring evidence and verifies the actual source artifact and transcription checksums before producing a deterministic Curriculum Import Manifest v1. Valid draft authoring is not automatically conversion-ready.
+- Ambiguity markers remain explicit, and relationship proposals and editorial/review commentary do not become canonical manifest relationships or content.
+- No source artifact has been imported into PostgreSQL, and no Curriculum Version has been created or published by these tooling checkpoints.
+
 ## Next Work
 
-Phase 2 Milestone 19 is implemented but uncommitted pending validation and an explicitly authorized checkpoint. Any next milestone requires explicit controller authorization; this work does not begin live assessment execution, question-level tracking, exams, scoring, reports, analytics, AI, Pomodoro/focus mode, automatic task outcomes, or later product work.
+Phase 2 Milestone 19 remains committed at `76bc4d7`. This Phase 20 checkpoint includes the curriculum foundation, structural import tooling, and the authoring validation/conversion tooling described above. Operational source review, import into an authorized draft, governed issue resolution, and a separate review/publication workflow have not occurred. Student Progress and later domains remain dependent on a published canonical curriculum.
+
+The current student-owned subject/topic behavior remains implemented reality until a separately approved compatibility and migration plan changes it. This checkpoint does not implement Student Progress, practice storage, task-level result feedback, report upload, question tracking, online exams, analytics, AI, or later product capabilities.

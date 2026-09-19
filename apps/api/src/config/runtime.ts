@@ -122,6 +122,8 @@ const cookieDomainSchema = z
     return normalized
   })
 
+const booleanFlag = z.enum(['true', 'false']).default('false').transform((value) => value === 'true')
+
 export const envSchema = z
   .object({
     NODE_ENV: z
@@ -169,6 +171,9 @@ export const envSchema = z
         return z.NEVER
       }
     }),
+
+    CURRICULUM_ADMIN_ENABLED: booleanFlag,
+    CURRICULUM_READ_ENABLED: booleanFlag,
 
     DATABASE_URL: z.string().min(1),
 

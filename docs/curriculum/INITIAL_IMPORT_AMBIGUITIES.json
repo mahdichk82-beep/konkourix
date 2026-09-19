@@ -1,0 +1,62 @@
+{
+  "status": "BLOCKED_PENDING_AUTHORIZED_DECISIONS",
+  "authority": "docs/curriculum/CANONICAL_CURRICULUM.md#known-source-ambiguities-and-completeness-limits",
+  "automaticResolutionAllowed": false,
+  "issues": [
+    {
+      "code": "SOURCE_DETAIL_INCOMPLETE",
+      "blocking": true,
+      "summary": "Some lower-priority lessons were not written out; the detailed trees are narrower than the authoritative subject matrix."
+    },
+    {
+      "code": "CURRICULUM_VERSION_METADATA_MISSING",
+      "blocking": true,
+      "summary": "The source provides no official root/version name, academic year, ministry edition, publication date, edition number, or effective date."
+    },
+    {
+      "code": "BIOLOGY_SUBJECT_BOUNDARIES_MISSING",
+      "blocking": true,
+      "summary": "The three Biology chapter sequences have no explicit زیست‌شناسی ۱، زیست‌شناسی ۲، or زیست‌شناسی ۳ headings."
+    },
+    {
+      "code": "STRUCTURAL_LEVEL_UNRESOLVED",
+      "blocking": true,
+      "summary": "Some branches omit intermediate levels or mix فصل، بخش، درس، گفتار، موضوع, and unlabeled branches."
+    },
+    {
+      "code": "THEMATIC_TREE_CLASSIFICATION_UNRESOLVED",
+      "blocking": true,
+      "summary": "Cross-grade thematic Arabic, Persian, English, experimental Mathematics, and Literary Sciences trees lack an approved ownership/type classification."
+    },
+    {
+      "code": "BRIDGING_SKILLS_OWNERSHIP_UNRESOLVED",
+      "blocking": true,
+      "summary": "مهارت‌ها و مباحث پیوندی ⭐ has no explicit owning parent."
+    },
+    {
+      "code": "CHEMISTRY_SHARED_OWNERSHIP_UNRESOLVED",
+      "blocking": true,
+      "summary": "The shared-Chemistry prose statement lacks an approved ownership or applicability interpretation."
+    },
+    {
+      "code": "INFORMAL_FIELD_HEADING_UNRESOLVED",
+      "blocking": true,
+      "summary": "The standalone رشته ریاضی فیزیک and انسانی headings need confirmed scope mappings."
+    },
+    {
+      "code": "ARABIC_JOINED_PARAGRAPH",
+      "blocking": true,
+      "summary": "One Arabic paragraph contains two intended-looking entries and must remain joined until an authorized decision."
+    },
+    {
+      "code": "STAR_MARKER_UNRESOLVED",
+      "blocking": true,
+      "summary": "The meaning of ⭐ is undefined; the marker must remain part of exact source text."
+    },
+    {
+      "code": "UNDEFINED_EDUCATIONAL_METADATA",
+      "blocking": false,
+      "summary": "The source does not define prerequisites, objectives, hours, difficulty, assessment weights, aliases, equivalence mappings, or stable identifiers."
+    }
+  ]
+}

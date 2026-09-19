@@ -1,0 +1,527 @@
+{
+  "valid": true,
+  "totals": {
+    "nodes": 535,
+    "scopes": 4,
+    "grades": 12,
+    "subjects": 56,
+    "chapters": 177,
+    "structuralLessons": 285,
+    "applicabilityRelationships": 36
+  },
+  "sharedSubjects": [
+    {
+      "ref": "shared.g10.persian",
+      "sourceRecordKey": "src-851fbf8e-9691-42ea-89f2-dac235434d92",
+      "label": "فارسی ۱",
+      "gradeRef": "shared.g10",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g10.arabic",
+      "sourceRecordKey": "src-7acb021c-3471-4a41-a6c5-11a32bcc3552",
+      "label": "عربی، زبان قرآن ۱",
+      "gradeRef": "shared.g10",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g10.religion",
+      "sourceRecordKey": "src-d7eb2ae4-b7c9-4052-b2d6-d1d7e7ad48cf",
+      "label": "دین و زندگی ۱",
+      "gradeRef": "shared.g10",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g10.english",
+      "sourceRecordKey": "src-e6eb9590-310f-4232-80f7-ac0e534bdc6a",
+      "label": "زبان انگلیسی ۱",
+      "gradeRef": "shared.g10",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g11.persian",
+      "sourceRecordKey": "src-43bc4c27-12c5-42a4-a624-467fb8c69222",
+      "label": "فارسی ۲",
+      "gradeRef": "shared.g11",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g11.arabic",
+      "sourceRecordKey": "src-0e446c32-53bc-4dab-b2d3-c2b9e7d98f9c",
+      "label": "عربی، زبان قرآن ۲",
+      "gradeRef": "shared.g11",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g11.religion",
+      "sourceRecordKey": "src-6bc8e80b-2da0-46f0-85a3-76ca49f73e94",
+      "label": "دین و زندگی ۲",
+      "gradeRef": "shared.g11",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g11.english",
+      "sourceRecordKey": "src-5fe0cc01-9715-41a5-b99e-83242c4aef0e",
+      "label": "زبان انگلیسی ۲",
+      "gradeRef": "shared.g11",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g12.persian",
+      "sourceRecordKey": "src-0475f1ec-ec47-4126-831a-1af5597d67ee",
+      "label": "فارسی ۳",
+      "gradeRef": "shared.g12",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g12.arabic",
+      "sourceRecordKey": "src-35bf339e-0a5a-41c6-9556-702d962b4051",
+      "label": "عربی، زبان قرآن ۳",
+      "gradeRef": "shared.g12",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g12.religion",
+      "sourceRecordKey": "src-eeb22964-4a5f-4978-b6d2-e75dbfca43f2",
+      "label": "دین و زندگی ۳",
+      "gradeRef": "shared.g12",
+      "scopeRef": "shared",
+      "shared": true
+    },
+    {
+      "ref": "shared.g12.english",
+      "sourceRecordKey": "src-bd691c76-c45c-4a1c-bdd6-2897bc5de626",
+      "label": "زبان انگلیسی ۳",
+      "gradeRef": "shared.g12",
+      "scopeRef": "shared",
+      "shared": true
+    }
+  ],
+  "scopeSpecificSubjects": [
+    {
+      "ref": "mathematics.g10.math1",
+      "sourceRecordKey": "src-d2816d0f-34f4-4d6d-8df4-0f22bd69850c",
+      "label": "ریاضی ۱",
+      "gradeRef": "mathematics.g10",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "mathematics.g10.geometry1",
+      "sourceRecordKey": "src-35d39f43-6c99-4171-8f90-224cb466953e",
+      "label": "هندسه ۱",
+      "gradeRef": "mathematics.g10",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "mathematics.g10.physics1",
+      "sourceRecordKey": "src-0101a74c-f69c-4521-8169-2303c4d8c0ca",
+      "label": "فیزیک ۱",
+      "gradeRef": "mathematics.g10",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "mathematics.g11.calculus1",
+      "sourceRecordKey": "src-b3e2ae21-7383-488e-b75f-b4d102cd23e2",
+      "label": "حسابان ۱",
+      "gradeRef": "mathematics.g11",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "mathematics.g11.geometry2",
+      "sourceRecordKey": "src-d57723d1-3c93-49b2-84d9-475f0d9083aa",
+      "label": "هندسه ۲",
+      "gradeRef": "mathematics.g11",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "mathematics.g11.statistics",
+      "sourceRecordKey": "src-0fe7bf27-561a-4c8c-bc3c-b117557c4c29",
+      "label": "آمار و احتمال",
+      "gradeRef": "mathematics.g11",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "mathematics.g11.physics2",
+      "sourceRecordKey": "src-6194a2c6-fb43-454f-ac8b-ca3ac5f3ab95",
+      "label": "فیزیک ۲",
+      "gradeRef": "mathematics.g11",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "mathematics.g12.calculus2",
+      "sourceRecordKey": "src-2d6376b1-38b6-4af3-a19f-5dec9bee8cad",
+      "label": "حسابان ۲",
+      "gradeRef": "mathematics.g12",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "mathematics.g12.geometry3",
+      "sourceRecordKey": "src-ed894701-a020-4942-93d8-25032ba83ab1",
+      "label": "هندسه ۳",
+      "gradeRef": "mathematics.g12",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "mathematics.g12.discrete",
+      "sourceRecordKey": "src-825b4fbf-0713-4da1-9d9a-18ae5505c9d7",
+      "label": "ریاضیات گسسته",
+      "gradeRef": "mathematics.g12",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "mathematics.g12.physics3",
+      "sourceRecordKey": "src-2c350da7-ba5e-4da0-a634-6669aa2ce2f1",
+      "label": "فیزیک ۳",
+      "gradeRef": "mathematics.g12",
+      "scopeRef": "mathematics",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g10.math1",
+      "sourceRecordKey": "src-b3c48d87-84e3-413f-9f71-8ba563d928cb",
+      "label": "ریاضی ۱",
+      "gradeRef": "experimental.g10",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g10.physics1",
+      "sourceRecordKey": "src-7454552d-a13d-4000-8689-42455a830029",
+      "label": "فیزیک ۱",
+      "gradeRef": "experimental.g10",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g10.chemistry1",
+      "sourceRecordKey": "src-c0044875-c4c0-406f-80da-b5e2b5281d16",
+      "label": "شیمی ۱",
+      "gradeRef": "experimental.g10",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g10.biology1",
+      "sourceRecordKey": "src-bafbe0d4-e5f1-4a5c-b90c-a70660b0881a",
+      "label": "زیست‌شناسی ۱",
+      "gradeRef": "experimental.g10",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g11.math2",
+      "sourceRecordKey": "src-3f2f90ee-fd9c-400e-a739-32a8ca77d99d",
+      "label": "ریاضی ۲",
+      "gradeRef": "experimental.g11",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g11.physics2",
+      "sourceRecordKey": "src-921d8b5a-131a-4770-9cdd-6cee18f4a2da",
+      "label": "فیزیک ۲",
+      "gradeRef": "experimental.g11",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g11.chemistry2",
+      "sourceRecordKey": "src-bebd8e2e-0090-4f0b-8756-207fef73dcec",
+      "label": "شیمی ۲",
+      "gradeRef": "experimental.g11",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g11.biology2",
+      "sourceRecordKey": "src-d334776c-f61c-4f75-8dbe-bba38753cd5f",
+      "label": "زیست‌شناسی ۲",
+      "gradeRef": "experimental.g11",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g11.geology",
+      "sourceRecordKey": "src-1a5b2bc2-b89e-4d2f-bfe9-38e2a2a83f2c",
+      "label": "زمین‌شناسی",
+      "gradeRef": "experimental.g11",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g12.math3",
+      "sourceRecordKey": "src-fc3db6fa-56fd-4097-9d79-5cddd5df2b8c",
+      "label": "ریاضی ۳",
+      "gradeRef": "experimental.g12",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g12.physics3",
+      "sourceRecordKey": "src-300e2a4b-3f7e-49b3-9534-3dfe8580a17e",
+      "label": "فیزیک ۳",
+      "gradeRef": "experimental.g12",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g12.chemistry3",
+      "sourceRecordKey": "src-22a68b33-493a-4c58-b5e0-c232329c6b57",
+      "label": "شیمی ۳",
+      "gradeRef": "experimental.g12",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "experimental.g12.biology3",
+      "sourceRecordKey": "src-e9b3a0da-91dd-4063-81e3-9b41fecd3eea",
+      "label": "زیست‌شناسی ۳",
+      "gradeRef": "experimental.g12",
+      "scopeRef": "experimental",
+      "shared": false
+    },
+    {
+      "ref": "human.g10.literary",
+      "sourceRecordKey": "src-2ab76906-af02-4119-8ff0-7fd370876d8b",
+      "label": "علوم و فنون ادبی ۱",
+      "gradeRef": "human.g10",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g10.sociology",
+      "sourceRecordKey": "src-c1ce90d2-9ac8-405c-bb76-9640619b9ae2",
+      "label": "جامعه‌شناسی ۱",
+      "gradeRef": "human.g10",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g10.logic",
+      "sourceRecordKey": "src-7c253b1f-1ac8-4221-8f19-68aac9dd8510",
+      "label": "منطق",
+      "gradeRef": "human.g10",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g10.economics",
+      "sourceRecordKey": "src-75cad149-9833-48e6-8837-3bbec8ab14a1",
+      "label": "اقتصاد",
+      "gradeRef": "human.g10",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g10.mathstats",
+      "sourceRecordKey": "src-c0ba30a8-f184-4ddc-805c-68f56d3ce697",
+      "label": "ریاضی و آمار ۱",
+      "gradeRef": "human.g10",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g10.history",
+      "sourceRecordKey": "src-e77242ab-c613-472b-96a3-57f4816c1c74",
+      "label": "تاریخ ۱",
+      "gradeRef": "human.g10",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g10.geography",
+      "sourceRecordKey": "src-333b245e-1840-4325-bca7-79b91ad37e26",
+      "label": "جغرافیای ایران",
+      "gradeRef": "human.g10",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g11.literary",
+      "sourceRecordKey": "src-239c1d8b-6eaf-49dd-acd5-8cd4d522da7f",
+      "label": "علوم و فنون ادبی ۲",
+      "gradeRef": "human.g11",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g11.sociology",
+      "sourceRecordKey": "src-f9e1daf7-bc90-4abd-ba48-dbbd66a663de",
+      "label": "جامعه‌شناسی ۲",
+      "gradeRef": "human.g11",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g11.psychology",
+      "sourceRecordKey": "src-61fa4d3d-7af0-4ea8-aaf3-5043971ba98d",
+      "label": "روان‌شناسی",
+      "gradeRef": "human.g11",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g11.philosophy",
+      "sourceRecordKey": "src-493b4d35-7938-42f5-bf56-54ea4148c88e",
+      "label": "فلسفه ۱",
+      "gradeRef": "human.g11",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g11.mathstats",
+      "sourceRecordKey": "src-24a2092d-6695-4b80-8eab-665e02c20c10",
+      "label": "ریاضی و آمار ۲",
+      "gradeRef": "human.g11",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g11.history",
+      "sourceRecordKey": "src-42434386-5ace-4118-8b49-a15cc398ced2",
+      "label": "تاریخ ۲",
+      "gradeRef": "human.g11",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g11.geography",
+      "sourceRecordKey": "src-7689d235-95ba-4b8a-bd7e-b7ef1836db55",
+      "label": "جغرافیا ۲",
+      "gradeRef": "human.g11",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g12.literary",
+      "sourceRecordKey": "src-6ce15664-8f90-406e-bd6a-3011e8e352cd",
+      "label": "علوم و فنون ادبی ۳",
+      "gradeRef": "human.g12",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g12.sociology",
+      "sourceRecordKey": "src-28036aff-b71f-42f0-8107-edb0ca2453a0",
+      "label": "جامعه‌شناسی ۳",
+      "gradeRef": "human.g12",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g12.philosophy",
+      "sourceRecordKey": "src-abadd6b5-0b25-486a-96f7-04c85e56e80e",
+      "label": "فلسفه ۲",
+      "gradeRef": "human.g12",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g12.mathstats",
+      "sourceRecordKey": "src-600a17b7-cf40-4818-be87-8fe8d0f05eae",
+      "label": "ریاضی و آمار ۳",
+      "gradeRef": "human.g12",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g12.history",
+      "sourceRecordKey": "src-e3b0f351-5915-4c58-b492-b0bb6e2438e6",
+      "label": "تاریخ ۳",
+      "gradeRef": "human.g12",
+      "scopeRef": "human",
+      "shared": false
+    },
+    {
+      "ref": "human.g12.geography",
+      "sourceRecordKey": "src-b90a5355-fa72-462c-b263-6f940126c5ce",
+      "label": "جغرافیا ۳",
+      "gradeRef": "human.g12",
+      "scopeRef": "human",
+      "shared": false
+    }
+  ],
+  "unresolvedReviewItems": [
+    {
+      "code": "SOURCE_DETAIL_INCOMPLETE",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L6780",
+      "detail": "The source says some lower-priority lessons were not written out; absent detail cannot be treated as proof that structure does not exist."
+    },
+    {
+      "code": "CURRICULUM_RELEASE_IDENTITY_MISSING",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L6781",
+      "detail": "The source provides no official curriculum name, academic year, edition, publication date, or effective date."
+    },
+    {
+      "code": "BIOLOGY_GRADE_PARENT_UNRESOLVED",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L1813-L2281;L6782",
+      "detail": "Three biology chapter sequences lack explicit Biology 1/2/3 boundary headings and remain unattached."
+    },
+    {
+      "code": "STRUCTURAL_TYPE_MAPPING_REVIEW",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L6783",
+      "detail": "Several areas omit intermediate levels or mix structural labels; unapproved semantic mappings remain excluded."
+    },
+    {
+      "code": "CROSS_GRADE_THEMATIC_TREES_UNRESOLVED",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L6784",
+      "detail": "Cross-grade Arabic, Persian, English, Experimental Mathematics, and Literary Sciences trees require an ownership or mapping decision."
+    },
+    {
+      "code": "CHEMISTRY_LINKED_SKILLS_OWNERSHIP_UNRESOLVED",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L6785",
+      "detail": "The starred linked-skills section following Chemistry has no explicit owner."
+    },
+    {
+      "code": "CHEMISTRY_CROSS_SCOPE_RELATIONSHIP_UNRESOLVED",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L5577;L6786",
+      "detail": "The prose statement that Chemistry is shared by Experimental Sciences and Mathematics & Physics requires an ownership/applicability decision."
+    },
+    {
+      "code": "ALTERNATE_SCOPE_HEADING_MAPPING_UNRESOLVED",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L6787",
+      "detail": "Standalone informal Mathematics & Physics and Human Sciences headings need confirmed mappings to canonical scopes."
+    },
+    {
+      "code": "ARABIC_COMBINED_SOURCE_PARAGRAPH",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L6788",
+      "detail": "One Arabic paragraph appears to combine two entries and cannot be split without authorization."
+    },
+    {
+      "code": "STAR_MARKER_MEANING_UNRESOLVED",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L6789",
+      "detail": "The meaning of source star markers is undefined; no weight or other metadata may be inferred."
+    },
+    {
+      "code": "EDUCATIONAL_METADATA_NOT_DEFINED",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L6790",
+      "detail": "Prerequisites, objectives, hours, difficulty, weights, aliases, equivalence, and source-issued stable identifiers are not defined."
+    },
+    {
+      "code": "GEOLOGY_DETAIL_ABSENT",
+      "sourceLocator": "CANONICAL_CURRICULUM.md:L147",
+      "detail": "The source identifies Grade 11 Geology but contains no detailed Geology tree."
+    }
+  ],
+  "issues": []
+}

@@ -178,13 +178,13 @@ This lightweight decision log records architectural constraints established by t
 
 **Decision:** Student Web and Counselor Web each own an independent authenticated application shell. Each shell provides its own route map, desktop sidebar, mobile bottom navigation, page header, constrained content area, dashboard foundation, and placeholder destinations. The applications are not merged, and navigation visibility does not grant backend permission.
 
-**Routing policy:** The current shells use the browser History API and the established SPA fallback instead of adding a routing dependency. Student routes are dashboard, planning, study, reports, and settings. Counselor routes are dashboard, students, planning, reports, and settings. Non-dashboard feature routes remain explicit empty placeholders until their own milestones are authorized.
+**Historical routing snapshot:** At this milestone, the shells used the browser History API and the established SPA fallback instead of adding a routing dependency. Student routes were dashboard, planning, study, reports, and settings. Counselor routes were dashboard, students, planning, reports, and settings. Non-dashboard feature routes were explicit empty placeholders until their own milestones were authorized.
 
 **UI policy:** Small `Button`, `Card`, and loading/empty/error-state primitives live inside each application while their visual language may still diverge. The currently empty shared packages are not activated solely for these few primitives; shared extraction requires a stable cross-application contract rather than superficial duplication.
 
 **Responsive and theme policy:** Both applications declare Persian/RTL document defaults, use desktop side navigation above the mobile breakpoint, and use a touch-friendly fixed bottom navigation on smaller screens. Light and dark themes are CSS-variable foundations. Only the non-sensitive per-application theme preference is stored in browser storage; authentication tokens and permission state remain governed by ADR-016.
 
-**Status:** Accepted
+**Status:** Accepted for the independent-shell boundary. The route inventory is superseded by later implemented milestones and `PROJECT_STATE.md`.
 
 ## ADR-018 — Account Settings and Session Revocation Policy
 
@@ -241,3 +241,121 @@ This lightweight decision log records architectural constraints established by t
 **Lifecycle and ownership policy:** There is no live assessment lifecycle, timer, start, finish, pause, resume, or cancellation. The authenticated student owns creation, reading, correction of raw facts, and server-timestamped soft invalidation; normal product APIs do not hard-delete attempts. Counselor access remains mutation-free. Creation, invalidation, and rescheduling serialize on the student's stable PostgreSQL profile row where their ordering affects scheduling integrity.
 
 **Status:** Accepted
+
+## ADR-023 — Official Product Domain Baseline
+
+**Decision:** Konkourix is a specialized exam-preparation ecosystem organized around the loop Plan → Execute → Measure → Improve. The official core domains are Planning (`DailyTask`), Execution (`StudySession`), and Assessment (`AssessmentAttempt`). The earlier generic task-management framing is superseded; task capabilities remain valid only as educational planning capabilities within this domain map.
+
+**Separation policy:** Planned intention, actual study, and completed assessment evidence keep independent meanings and lifecycles. Optional provenance links do not imply dependency: a task may have multiple study sessions or assessment attempts, and approved historical/test-only workflows may record either evidence type without manufacturing the other. No session or attempt automatically decides a task outcome.
+
+**Architecture policy:** The current implementation remains a modular monolith with separate Student Web and Counselor Web applications, one Fastify API, PostgreSQL, and Prisma. Domain boundaries are logical and enforceable without becoming microservices. Later extraction requires evidence. The curriculum statement in this ADR is refined and superseded by ADR-024; the remainder stays accepted.
+
+**Documentation policy:** [PRODUCT_VISION.md](PRODUCT_VISION.md), [DOMAIN_MAP.md](DOMAIN_MAP.md), [PRODUCT_DECISIONS.md](PRODUCT_DECISIONS.md), [UX_PRINCIPLES.md](UX_PRINCIPLES.md), [FUTURE_EXPANSION.md](FUTURE_EXPANSION.md), and [ROADMAP.md](ROADMAP.md) define the synchronized product baseline. Earlier decisions are preserved; where their assumptions conflict, this accepted decision marks the old framing as superseded rather than deleting history.
+
+**Status:** Accepted
+
+## ADR-024 — Canonical Deep Curriculum Architecture
+
+**Decision:** Konkourix uses one centrally managed canonical curriculum tree with semantic depth from رشته through درس, فصل, بخش, مبحث, and مفهوم/ریزمبحث اتمیک. Users reference canonical nodes but do not create, fork, rename, move, or delete curriculum structure. Domain experts manually curate changes through controlled governance.
+
+**Rejected architecture:** User-created student, counselor, teacher, or school curriculum trees. The repository's existing student-owned `StudySubject` and `Topic` behavior is transitional and does not define the target architecture. Reconciliation requires a separately approved data/API/UX migration plan; this ADR changes no current schema or runtime behavior.
+
+**Student-progress policy:** Student customization is a separate Student Topic Progress layer keyed to canonical nodes. It may contain mastery from 1 through 5, status (شروع نشده, در حال یادگیری, نیازمند مرور, مسلط, or ضعیف), notes, review dates, weaknesses, strengths, and last activity. Progress changes never mutate canonical curriculum.
+
+**AI policy:** AI may later consume approved curriculum data for analysis, recommendations, weak-point detection, and learning assistance. AI must not generate or modify the canonical curriculum.
+
+**Planning policy:** `DailyTask` is a planned learning execution unit, not a generic todo or an actual execution record. The target task contract references a canonical curriculum node, activity type, planned duration, planned questions, and expected outcome. Target result feedback records completed/incomplete state and five-level learning quality with optional note/difficulty/problem details. Task-level learning quality is distinct from the implemented interval-level `StudySession.studyQualityRating`.
+
+**Testing policy:** Practice/exercises are learning activities without an exam lifecycle. External exams are provider-owned and produce performance reports only. Internal online exams are future Konkourix-owned delivery flows requiring a canonical-curriculum-linked Question Bank, moderation, Exam Builder, timed delivery, and answer evaluation. These concepts must not share a false lifecycle merely because all may involve questions.
+
+**Question policy:** Future questions reference canonical nodes through an appropriate atomic concept. If teacher contribution is supported, one possible governed workflow is teacher submission followed by admin review before an approved question enters the bank; submission never implies automatic publication. Canonical linkage supports precise search, exam generation, weakness analysis, and targeted practice.
+
+**Expansion policy:** Personal and counselor-created learning tasks remain attributable and distinguishable while referencing the same canonical curriculum. The canonical tree supplies stable references for future counselors, teachers, schools, question banks, online exams, and educational content without redesigning the taxonomy.
+
+**Dependency policy:** Canonical curriculum management precedes Student Topic Progress, which precedes the Question Bank, Online Exam Engine, and Advanced Analytics foundations.
+
+**Status:** Accepted
+
+## ADR-025 — Canonical Curriculum Lifecycle and Legacy Compatibility
+
+**Decision:** Canonical curriculum uses opaque stable logical-node IDs, immutable node revisions, and immutable published curriculum releases. The ordered hierarchy supports Track/Field → Subject → Chapter → Section → Topic → Micro Topic/Atomic Concept. A compatible rename or reorder retains logical identity; a semantic split or merge creates new identities and reviewed lineage. Published nodes are deprecated or retired rather than hard-deleted.
+
+**Governance policy:** Domain experts edit and review draft releases. An authorized admin publishes an internally consistent release after structural and impact validation. Students, counselors, teachers, schools, integrations, and AI cannot mutate canonical curriculum.
+
+**Compatibility policy:** Adoption from `StudySubject` and `Topic` is non-destructive. Legacy identifiers and historical task/session/assessment links remain readable. An explicit reviewed mapping registry supports staged compatibility reads, canonical references for new writes, later disabling of legacy writes, and continued historical reads. Dual writes are not assumed, and no applied migration is rewritten.
+
+**Specification:** [CANONICAL_CURRICULUM_SPECIFICATION.md](CANONICAL_CURRICULUM_SPECIFICATION.md)
+
+**Status:** Accepted target architecture; not implemented
+
+## ADR-026 — Versioned Counselor Planning and Immutable Published Intention
+
+**Decision:** Counselors author plans in draft revisions and explicitly publish immutable plan versions. Future, unexecuted blocks may be moved, copied, replaced, or adjusted in a later revision, including workload, activity, duration, planned questions, expected outcome, and canonical curriculum references. Publishing is atomic from the student's perspective.
+
+**Student and history policy:** Students execute and report reality and may create separately attributed personal tasks. They cannot edit counselor-authored plan content. Published historical intention and linked execution/assessment evidence remain immutable and retain the governing plan/version context. Plan creation, publication, supersession, and material changes require durable audit records.
+
+**Specification:** [PLANNING_ARCHITECTURE.md](PLANNING_ARCHITECTURE.md)
+
+**Status:** Accepted target architecture; not implemented
+
+## ADR-027 — Separate Practice, External Report, and Internal Exam Domains
+
+**Decision:** Practice is daily learning activity without an exam-delivery lifecycle. External Exam Reports record evidence for provider-owned exams such as Ghalamchi, Maz, and Gaj without owning their questions, delivery, scoring, or ranking. Internal Konkourix Exams own a distinct Question Bank → Exam Builder/version → Question Selection → Student Attempt → Answer Evaluation → Result lifecycle.
+
+**Separation policy:** These domains may contribute to shared read/reporting projections but do not share one write lifecycle. None requires a fake `StudySession` or automatically determines task outcome. The implemented generic completed `AssessmentAttempt` remains current behavior and is not declared the final persistence model for all three capabilities.
+
+**Specification:** [ASSESSMENT_ARCHITECTURE.md](ASSESSMENT_ARCHITECTURE.md)
+
+**Status:** Accepted target architecture; partially implemented only as completed-attempt evidence
+
+## ADR-028 — Question Bank Provenance, Moderation, and Multi-Node Curriculum Links
+
+**Decision:** Questions have stable logical identities and immutable approved versions. Submissions record author/source attribution, contributor provenance, and copyright/license metadata. Educational, answer/solution, copyright, and curriculum-link review precede publication. Submission never implies approval, and withdrawal does not corrupt delivered exam history.
+
+**Curriculum policy:** Question and Canonical Curriculum Node have an explicit many-to-many relationship. Every published question has reviewed canonical links precise enough for search, practice, exam construction, and later analysis. Whether a primary node is required, whether an atomic node is mandatory, whether ancestors are stored or derived, and whether link roles exist remain explicitly unresolved.
+
+**Specification:** [QUESTION_BANK_ARCHITECTURE.md](QUESTION_BANK_ARCHITECTURE.md)
+
+**Status:** Accepted target architecture; not implemented
+
+## ADR-029 — Communication Channel Separation
+
+**Decision:** Communication is divided into General Chat, Ticket/Thread, and Suggestions. General Chat is lightweight relationship-scoped conversation. Tickets are structured, resolvable study, plan, report-review, or technical issues. Suggestions are governed curriculum-change, question-submission, or product-improvement workflows.
+
+**Boundary policy:** Konkourix does not create a chat channel for every entity. A communication record may hold a typed contextual reference, but messages do not become authoritative plan changes, curriculum edits, assessment corrections, audit history, or private counselor notes. A unified inbox is a projection and does not merge source models.
+
+**Specification:** [COMMUNICATION_ARCHITECTURE.md](COMMUNICATION_ARCHITECTURE.md)
+
+**Status:** Accepted target architecture; not implemented
+
+## ADR-030 — Student-Counselor Acquisition and Human-Reviewed Introduction
+
+**Decision:** Students may register and use the student product without a counselor. Relationships may begin through a counselor invitation code or through a student counselor request. In the request flow, a Super Admin evaluates the student's stated conditions, introduces suitable counselors, and the student makes the final selection.
+
+**Matching policy:** There is no automatic matching, silent assignment, or ranking-driven placement. Software may assist an authorized admin's review later, but it cannot replace human introduction and student selection. Relationship transitions require actor, time, and reason auditability.
+
+**Specification:** [COUNSELOR_ECOSYSTEM.md](COUNSELOR_ECOSYSTEM.md)
+
+**Status:** Accepted target architecture; relationship storage exists, acquisition workflows do not
+
+## ADR-031 — Private Counselor Notes Authorization Boundary
+
+**Decision:** Private Counselor Notes are confidential records for behavior observations, weaknesses, and reminders. A note is readable only by its owning counselor and specifically authorized admins. Students, other counselors, teachers, and ordinary support roles cannot read it; reassignment does not automatically transfer it.
+
+**Boundary policy:** Private notes are not chat, student-visible feedback, plan content, structured progress facts, or input to automatic matching/adverse automated decisions. Access and exceptional transfer require durable audit. Retention, export, deletion, and exceptional-transfer rules require later approval.
+
+**Specification:** [COUNSELOR_ECOSYSTEM.md](COUNSELOR_ECOSYSTEM.md)
+
+**Status:** Accepted target architecture; not implemented
+
+## ADR-032 — Role-Specific Experience and Visual Direction
+
+**Decision:** Konkourix presents a specialized Konkur ecosystem rather than a generic todo, calendar, CRM, or administrative product. Student experiences prioritize motivation, vitality, progress, and the next meaningful action. Counselor experiences prioritize control, planning speed, monitoring, and analysis.
+
+**Visual policy:** The target identity is blue-based, modern, premium, comfortable, and energetic. Glass UI elements may be used selectively where accessibility, contrast, readability, and performance remain strong. Visual style never substitutes for domain clarity, state feedback, or backend authorization. Exact tokens and components require a later UI specification.
+
+**Status:** Accepted UX direction; not implemented by this documentation decision
+
+## Subsequent Standalone ADRs
+
+Accepted decisions after ADR-032 are maintained as standalone records in [`adr/README.md`](adr/README.md). The current approved batch contains ADR-033, ADR-036, ADR-037, ADR-038, ADR-039, ADR-041, and ADR-043. Numbers omitted from that batch remain reserved and are not renumbered or implicitly approved.

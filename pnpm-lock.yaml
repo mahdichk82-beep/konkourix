@@ -38,6 +38,9 @@ importers:
       pg:
         specifier: ^8.23.0
         version: 8.23.0
+      yaml:
+        specifier: ^2.9.0
+        version: 2.9.0
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -2931,8 +2934,7 @@ snapshots:
 
   xtend@4.0.2: {}
 
-  yaml@2.9.0:
-    optional: true
+  yaml@2.9.0: {}
 
   zeptomatch@2.1.0:
     dependencies:

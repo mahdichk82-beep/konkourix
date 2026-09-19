@@ -182,13 +182,13 @@ export type StudySessionAggregateArgs<ExtArgs extends runtime.Types.Extensions.I
   _avg?: StudySessionAvgAggregateInputType
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-   *
+   * 
    * Select which fields to sum
   **/
   _sum?: StudySessionSumAggregateInputType
   /**
    * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-   *
+   * 
    * Select which fields to find the minimum value
   **/
   _min?: StudySessionMinAggregateInputType

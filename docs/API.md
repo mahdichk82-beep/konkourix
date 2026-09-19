@@ -2,6 +2,8 @@
 
 All application routes use the `/api/v1` prefix and the standard success/error envelope. Authentication and authorization are server-owned; browser-supplied roles, owners, and creator identities are never authoritative.
 
+This file documents the currently implemented HTTP contract, including student-owned subject/topic validation. ADR-024 establishes a future centrally managed canonical curriculum and supersedes user-created curriculum as the target architecture; no API or runtime behavior changed during that documentation decision.
+
 ## Counselor batch task creation
 
 `POST /api/v1/counselor/students/:studentProfileId/tasks/batch`

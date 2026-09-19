@@ -201,6 +201,7 @@ export type TopicWhereInput = {
   subject?: Prisma.XOR<Prisma.StudySubjectScalarRelationFilter, Prisma.StudySubjectWhereInput>
   dailyTasks?: Prisma.DailyTaskListRelationFilter
   assessmentAttempts?: Prisma.AssessmentAttemptListRelationFilter
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingListRelationFilter
 }
 
 export type TopicOrderByWithRelationInput = {
@@ -214,6 +215,7 @@ export type TopicOrderByWithRelationInput = {
   subject?: Prisma.StudySubjectOrderByWithRelationInput
   dailyTasks?: Prisma.DailyTaskOrderByRelationAggregateInput
   assessmentAttempts?: Prisma.AssessmentAttemptOrderByRelationAggregateInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingOrderByRelationAggregateInput
 }
 
 export type TopicWhereUniqueInput = Prisma.AtLeast<{
@@ -231,6 +233,7 @@ export type TopicWhereUniqueInput = Prisma.AtLeast<{
   subject?: Prisma.XOR<Prisma.StudySubjectScalarRelationFilter, Prisma.StudySubjectWhereInput>
   dailyTasks?: Prisma.DailyTaskListRelationFilter
   assessmentAttempts?: Prisma.AssessmentAttemptListRelationFilter
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingListRelationFilter
 }, "id" | "subjectId_normalizedTitle">
 
 export type TopicOrderByWithAggregationInput = {
@@ -269,6 +272,7 @@ export type TopicCreateInput = {
   subject: Prisma.StudySubjectCreateNestedOneWithoutTopicsInput
   dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutTopicInput
   assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutTopicInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingCreateNestedManyWithoutTopicInput
 }
 
 export type TopicUncheckedCreateInput = {
@@ -281,6 +285,7 @@ export type TopicUncheckedCreateInput = {
   updatedAt?: Date | string
   dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutTopicInput
   assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutTopicInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUncheckedCreateNestedManyWithoutTopicInput
 }
 
 export type TopicUpdateInput = {
@@ -293,6 +298,7 @@ export type TopicUpdateInput = {
   subject?: Prisma.StudySubjectUpdateOneRequiredWithoutTopicsNestedInput
   dailyTasks?: Prisma.DailyTaskUpdateManyWithoutTopicNestedInput
   assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutTopicNestedInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicUncheckedUpdateInput = {
@@ -305,6 +311,7 @@ export type TopicUncheckedUpdateInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutTopicNestedInput
   assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutTopicNestedInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUncheckedUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicCreateManyInput = {
@@ -460,6 +467,22 @@ export type TopicUpdateOneWithoutAssessmentAttemptsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.TopicUpdateToOneWithWhereWithoutAssessmentAttemptsInput, Prisma.TopicUpdateWithoutAssessmentAttemptsInput>, Prisma.TopicUncheckedUpdateWithoutAssessmentAttemptsInput>
 }
 
+export type TopicCreateNestedOneWithoutLegacyCurriculumMappingsInput = {
+  create?: Prisma.XOR<Prisma.TopicCreateWithoutLegacyCurriculumMappingsInput, Prisma.TopicUncheckedCreateWithoutLegacyCurriculumMappingsInput>
+  connectOrCreate?: Prisma.TopicCreateOrConnectWithoutLegacyCurriculumMappingsInput
+  connect?: Prisma.TopicWhereUniqueInput
+}
+
+export type TopicUpdateOneWithoutLegacyCurriculumMappingsNestedInput = {
+  create?: Prisma.XOR<Prisma.TopicCreateWithoutLegacyCurriculumMappingsInput, Prisma.TopicUncheckedCreateWithoutLegacyCurriculumMappingsInput>
+  connectOrCreate?: Prisma.TopicCreateOrConnectWithoutLegacyCurriculumMappingsInput
+  upsert?: Prisma.TopicUpsertWithoutLegacyCurriculumMappingsInput
+  disconnect?: Prisma.TopicWhereInput | boolean
+  delete?: Prisma.TopicWhereInput | boolean
+  connect?: Prisma.TopicWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.TopicUpdateToOneWithWhereWithoutLegacyCurriculumMappingsInput, Prisma.TopicUpdateWithoutLegacyCurriculumMappingsInput>, Prisma.TopicUncheckedUpdateWithoutLegacyCurriculumMappingsInput>
+}
+
 export type TopicCreateWithoutSubjectInput = {
   id?: string
   title: string
@@ -469,6 +492,7 @@ export type TopicCreateWithoutSubjectInput = {
   updatedAt?: Date | string
   dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutTopicInput
   assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutTopicInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingCreateNestedManyWithoutTopicInput
 }
 
 export type TopicUncheckedCreateWithoutSubjectInput = {
@@ -480,6 +504,7 @@ export type TopicUncheckedCreateWithoutSubjectInput = {
   updatedAt?: Date | string
   dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutTopicInput
   assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutTopicInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUncheckedCreateNestedManyWithoutTopicInput
 }
 
 export type TopicCreateOrConnectWithoutSubjectInput = {
@@ -530,6 +555,7 @@ export type TopicCreateWithoutDailyTasksInput = {
   updatedAt?: Date | string
   subject: Prisma.StudySubjectCreateNestedOneWithoutTopicsInput
   assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutTopicInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingCreateNestedManyWithoutTopicInput
 }
 
 export type TopicUncheckedCreateWithoutDailyTasksInput = {
@@ -541,6 +567,7 @@ export type TopicUncheckedCreateWithoutDailyTasksInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutTopicInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUncheckedCreateNestedManyWithoutTopicInput
 }
 
 export type TopicCreateOrConnectWithoutDailyTasksInput = {
@@ -568,6 +595,7 @@ export type TopicUpdateWithoutDailyTasksInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   subject?: Prisma.StudySubjectUpdateOneRequiredWithoutTopicsNestedInput
   assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutTopicNestedInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicUncheckedUpdateWithoutDailyTasksInput = {
@@ -579,6 +607,7 @@ export type TopicUncheckedUpdateWithoutDailyTasksInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutTopicNestedInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUncheckedUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicCreateWithoutAssessmentAttemptsInput = {
@@ -590,6 +619,7 @@ export type TopicCreateWithoutAssessmentAttemptsInput = {
   updatedAt?: Date | string
   subject: Prisma.StudySubjectCreateNestedOneWithoutTopicsInput
   dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutTopicInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingCreateNestedManyWithoutTopicInput
 }
 
 export type TopicUncheckedCreateWithoutAssessmentAttemptsInput = {
@@ -601,6 +631,7 @@ export type TopicUncheckedCreateWithoutAssessmentAttemptsInput = {
   createdAt?: Date | string
   updatedAt?: Date | string
   dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutTopicInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUncheckedCreateNestedManyWithoutTopicInput
 }
 
 export type TopicCreateOrConnectWithoutAssessmentAttemptsInput = {
@@ -628,6 +659,7 @@ export type TopicUpdateWithoutAssessmentAttemptsInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   subject?: Prisma.StudySubjectUpdateOneRequiredWithoutTopicsNestedInput
   dailyTasks?: Prisma.DailyTaskUpdateManyWithoutTopicNestedInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicUncheckedUpdateWithoutAssessmentAttemptsInput = {
@@ -639,6 +671,71 @@ export type TopicUncheckedUpdateWithoutAssessmentAttemptsInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutTopicNestedInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUncheckedUpdateManyWithoutTopicNestedInput
+}
+
+export type TopicCreateWithoutLegacyCurriculumMappingsInput = {
+  id?: string
+  title: string
+  normalizedTitle: string
+  archivedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  subject: Prisma.StudySubjectCreateNestedOneWithoutTopicsInput
+  dailyTasks?: Prisma.DailyTaskCreateNestedManyWithoutTopicInput
+  assessmentAttempts?: Prisma.AssessmentAttemptCreateNestedManyWithoutTopicInput
+}
+
+export type TopicUncheckedCreateWithoutLegacyCurriculumMappingsInput = {
+  id?: string
+  subjectId: string
+  title: string
+  normalizedTitle: string
+  archivedAt?: Date | string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  dailyTasks?: Prisma.DailyTaskUncheckedCreateNestedManyWithoutTopicInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedCreateNestedManyWithoutTopicInput
+}
+
+export type TopicCreateOrConnectWithoutLegacyCurriculumMappingsInput = {
+  where: Prisma.TopicWhereUniqueInput
+  create: Prisma.XOR<Prisma.TopicCreateWithoutLegacyCurriculumMappingsInput, Prisma.TopicUncheckedCreateWithoutLegacyCurriculumMappingsInput>
+}
+
+export type TopicUpsertWithoutLegacyCurriculumMappingsInput = {
+  update: Prisma.XOR<Prisma.TopicUpdateWithoutLegacyCurriculumMappingsInput, Prisma.TopicUncheckedUpdateWithoutLegacyCurriculumMappingsInput>
+  create: Prisma.XOR<Prisma.TopicCreateWithoutLegacyCurriculumMappingsInput, Prisma.TopicUncheckedCreateWithoutLegacyCurriculumMappingsInput>
+  where?: Prisma.TopicWhereInput
+}
+
+export type TopicUpdateToOneWithWhereWithoutLegacyCurriculumMappingsInput = {
+  where?: Prisma.TopicWhereInput
+  data: Prisma.XOR<Prisma.TopicUpdateWithoutLegacyCurriculumMappingsInput, Prisma.TopicUncheckedUpdateWithoutLegacyCurriculumMappingsInput>
+}
+
+export type TopicUpdateWithoutLegacyCurriculumMappingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  subject?: Prisma.StudySubjectUpdateOneRequiredWithoutTopicsNestedInput
+  dailyTasks?: Prisma.DailyTaskUpdateManyWithoutTopicNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutTopicNestedInput
+}
+
+export type TopicUncheckedUpdateWithoutLegacyCurriculumMappingsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  subjectId?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  archivedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutTopicNestedInput
+  assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicCreateManySubjectInput = {
@@ -659,6 +756,7 @@ export type TopicUpdateWithoutSubjectInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   dailyTasks?: Prisma.DailyTaskUpdateManyWithoutTopicNestedInput
   assessmentAttempts?: Prisma.AssessmentAttemptUpdateManyWithoutTopicNestedInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicUncheckedUpdateWithoutSubjectInput = {
@@ -670,6 +768,7 @@ export type TopicUncheckedUpdateWithoutSubjectInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   dailyTasks?: Prisma.DailyTaskUncheckedUpdateManyWithoutTopicNestedInput
   assessmentAttempts?: Prisma.AssessmentAttemptUncheckedUpdateManyWithoutTopicNestedInput
+  legacyCurriculumMappings?: Prisma.LegacyCurriculumMappingUncheckedUpdateManyWithoutTopicNestedInput
 }
 
 export type TopicUncheckedUpdateManyWithoutSubjectInput = {
@@ -689,11 +788,13 @@ export type TopicUncheckedUpdateManyWithoutSubjectInput = {
 export type TopicCountOutputType = {
   dailyTasks: number
   assessmentAttempts: number
+  legacyCurriculumMappings: number
 }
 
 export type TopicCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   dailyTasks?: boolean | TopicCountOutputTypeCountDailyTasksArgs
   assessmentAttempts?: boolean | TopicCountOutputTypeCountAssessmentAttemptsArgs
+  legacyCurriculumMappings?: boolean | TopicCountOutputTypeCountLegacyCurriculumMappingsArgs
 }
 
 /**
@@ -720,6 +821,13 @@ export type TopicCountOutputTypeCountAssessmentAttemptsArgs<ExtArgs extends runt
   where?: Prisma.AssessmentAttemptWhereInput
 }
 
+/**
+ * TopicCountOutputType without action
+ */
+export type TopicCountOutputTypeCountLegacyCurriculumMappingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.LegacyCurriculumMappingWhereInput
+}
+
 
 export type TopicSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -732,6 +840,7 @@ export type TopicSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   subject?: boolean | Prisma.StudySubjectDefaultArgs<ExtArgs>
   dailyTasks?: boolean | Prisma.Topic$dailyTasksArgs<ExtArgs>
   assessmentAttempts?: boolean | Prisma.Topic$assessmentAttemptsArgs<ExtArgs>
+  legacyCurriculumMappings?: boolean | Prisma.Topic$legacyCurriculumMappingsArgs<ExtArgs>
   _count?: boolean | Prisma.TopicCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["topic"]>
 
@@ -772,6 +881,7 @@ export type TopicInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   subject?: boolean | Prisma.StudySubjectDefaultArgs<ExtArgs>
   dailyTasks?: boolean | Prisma.Topic$dailyTasksArgs<ExtArgs>
   assessmentAttempts?: boolean | Prisma.Topic$assessmentAttemptsArgs<ExtArgs>
+  legacyCurriculumMappings?: boolean | Prisma.Topic$legacyCurriculumMappingsArgs<ExtArgs>
   _count?: boolean | Prisma.TopicCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type TopicIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -787,6 +897,7 @@ export type $TopicPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     subject: Prisma.$StudySubjectPayload<ExtArgs>
     dailyTasks: Prisma.$DailyTaskPayload<ExtArgs>[]
     assessmentAttempts: Prisma.$AssessmentAttemptPayload<ExtArgs>[]
+    legacyCurriculumMappings: Prisma.$LegacyCurriculumMappingPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1193,6 +1304,7 @@ export interface Prisma__TopicClient<T, Null = never, ExtArgs extends runtime.Ty
   subject<T extends Prisma.StudySubjectDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.StudySubjectDefaultArgs<ExtArgs>>): Prisma.Prisma__StudySubjectClient<runtime.Types.Result.GetResult<Prisma.$StudySubjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   dailyTasks<T extends Prisma.Topic$dailyTasksArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Topic$dailyTasksArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DailyTaskPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   assessmentAttempts<T extends Prisma.Topic$assessmentAttemptsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Topic$assessmentAttemptsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AssessmentAttemptPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  legacyCurriculumMappings<T extends Prisma.Topic$legacyCurriculumMappingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Topic$legacyCurriculumMappingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$LegacyCurriculumMappingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1675,6 +1787,30 @@ export type Topic$assessmentAttemptsArgs<ExtArgs extends runtime.Types.Extension
   take?: number
   skip?: number
   distinct?: Prisma.AssessmentAttemptScalarFieldEnum | Prisma.AssessmentAttemptScalarFieldEnum[]
+}
+
+/**
+ * Topic.legacyCurriculumMappings
+ */
+export type Topic$legacyCurriculumMappingsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the LegacyCurriculumMapping
+   */
+  select?: Prisma.LegacyCurriculumMappingSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the LegacyCurriculumMapping
+   */
+  omit?: Prisma.LegacyCurriculumMappingOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.LegacyCurriculumMappingInclude<ExtArgs> | null
+  where?: Prisma.LegacyCurriculumMappingWhereInput
+  orderBy?: Prisma.LegacyCurriculumMappingOrderByWithRelationInput | Prisma.LegacyCurriculumMappingOrderByWithRelationInput[]
+  cursor?: Prisma.LegacyCurriculumMappingWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.LegacyCurriculumMappingScalarFieldEnum | Prisma.LegacyCurriculumMappingScalarFieldEnum[]
 }
 
 /**
