@@ -53,6 +53,7 @@ No taxonomy node, label, content body, provenance record, or mapping was added o
 | --- | --- |
 | Machine structure | `PASS` |
 | Educational review | `PENDING` |
+| Package lifecycle | `DRAFT` |
 | Persistence | `BLOCKED_PENDING_CURRICULUM_VERSION_REBIND` |
 | Publication | `NOT_AUTHORIZED` |
 
@@ -95,6 +96,12 @@ No item below is answered or accepted by this milestone. A qualified human revie
 - [ ] source and provenance appropriateness.
 
 Review findings must create an explicit corrected revision. Machine validation must not mark any checklist item complete.
+
+## Available governed review workflow
+
+The persistence-neutral workflow is defined in [KNOWLEDGE_PACKAGE_REVIEW.md](KNOWLEDGE_PACKAGE_REVIEW.md). A qualified reviewer can use the deterministic [review packet](PHYSICS12_MOTION_REVIEW_PACKET.md) and [blank JSON input template](PHYSICS12_MOTION_REVIEW_INPUT.template.json) to record a review session bound to this exact revision and its two checksums.
+
+No packet field is a review decision. No review session or reviewer identity is committed for this candidate. The real package remains `DRAFT` / `PENDING`; an accepted future review would establish eligibility for a separate explicit `REVIEWED` transition only. It would not approve, publish, persist, rebind, or change Content verification automatically.
 
 ## Future educational authoring requirements
 

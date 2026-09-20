@@ -1328,6 +1328,19 @@ Package format, lifecycle, manual review points, and future automation boundarie
 
 Candidate identity, readiness, boundaries, and the unanswered Physics human-review checklist are documented in [curriculum/PRODUCTION_PACKAGE_PHYSICS12_MOTION.md](curriculum/PRODUCTION_PACKAGE_PHYSICS12_MOTION.md).
 
+## Knowledge Phase 7.2 — Governed Educational Review Workflow
+
+**Status: REVIEW TOOLING IMPLEMENTED; REAL PHYSICS REVISION REMAINS DRAFT/PENDING**
+
+- A persistence-neutral review-session contract binds human evidence to the exact package ID, revision ID/number, payload and package checksums, subject, structural scope, and provisional Curriculum snapshot.
+- Twelve controlled review dimensions, explicit dimension dispositions, targeted findings, reviewer metadata, and `PENDING → IN_REVIEW → CHANGES_REQUESTED | ACCEPTED` validation support human decisions without making them.
+- Validation rejects stale identity/checksum evidence, missing mandatory decisions, open blocking findings on acceptance, invalid targets, duplicate decisions, and inconsistent review metadata. A valid accepted decision only makes the exact revision eligible for a later explicit `REVIEWED` transition.
+- Review history remains bound to each historical revision. Synthetic tests prove a correction creates a new revision identity/checksum, retains stable package identity, binds its predecessor, and resets to `DRAFT` / `PENDING` without creating a real Revision 2.
+- A deterministic Physics review packet and blank JSON template expose all current taxonomy, Content, and mapping identities without reviewer answers. The real Physics candidate remains Revision 1, `DRAFT`, `PENDING`, unpersisted, and rebind-blocked; all 12 Content Items remain `UNVERIFIED`.
+- No educational payload, structural Curriculum, pilot data, database schema, Question Bank, analytics, or planning behavior changed.
+
+The workflow and boundaries are documented in [curriculum/KNOWLEDGE_PACKAGE_REVIEW.md](curriculum/KNOWLEDGE_PACKAGE_REVIEW.md).
+
 ## Next Work
 
 Phase 2 Milestone 19 remains committed at `76bc4d7`. This Phase 20 checkpoint includes the curriculum foundation, structural import tooling, and the authoring validation/conversion tooling described above. Operational source review, import into an authorized draft, governed issue resolution, and a separate review/publication workflow have not occurred. Student Progress and later domains remain dependent on a published canonical curriculum.

@@ -108,6 +108,7 @@ export type ProductionKnowledgePackageCandidate = Readonly<{
     packageKind: 'PRODUCTION_PACKAGE_CANDIDATE'
     packageRevisionId: string
     packageRevision: number
+    supersedesRevisionId?: string
   }>
   structuralAnchor: KnowledgeExpansionStructuralAnchor
   structuralSnapshot: Readonly<{
@@ -117,6 +118,12 @@ export type ProductionKnowledgePackageCandidate = Readonly<{
   payloadReference: Readonly<{
     kind: 'PILOT'
     sourcePackageId: string
+  }> | Readonly<{
+    kind: 'PACKAGE_REVISION'
+    packageId: string
+    packageRevisionId: string
+    packageRevision: number
+    packageChecksum: string
   }>
   taxonomyNodes: readonly KnowledgeTaxonomyNode[]
   contentItems: readonly ContentItemCandidate[]
@@ -164,7 +171,8 @@ export type ProductionKnowledgeReadinessReport = Readonly<{
   }>
   readiness: Readonly<{
     machineStructure: 'PASS' | 'FAIL'
-    educationalReview: 'PENDING'
+    educationalReview: 'PENDING' | 'CHANGES_REQUESTED' | 'ACCEPTED'
+    packageLifecycle: KnowledgeImportPackageStatus
     persistence: 'BLOCKED_PENDING_CURRICULUM_VERSION_REBIND' | 'BLOCKED_VALIDATION_FAILURES'
     publication: 'NOT_AUTHORIZED'
   }>
@@ -515,11 +523,56 @@ export const buildProductionKnowledgePackageCandidate = (input: {
   }
 }
 
+export const buildNextProductionKnowledgePackageRevision = (input: {
+  currentRevision: ProductionKnowledgePackageCandidate
+  packageRevisionId: string
+  taxonomyNodes: readonly KnowledgeTaxonomyNode[]
+  contentItems: readonly ContentItemCandidate[]
+  mappings: readonly ContentCurriculumMapping[]
+}): ProductionKnowledgePackageCandidate => {
+  const { currentRevision } = input
+  const draft = {
+    ...currentRevision,
+    package: {
+      ...currentRevision.package,
+      packageRevisionId: input.packageRevisionId,
+      packageRevision: currentRevision.package.packageRevision + 1,
+      supersedesRevisionId: currentRevision.package.packageRevisionId,
+      status: 'DRAFT',
+      review: {
+        reviewer: null,
+        reviewedAt: null,
+        reviewStatus: 'PENDING',
+      },
+    },
+    payloadReference: {
+      kind: 'PACKAGE_REVISION',
+      packageId: currentRevision.package.packageId,
+      packageRevisionId: currentRevision.package.packageRevisionId,
+      packageRevision: currentRevision.package.packageRevision,
+      packageChecksum: currentRevision.packageChecksum,
+    },
+    taxonomyNodes: input.taxonomyNodes,
+    contentItems: input.contentItems,
+    mappings: input.mappings,
+  } as const
+  const { packageChecksum: _oldPackageChecksum, payloadChecksum: _oldPayloadChecksum, ...content } = draft
+  const withPayloadChecksum = {
+    ...content,
+    payloadChecksum: productionKnowledgePayloadChecksum(content),
+  }
+  return {
+    ...withPayloadChecksum,
+    packageChecksum: productionKnowledgePackageChecksum(withPayloadChecksum),
+  }
+}
+
 export const validateProductionKnowledgePackageCandidate = (input: {
   structuralRecords: readonly HumanSciencesCatalogRecord[]
   expectedStructuralCatalogSha256: string
   sourcePilotManifest: KnowledgeExpansionManifest
   candidate: ProductionKnowledgePackageCandidate
+  supersededCandidate?: ProductionKnowledgePackageCandidate
 }): ProductionKnowledgePackageValidationReport => {
   const { candidate, sourcePilotManifest } = input
   const draftPackageReport = validateKnowledgeExpansionManifest({
@@ -542,25 +595,62 @@ export const validateProductionKnowledgePackageCandidate = (input: {
   if (!Number.isSafeInteger(candidatePackage.packageRevision) || candidatePackage.packageRevision < 1) {
     addIssue(issues, 'PACKAGE_REVISION_INVALID', 'Package revision must be a positive integer')
   }
-  if (sourcePackage.packageKind !== 'PILOT' || candidate.payloadReference.kind !== 'PILOT') {
-    addIssue(issues, 'PILOT_PAYLOAD_REFERENCE_REQUIRED', 'Production candidate must reference a PILOT package')
-  }
-  if (candidate.payloadReference.sourcePackageId !== sourcePackage.packageId) {
-    addIssue(issues, 'SOURCE_PILOT_PACKAGE_MISMATCH', 'Production candidate must identify the exact source pilot package')
-  }
-  if (
-    candidate.taxonomyNodes !== sourcePilotManifest.taxonomyNodes
-    || candidate.contentItems !== sourcePilotManifest.contentItems
-    || candidate.mappings !== sourcePilotManifest.mappings
-  ) {
-    addIssue(issues, 'PILOT_PAYLOAD_REFERENCE_MISMATCH', 'Production candidate must reuse the exact pilot payload arrays without copying or mutation')
-  }
-  if (
-    candidatePackage.subject !== sourcePackage.subject
-    || candidatePackage.structuralScope !== sourcePackage.structuralScope
-    || candidatePackage.curriculumVersionId !== sourcePackage.curriculumVersionId
-  ) {
-    addIssue(issues, 'PILOT_SCOPE_MISMATCH', 'Production candidate subject, scope, and provisional version must match the source pilot')
+  if (candidate.payloadReference.kind === 'PILOT') {
+    if (sourcePackage.packageKind !== 'PILOT') {
+      addIssue(issues, 'PILOT_PAYLOAD_REFERENCE_REQUIRED', 'Initial production candidate must reference a PILOT package')
+    }
+    if (candidate.payloadReference.sourcePackageId !== sourcePackage.packageId) {
+      addIssue(issues, 'SOURCE_PILOT_PACKAGE_MISMATCH', 'Production candidate must identify the exact source pilot package')
+    }
+    if (
+      candidate.taxonomyNodes !== sourcePilotManifest.taxonomyNodes
+      || candidate.contentItems !== sourcePilotManifest.contentItems
+      || candidate.mappings !== sourcePilotManifest.mappings
+    ) {
+      addIssue(issues, 'PILOT_PAYLOAD_REFERENCE_MISMATCH', 'Initial production candidate must reuse the exact pilot payload arrays without copying or mutation')
+    }
+    if (
+      candidatePackage.subject !== sourcePackage.subject
+      || candidatePackage.structuralScope !== sourcePackage.structuralScope
+      || candidatePackage.curriculumVersionId !== sourcePackage.curriculumVersionId
+    ) {
+      addIssue(issues, 'PILOT_SCOPE_MISMATCH', 'Production candidate subject, scope, and provisional version must match the source pilot')
+    }
+  } else {
+    const prior = input.supersededCandidate
+    if (!prior) {
+      addIssue(issues, 'SUPERSEDED_REVISION_REQUIRED', 'Corrected package revision requires its exact predecessor for validation')
+    } else {
+      const reference = candidate.payloadReference
+      if (
+        reference.packageId !== prior.package.packageId
+        || reference.packageRevisionId !== prior.package.packageRevisionId
+        || reference.packageRevision !== prior.package.packageRevision
+        || reference.packageChecksum !== prior.packageChecksum
+        || candidatePackage.supersedesRevisionId !== prior.package.packageRevisionId
+      ) {
+        addIssue(issues, 'SUPERSEDED_REVISION_MISMATCH', 'Corrected package revision must bind to the exact predecessor identity and checksum')
+      }
+      if (
+        candidatePackage.packageId !== prior.package.packageId
+        || candidatePackage.packageRevision !== prior.package.packageRevision + 1
+        || candidatePackage.packageRevisionId === prior.package.packageRevisionId
+      ) {
+        addIssue(issues, 'PACKAGE_REVISION_SEQUENCE_INVALID', 'Corrected revision must retain package identity, increment once, and use a new revision identity')
+      }
+      if (
+        candidatePackage.subject !== prior.package.subject
+        || candidatePackage.structuralScope !== prior.package.structuralScope
+        || candidatePackage.curriculumVersionId !== prior.package.curriculumVersionId
+        || candidate.structuralAnchor.subjectId !== prior.structuralAnchor.subjectId
+        || candidate.structuralAnchor.curriculumNodeId !== prior.structuralAnchor.curriculumNodeId
+        || candidate.structuralAnchor.curriculumVersionId !== prior.structuralAnchor.curriculumVersionId
+        || candidate.structuralSnapshot.snapshotId !== prior.structuralSnapshot.snapshotId
+        || candidate.structuralSnapshot.catalogSha256 !== prior.structuralSnapshot.catalogSha256
+      ) {
+        addIssue(issues, 'PACKAGE_REVISION_SCOPE_CHANGED', 'Corrected revision cannot change package structural identity or frozen snapshot')
+      }
+    }
   }
   if (
     candidate.structuralSnapshot.snapshotId !== sourcePackage.curriculumVersionId
@@ -597,7 +687,10 @@ export const validateProductionKnowledgePackageCandidate = (input: {
   if (candidate.payloadChecksum !== expectedPayloadChecksum) {
     addIssue(issues, 'PRODUCTION_PAYLOAD_CHECKSUM_MISMATCH', 'Production candidate payload checksum does not match its exact payload')
   }
-  if (expectedPayloadChecksum !== productionKnowledgePayloadChecksum(sourcePilotManifest)) {
+  if (
+    candidate.payloadReference.kind === 'PILOT'
+    && expectedPayloadChecksum !== productionKnowledgePayloadChecksum(sourcePilotManifest)
+  ) {
     addIssue(issues, 'PILOT_PAYLOAD_MUTATED', 'Production candidate payload differs from the source pilot payload')
   }
   const expectedPackageChecksum = productionKnowledgePackageChecksum(candidate)
@@ -667,24 +760,50 @@ export const validateProductionKnowledgePackageCandidateSet = (input: {
 
 export const createProductionKnowledgeReadinessReport = (
   validation: ProductionKnowledgePackageValidationReport,
-): ProductionKnowledgeReadinessReport => ({
-  packageId: validation.packageId,
-  packageRevisionId: validation.packageRevisionId,
-  packageRevision: validation.packageRevision,
-  payloadChecksum: validation.payloadChecksum,
-  packageChecksum: validation.packageChecksum,
-  counts: {
-    taxonomyNodes: validation.taxonomyNodeCount,
-    contentItems: validation.contentItemCount,
-    mappings: validation.mappingCount,
-  },
-  readiness: {
-    machineStructure: validation.valid ? 'PASS' : 'FAIL',
-    educationalReview: 'PENDING',
-    persistence: validation.valid
-      ? 'BLOCKED_PENDING_CURRICULUM_VERSION_REBIND'
-      : 'BLOCKED_VALIDATION_FAILURES',
-    publication: 'NOT_AUTHORIZED',
-  },
-  issues: validation.issues,
-})
+  review?: Readonly<{
+    valid: boolean
+    reviewStatus: KnowledgePackageReviewStatus
+    reviewedSubject: Readonly<{
+      packageId: string
+      packageRevisionId: string
+      packageRevision: number
+      payloadChecksum: string
+      packageChecksum: string
+    }>
+  }>,
+): ProductionKnowledgeReadinessReport => {
+  const reviewMatchesRevision = Boolean(
+    review?.valid
+    && review.reviewedSubject.packageId === validation.packageId
+    && review.reviewedSubject.packageRevisionId === validation.packageRevisionId
+    && review.reviewedSubject.packageRevision === validation.packageRevision
+    && review.reviewedSubject.payloadChecksum === validation.payloadChecksum
+    && review.reviewedSubject.packageChecksum === validation.packageChecksum,
+  )
+  return {
+    packageId: validation.packageId,
+    packageRevisionId: validation.packageRevisionId,
+    packageRevision: validation.packageRevision,
+    payloadChecksum: validation.payloadChecksum,
+    packageChecksum: validation.packageChecksum,
+    counts: {
+      taxonomyNodes: validation.taxonomyNodeCount,
+      contentItems: validation.contentItemCount,
+      mappings: validation.mappingCount,
+    },
+    readiness: {
+      machineStructure: validation.valid ? 'PASS' : 'FAIL',
+      educationalReview: reviewMatchesRevision && review?.reviewStatus === 'ACCEPTED'
+        ? 'ACCEPTED'
+        : reviewMatchesRevision && review?.reviewStatus === 'CHANGES_REQUESTED'
+          ? 'CHANGES_REQUESTED'
+          : 'PENDING',
+      packageLifecycle: validation.draftPackageReport.packageStatus,
+      persistence: validation.valid
+        ? 'BLOCKED_PENDING_CURRICULUM_VERSION_REBIND'
+        : 'BLOCKED_VALIDATION_FAILURES',
+      publication: 'NOT_AUTHORIZED',
+    },
+    issues: validation.issues,
+  }
+}

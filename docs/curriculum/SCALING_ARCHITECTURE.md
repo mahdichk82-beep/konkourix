@@ -164,6 +164,8 @@ Production-candidate validation composes the existing draft validation pipeline 
 
 The current Physics candidate is machine-valid but remains educationally pending, persistence-blocked pending an exact Curriculum Version rebind, and not authorized for publication. Details and the uncompleted human-review specification are in [PRODUCTION_PACKAGE_PHYSICS12_MOTION.md](PRODUCTION_PACKAGE_PHYSICS12_MOTION.md).
 
+The governed human-review evidence model, checksum binding, stale-review rejection, review history, deterministic packet, and change-request revision flow are defined in [KNOWLEDGE_PACKAGE_REVIEW.md](KNOWLEDGE_PACKAGE_REVIEW.md). Review evidence remains external to the immutable package revision and cannot automatically change package or Content lifecycle.
+
 ## Exit boundary
 
 This foundation is complete when draft packages can be validated independently and as a collision-safe set, both pilots remain compatible, and the frozen structural checksum remains unchanged. It does not authorize importing, reviewing, approving, persisting, or publishing any package.

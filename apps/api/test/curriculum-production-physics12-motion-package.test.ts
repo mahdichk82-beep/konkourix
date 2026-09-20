@@ -49,6 +49,7 @@ test('valid Physics production candidate is machine-ready but not reviewed or pe
   assert.deepEqual(physics12MotionProductionReadinessReport.readiness, {
     machineStructure: 'PASS',
     educationalReview: 'PENDING',
+    packageLifecycle: 'DRAFT',
     persistence: 'BLOCKED_PENDING_CURRICULUM_VERSION_REBIND',
     publication: 'NOT_AUTHORIZED',
   })
