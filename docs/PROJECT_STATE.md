@@ -1315,6 +1315,19 @@ Package format, lifecycle, manual review points, and future automation boundarie
 - Synthetic-only runtime checks verified draft creation/read authorization, unauthorized denial, unpublished-draft isolation, audit persistence, lifecycle and identity constraints, same-version parent enforcement, capability controls, import checksum integrity, and explicit legacy mapping integrity.
 - No Curriculum import, source record, legacy mapping, source-derived Curriculum Version, or publication was created. The disposable rehearsal database was removed after verification.
 
+## Knowledge Phase 7.1 — First Production Knowledge Package Foundation
+
+**Status: PRODUCTION PACKAGE CANDIDATE IMPLEMENTED; DRAFT, UNREVIEWED, AND NOT PERSISTED**
+
+- The existing Physics 12 Motion pilot remains the unchanged educational payload and evidence fixture. A separate `PRODUCTION_PACKAGE_CANDIDATE` envelope reuses its exact 30 taxonomy nodes, 12 unverified Content Items, and 12 mappings by reference.
+- Stable opaque package and revision identities, a positive revision number, deterministic payload/package checksums, and a deterministic readiness report establish correction-safe in-repository revision handling without database persistence.
+- Production validation composes the existing package, taxonomy, and content validators and additionally enforces the exact Physics 3 Chapter 1 anchor, frozen candidate snapshot and checksum, pilot payload integrity, key and identity collision checks, `DRAFT`/`PENDING` lifecycle, unverified Content, and absence of a claimed database Curriculum Version UUID.
+- Machine structure is `PASS`; educational review is `PENDING`; persistence is `BLOCKED_PENDING_CURRICULUM_VERSION_REBIND`; publication is `NOT_AUTHORIZED`.
+- The package remains pinned provisionally to the frozen candidate and explicitly requires an exact Curriculum Version rebind before any future persistence. No database record, structural Curriculum change, Question Bank item, analytics, planning, recommendation, or additional educational material was created.
+- Arabic 10 remains an isolated pilot and no Arabic production package was created. The structural checksum remains `ef04a21c556dbc716137d8291c44e933f73fc8fd3c538dc3dfd59a1f560164be`.
+
+Candidate identity, readiness, boundaries, and the unanswered Physics human-review checklist are documented in [curriculum/PRODUCTION_PACKAGE_PHYSICS12_MOTION.md](curriculum/PRODUCTION_PACKAGE_PHYSICS12_MOTION.md).
+
 ## Next Work
 
 Phase 2 Milestone 19 remains committed at `76bc4d7`. This Phase 20 checkpoint includes the curriculum foundation, structural import tooling, and the authoring validation/conversion tooling described above. Operational source review, import into an authorized draft, governed issue resolution, and a separate review/publication workflow have not occurred. Student Progress and later domains remain dependent on a published canonical curriculum.

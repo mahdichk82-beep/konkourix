@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import {
   validateContentIngestion,
   type ContentCurriculumMapping,
@@ -15,6 +16,12 @@ import {
 } from './taxonomy.js'
 
 export const KNOWLEDGE_EXPANSION_MANIFEST_SCHEMA_VERSION = '1.0.0'
+
+export const knowledgePackageKinds = [
+  'PILOT',
+  'PRODUCTION_PACKAGE_CANDIDATE',
+] as const
+export type KnowledgePackageKind = typeof knowledgePackageKinds[number]
 
 export const knowledgeImportPackageStatuses = [
   'DRAFT',
@@ -40,6 +47,7 @@ export type KnowledgePackageReview = Readonly<{
 
 export type DraftKnowledgeImportPackage = Readonly<{
   packageId: string
+  packageKind: KnowledgePackageKind
   subject: string
   structuralScope: string
   curriculumVersionId: string
@@ -89,6 +97,80 @@ export type KnowledgeExpansionPackageSetReport = Readonly<{
   issues: readonly KnowledgeExpansionValidationIssue[]
 }>
 
+export const productionKnowledgePersistenceStates = [
+  'REQUIRES_CURRICULUM_VERSION_REBIND_BEFORE_PERSISTENCE',
+] as const
+export type ProductionKnowledgePersistenceState = typeof productionKnowledgePersistenceStates[number]
+
+export type ProductionKnowledgePackageCandidate = Readonly<{
+  manifestSchemaVersion: typeof KNOWLEDGE_EXPANSION_MANIFEST_SCHEMA_VERSION
+  package: DraftKnowledgeImportPackage & Readonly<{
+    packageKind: 'PRODUCTION_PACKAGE_CANDIDATE'
+    packageRevisionId: string
+    packageRevision: number
+  }>
+  structuralAnchor: KnowledgeExpansionStructuralAnchor
+  structuralSnapshot: Readonly<{
+    snapshotId: string
+    catalogSha256: string
+  }>
+  payloadReference: Readonly<{
+    kind: 'PILOT'
+    sourcePackageId: string
+  }>
+  taxonomyNodes: readonly KnowledgeTaxonomyNode[]
+  contentItems: readonly ContentItemCandidate[]
+  mappings: readonly ContentCurriculumMapping[]
+  persistence: Readonly<{
+    state: ProductionKnowledgePersistenceState
+    requiresCurriculumVersionRebind: true
+    databaseCurriculumVersionId: null
+  }>
+  payloadChecksum: string
+  packageChecksum: string
+}>
+
+export type ProductionKnowledgePackageValidationReport = Readonly<{
+  valid: boolean
+  packageId: string
+  packageRevisionId: string
+  packageRevision: number
+  payloadChecksum: string
+  packageChecksum: string
+  taxonomyNodeCount: number
+  contentItemCount: number
+  mappingCount: number
+  draftPackageReport: KnowledgeExpansionValidationReport
+  issues: readonly KnowledgeExpansionValidationIssue[]
+}>
+
+export type ProductionKnowledgePackageSetReport = Readonly<{
+  valid: boolean
+  packageCount: number
+  packageReports: readonly ProductionKnowledgePackageValidationReport[]
+  issues: readonly KnowledgeExpansionValidationIssue[]
+}>
+
+export type ProductionKnowledgeReadinessReport = Readonly<{
+  packageId: string
+  packageRevisionId: string
+  packageRevision: number
+  payloadChecksum: string
+  packageChecksum: string
+  counts: Readonly<{
+    taxonomyNodes: number
+    contentItems: number
+    mappings: number
+  }>
+  readiness: Readonly<{
+    machineStructure: 'PASS' | 'FAIL'
+    educationalReview: 'PENDING'
+    persistence: 'BLOCKED_PENDING_CURRICULUM_VERSION_REBIND' | 'BLOCKED_VALIDATION_FAILURES'
+    publication: 'NOT_AUTHORIZED'
+  }>
+  issues: readonly KnowledgeExpansionValidationIssue[]
+}>
+
 const allowedPackageTransitions: Readonly<
   Record<KnowledgeImportPackageStatus, ReadonlySet<KnowledgeImportPackageStatus>>
 > = {
@@ -112,6 +194,28 @@ const addIssue = (
 ): void => {
   issues.push({ code, message, domain, ...(reference ? { reference } : {}) })
 }
+
+const canonicalize = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(canonicalize)
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .filter(([, entry]) => entry !== undefined)
+        .sort(([left], [right]) => left.localeCompare(right, 'en'))
+        .map(([key, entry]) => [key, canonicalize(entry)]),
+    )
+  }
+  return value
+}
+
+const checksumJson = (value: unknown): string => createHash('sha256')
+  .update(JSON.stringify(canonicalize(value)), 'utf8')
+  .digest('hex')
+
+const opaquePackageId = /^pkg-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+const opaqueRevisionId = /^pkg-rev-[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/
+const sha256Pattern = /^[0-9a-f]{64}$/
+const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 const isValidTimestamp = (value: string): boolean =>
   Boolean(value.trim()) && Number.isFinite(Date.parse(value))
@@ -184,6 +288,9 @@ export const validateKnowledgeExpansionManifest = (input: {
   }
   if (!draftPackage.packageId.trim()) {
     addIssue(issues, 'PACKAGE_ID_REQUIRED', 'Knowledge import package requires a stable packageId')
+  }
+  if (!knowledgePackageKinds.includes(draftPackage.packageKind)) {
+    addIssue(issues, 'PACKAGE_KIND_UNSUPPORTED', 'Knowledge import package kind is unsupported')
   }
   if (!draftPackage.curriculumVersionId.trim()) {
     addIssue(issues, 'CURRICULUM_VERSION_REQUIRED', 'Knowledge import package must pin a Curriculum Version')
@@ -347,3 +454,237 @@ export const validateKnowledgeExpansionPackageSet = (input: {
     issues,
   }
 }
+
+export const productionKnowledgePayloadChecksum = (payload: Pick<
+ProductionKnowledgePackageCandidate,
+'taxonomyNodes' | 'contentItems' | 'mappings'
+>): string => checksumJson({
+  taxonomyNodes: payload.taxonomyNodes,
+  contentItems: payload.contentItems,
+  mappings: payload.mappings,
+})
+
+export const productionKnowledgePackageChecksum = (
+  candidate: Omit<ProductionKnowledgePackageCandidate, 'packageChecksum'> | ProductionKnowledgePackageCandidate,
+): string => {
+  const { packageChecksum: _ignored, ...content } = candidate as ProductionKnowledgePackageCandidate
+  return checksumJson(content)
+}
+
+export const buildProductionKnowledgePackageCandidate = (input: {
+  packageId: string
+  packageRevisionId: string
+  packageRevision: number
+  sourcePilotManifest: KnowledgeExpansionManifest
+  structuralCatalogSha256: string
+}): ProductionKnowledgePackageCandidate => {
+  const draft = {
+    manifestSchemaVersion: KNOWLEDGE_EXPANSION_MANIFEST_SCHEMA_VERSION,
+    package: {
+      ...input.sourcePilotManifest.package,
+      packageId: input.packageId,
+      packageKind: 'PRODUCTION_PACKAGE_CANDIDATE',
+      packageRevisionId: input.packageRevisionId,
+      packageRevision: input.packageRevision,
+    },
+    structuralAnchor: input.sourcePilotManifest.structuralAnchor,
+    structuralSnapshot: {
+      snapshotId: input.sourcePilotManifest.package.curriculumVersionId,
+      catalogSha256: input.structuralCatalogSha256,
+    },
+    payloadReference: {
+      kind: 'PILOT',
+      sourcePackageId: input.sourcePilotManifest.package.packageId,
+    },
+    taxonomyNodes: input.sourcePilotManifest.taxonomyNodes,
+    contentItems: input.sourcePilotManifest.contentItems,
+    mappings: input.sourcePilotManifest.mappings,
+    persistence: {
+      state: 'REQUIRES_CURRICULUM_VERSION_REBIND_BEFORE_PERSISTENCE',
+      requiresCurriculumVersionRebind: true,
+      databaseCurriculumVersionId: null,
+    },
+  } as const
+  const withPayloadChecksum = {
+    ...draft,
+    payloadChecksum: productionKnowledgePayloadChecksum(draft),
+  }
+  return {
+    ...withPayloadChecksum,
+    packageChecksum: productionKnowledgePackageChecksum(withPayloadChecksum),
+  }
+}
+
+export const validateProductionKnowledgePackageCandidate = (input: {
+  structuralRecords: readonly HumanSciencesCatalogRecord[]
+  expectedStructuralCatalogSha256: string
+  sourcePilotManifest: KnowledgeExpansionManifest
+  candidate: ProductionKnowledgePackageCandidate
+}): ProductionKnowledgePackageValidationReport => {
+  const { candidate, sourcePilotManifest } = input
+  const draftPackageReport = validateKnowledgeExpansionManifest({
+    structuralRecords: input.structuralRecords,
+    manifest: candidate,
+  })
+  const issues = [...draftPackageReport.issues]
+  const candidatePackage = candidate.package
+  const sourcePackage = sourcePilotManifest.package
+
+  if (candidatePackage.packageKind !== 'PRODUCTION_PACKAGE_CANDIDATE') {
+    addIssue(issues, 'PRODUCTION_PACKAGE_KIND_REQUIRED', 'Production candidate must declare PRODUCTION_PACKAGE_CANDIDATE')
+  }
+  if (!opaquePackageId.test(candidatePackage.packageId)) {
+    addIssue(issues, 'OPAQUE_PACKAGE_ID_REQUIRED', 'Production package identity must use the stable opaque package key form')
+  }
+  if (!opaqueRevisionId.test(candidatePackage.packageRevisionId)) {
+    addIssue(issues, 'OPAQUE_PACKAGE_REVISION_ID_REQUIRED', 'Package revision identity must use the stable opaque revision key form')
+  }
+  if (!Number.isSafeInteger(candidatePackage.packageRevision) || candidatePackage.packageRevision < 1) {
+    addIssue(issues, 'PACKAGE_REVISION_INVALID', 'Package revision must be a positive integer')
+  }
+  if (sourcePackage.packageKind !== 'PILOT' || candidate.payloadReference.kind !== 'PILOT') {
+    addIssue(issues, 'PILOT_PAYLOAD_REFERENCE_REQUIRED', 'Production candidate must reference a PILOT package')
+  }
+  if (candidate.payloadReference.sourcePackageId !== sourcePackage.packageId) {
+    addIssue(issues, 'SOURCE_PILOT_PACKAGE_MISMATCH', 'Production candidate must identify the exact source pilot package')
+  }
+  if (
+    candidate.taxonomyNodes !== sourcePilotManifest.taxonomyNodes
+    || candidate.contentItems !== sourcePilotManifest.contentItems
+    || candidate.mappings !== sourcePilotManifest.mappings
+  ) {
+    addIssue(issues, 'PILOT_PAYLOAD_REFERENCE_MISMATCH', 'Production candidate must reuse the exact pilot payload arrays without copying or mutation')
+  }
+  if (
+    candidatePackage.subject !== sourcePackage.subject
+    || candidatePackage.structuralScope !== sourcePackage.structuralScope
+    || candidatePackage.curriculumVersionId !== sourcePackage.curriculumVersionId
+  ) {
+    addIssue(issues, 'PILOT_SCOPE_MISMATCH', 'Production candidate subject, scope, and provisional version must match the source pilot')
+  }
+  if (
+    candidate.structuralSnapshot.snapshotId !== sourcePackage.curriculumVersionId
+    || candidate.structuralSnapshot.catalogSha256 !== input.expectedStructuralCatalogSha256
+    || !sha256Pattern.test(candidate.structuralSnapshot.catalogSha256)
+  ) {
+    addIssue(issues, 'FROZEN_STRUCTURAL_SNAPSHOT_MISMATCH', 'Production candidate must pin the exact audited frozen structural candidate')
+  }
+  if (uuidPattern.test(candidatePackage.curriculumVersionId)) {
+    addIssue(issues, 'DATABASE_CURRICULUM_VERSION_FORBIDDEN', 'Production candidate cannot claim a database CurriculumVersion UUID')
+  }
+  if (
+    candidate.persistence.state !== 'REQUIRES_CURRICULUM_VERSION_REBIND_BEFORE_PERSISTENCE'
+    || candidate.persistence.requiresCurriculumVersionRebind !== true
+    || candidate.persistence.databaseCurriculumVersionId !== null
+  ) {
+    addIssue(issues, 'CURRICULUM_VERSION_REBIND_REQUIRED', 'Production candidate must remain blocked pending an exact database Curriculum Version rebind')
+  }
+  if (
+    candidatePackage.status !== 'DRAFT'
+    || candidatePackage.review.reviewStatus !== 'PENDING'
+    || candidatePackage.review.reviewer !== null
+    || candidatePackage.review.reviewedAt !== null
+  ) {
+    addIssue(issues, 'PRODUCTION_CANDIDATE_MUST_REMAIN_DRAFT', 'Production candidate must remain DRAFT with PENDING review and no reviewer evidence')
+  }
+  for (const item of candidate.contentItems) {
+    if (item.provenance?.verificationStatus !== 'UNVERIFIED') {
+      addIssue(issues, 'PRODUCTION_CONTENT_MUST_BE_UNVERIFIED', 'Production candidate Content must remain UNVERIFIED', 'CONTENT', item.contentKey)
+    }
+  }
+
+  const expectedPayloadChecksum = productionKnowledgePayloadChecksum(candidate)
+  if (candidate.payloadChecksum !== expectedPayloadChecksum) {
+    addIssue(issues, 'PRODUCTION_PAYLOAD_CHECKSUM_MISMATCH', 'Production candidate payload checksum does not match its exact payload')
+  }
+  if (expectedPayloadChecksum !== productionKnowledgePayloadChecksum(sourcePilotManifest)) {
+    addIssue(issues, 'PILOT_PAYLOAD_MUTATED', 'Production candidate payload differs from the source pilot payload')
+  }
+  const expectedPackageChecksum = productionKnowledgePackageChecksum(candidate)
+  if (candidate.packageChecksum !== expectedPackageChecksum) {
+    addIssue(issues, 'PRODUCTION_PACKAGE_CHECKSUM_MISMATCH', 'Production package checksum does not match the exact package revision')
+  }
+
+  return {
+    valid: issues.length === 0,
+    packageId: candidatePackage.packageId,
+    packageRevisionId: candidatePackage.packageRevisionId,
+    packageRevision: candidatePackage.packageRevision,
+    payloadChecksum: candidate.payloadChecksum,
+    packageChecksum: candidate.packageChecksum,
+    taxonomyNodeCount: candidate.taxonomyNodes.length,
+    contentItemCount: candidate.contentItems.length,
+    mappingCount: candidate.mappings.length,
+    draftPackageReport,
+    issues,
+  }
+}
+
+export const validateProductionKnowledgePackageCandidateSet = (input: {
+  structuralRecords: readonly HumanSciencesCatalogRecord[]
+  expectedStructuralCatalogSha256: string
+  sourcePilotManifest: KnowledgeExpansionManifest
+  candidates: readonly ProductionKnowledgePackageCandidate[]
+}): ProductionKnowledgePackageSetReport => {
+  const issues: KnowledgeExpansionValidationIssue[] = []
+  const packageReports = input.candidates.map((candidate) => validateProductionKnowledgePackageCandidate({
+    structuralRecords: input.structuralRecords,
+    expectedStructuralCatalogSha256: input.expectedStructuralCatalogSha256,
+    sourcePilotManifest: input.sourcePilotManifest,
+    candidate,
+  }))
+  for (const report of packageReports) issues.push(...report.issues)
+
+  const packageIds = new Set<string>()
+  const revisionIds = new Set<string>()
+  const taxonomyKeys = new Set<string>()
+  const contentKeys = new Set<string>()
+  const mappingKeys = new Set<string>()
+  for (const candidate of input.candidates) {
+    if (packageIds.has(candidate.package.packageId)) {
+      addIssue(issues, 'DUPLICATE_PRODUCTION_PACKAGE_ID', 'Production package identities must be unique', 'PACKAGE', candidate.package.packageId)
+    }
+    packageIds.add(candidate.package.packageId)
+    if (revisionIds.has(candidate.package.packageRevisionId)) {
+      addIssue(issues, 'DUPLICATE_PACKAGE_REVISION_ID', 'Production package revision identities must be unique', 'PACKAGE', candidate.package.packageRevisionId)
+    }
+    revisionIds.add(candidate.package.packageRevisionId)
+    for (const node of candidate.taxonomyNodes) {
+      if (taxonomyKeys.has(node.taxonomyKey)) addIssue(issues, 'PRODUCTION_TAXONOMY_KEY_COLLISION', 'Taxonomy keys collide across production candidates', 'PACKAGE', node.taxonomyKey)
+      taxonomyKeys.add(node.taxonomyKey)
+    }
+    for (const item of candidate.contentItems) {
+      if (contentKeys.has(item.contentKey)) addIssue(issues, 'PRODUCTION_CONTENT_KEY_COLLISION', 'Content keys collide across production candidates', 'PACKAGE', item.contentKey)
+      contentKeys.add(item.contentKey)
+    }
+    for (const mapping of candidate.mappings) {
+      if (mappingKeys.has(mapping.mappingKey)) addIssue(issues, 'PRODUCTION_MAPPING_KEY_COLLISION', 'Mapping keys collide across production candidates', 'PACKAGE', mapping.mappingKey)
+      mappingKeys.add(mapping.mappingKey)
+    }
+  }
+  return { valid: issues.length === 0, packageCount: input.candidates.length, packageReports, issues }
+}
+
+export const createProductionKnowledgeReadinessReport = (
+  validation: ProductionKnowledgePackageValidationReport,
+): ProductionKnowledgeReadinessReport => ({
+  packageId: validation.packageId,
+  packageRevisionId: validation.packageRevisionId,
+  packageRevision: validation.packageRevision,
+  payloadChecksum: validation.payloadChecksum,
+  packageChecksum: validation.packageChecksum,
+  counts: {
+    taxonomyNodes: validation.taxonomyNodeCount,
+    contentItems: validation.contentItemCount,
+    mappings: validation.mappingCount,
+  },
+  readiness: {
+    machineStructure: validation.valid ? 'PASS' : 'FAIL',
+    educationalReview: 'PENDING',
+    persistence: validation.valid
+      ? 'BLOCKED_PENDING_CURRICULUM_VERSION_REBIND'
+      : 'BLOCKED_VALIDATION_FAILURES',
+    publication: 'NOT_AUTHORIZED',
+  },
+  issues: validation.issues,
+})

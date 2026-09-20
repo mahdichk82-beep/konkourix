@@ -154,6 +154,16 @@ AI-assisted proposals, OCR, bulk ingestion, persistence, authorization, revision
 
 The package set therefore contains 2 packages, 57 taxonomy nodes, 24 Content Items, and 24 mappings. The structural catalog remains unchanged and authoritative.
 
+## Production package candidate revision layer
+
+The first production package candidate wraps the existing Physics 12 Motion pilot without replacing it. `packageKind` distinguishes the original `PILOT` evidence envelope from `PRODUCTION_PACKAGE_CANDIDATE`. The candidate holds a stable opaque package ID, an opaque revision ID, a positive revision number, an exact source-pilot reference, deterministic payload and package-revision checksums, and the same structural anchor and payload arrays as the pilot.
+
+The payload checksum covers the ordered taxonomy, Content Item, and mapping arrays. The package checksum covers the complete candidate revision except its own checksum field. Both use canonical JSON key ordering and contain no runtime timestamp, random value, filesystem path, or environment-specific input. A future correction keeps the stable package identity and creates a new revision identity and number; it does not mutate a reviewed or approved revision.
+
+Production-candidate validation composes the existing draft validation pipeline and additionally requires exact pilot reuse, opaque identities, collision-free package/revision and payload keys, `DRAFT` / `PENDING` state, wholly `UNVERIFIED` Content, the audited frozen structural checksum, and an explicit `REQUIRES_CURRICULUM_VERSION_REBIND_BEFORE_PERSISTENCE` state with no database Curriculum Version UUID. Its deterministic readiness report separates machine structure, educational review, persistence, and publication status.
+
+The current Physics candidate is machine-valid but remains educationally pending, persistence-blocked pending an exact Curriculum Version rebind, and not authorized for publication. Details and the uncompleted human-review specification are in [PRODUCTION_PACKAGE_PHYSICS12_MOTION.md](PRODUCTION_PACKAGE_PHYSICS12_MOTION.md).
+
 ## Exit boundary
 
 This foundation is complete when draft packages can be validated independently and as a collision-safe set, both pilots remain compatible, and the frozen structural checksum remains unchanged. It does not authorize importing, reviewing, approving, persisting, or publishing any package.

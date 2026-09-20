@@ -25,6 +25,7 @@ export const physics12MotionKnowledgeExpansionManifest: KnowledgeExpansionManife
   manifestSchemaVersion: KNOWLEDGE_EXPANSION_MANIFEST_SCHEMA_VERSION,
   package: {
     packageId: 'pkg-74e3634f-15c1-45f5-b813-0f8704650e99',
+    packageKind: 'PILOT',
     subject: PHYSICS12_MOTION_PILOT.subjectId,
     structuralScope: PHYSICS12_MOTION_PILOT.chapterId,
     curriculumVersionId: PHYSICS12_MOTION_PILOT.curriculumVersionId,
@@ -46,6 +47,7 @@ export const arabic10Lesson1KnowledgeExpansionManifest: KnowledgeExpansionManife
   manifestSchemaVersion: KNOWLEDGE_EXPANSION_MANIFEST_SCHEMA_VERSION,
   package: {
     packageId: 'pkg-f425e2bf-3b24-492e-a815-e7d442f68445',
+    packageKind: 'PILOT',
     subject: ARABIC10_LESSON1_PILOT.subjectId,
     structuralScope: ARABIC10_LESSON1_PILOT.lessonId,
     curriculumVersionId: ARABIC10_LESSON1_PILOT.curriculumVersionId,
