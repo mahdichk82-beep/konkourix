@@ -1305,6 +1305,16 @@ Package format, lifecycle, manual review points, and future automation boundarie
 - Ambiguity markers remain explicit, and relationship proposals and editorial/review commentary do not become canonical manifest relationships or content.
 - No source artifact has been imported into PostgreSQL, and no Curriculum Version has been created or published by these tooling checkpoints.
 
+## Phase 20.8.2 — Database Migration Rehearsal & Runtime Verification
+
+**Status: PASS; DISPOSABLE DATABASE ONLY, NO SOURCE IMPORT OR PUBLICATION**
+
+- PostgreSQL 17.11 accepted the complete 18-migration history from an empty, isolated local rehearsal database through `prisma migrate deploy`; migration status was up to date and schema comparison reported no drift.
+- All fourteen contracted Phase 20 tables and all twelve frozen M19 domain tables were present. The four Phase 20 migrations remain additive, and the fourteen pre-Phase-20 migrations were not rewritten.
+- The three database-dependent Curriculum invariant tests passed with zero database-related skips. The complete Curriculum suite passed 135/135, and the full API suite passed 329/329 against the rehearsal schema.
+- Synthetic-only runtime checks verified draft creation/read authorization, unauthorized denial, unpublished-draft isolation, audit persistence, lifecycle and identity constraints, same-version parent enforcement, capability controls, import checksum integrity, and explicit legacy mapping integrity.
+- No Curriculum import, source record, legacy mapping, source-derived Curriculum Version, or publication was created. The disposable rehearsal database was removed after verification.
+
 ## Next Work
 
 Phase 2 Milestone 19 remains committed at `76bc4d7`. This Phase 20 checkpoint includes the curriculum foundation, structural import tooling, and the authoring validation/conversion tooling described above. Operational source review, import into an authorized draft, governed issue resolution, and a separate review/publication workflow have not occurred. Student Progress and later domains remain dependent on a published canonical curriculum.
