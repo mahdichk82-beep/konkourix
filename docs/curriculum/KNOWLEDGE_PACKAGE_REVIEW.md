@@ -6,6 +6,8 @@ This document defines the persistence-neutral human review workflow for a `PRODU
 
 The current Physics 12 Motion candidate has no review session or decision. It remains `DRAFT` with package review `PENDING`, reviewer `null`, and `reviewedAt: null`.
 
+Reviewer provenance is controlled as `HUMAN` or `AI_ASSISTED` at evidence intake and is never inferred from a display name. Only valid evidence explicitly classified `HUMAN` can satisfy the qualified-human review gate or authorize a later correction revision. AI evidence and its required human-triage workflow are documented in [KNOWLEDGE_PACKAGE_AI_REVIEW_TRIAGE.md](KNOWLEDGE_PACKAGE_AI_REVIEW_TRIAGE.md).
+
 ## Exact review subject
 
 Review schema `konkourix-knowledge-package-review/v1` binds every session to:
@@ -72,7 +74,7 @@ The packet generator and checked-in packet are tested for deterministic equivale
 
 ## Change request and new revision
 
-When Revision 1 receives `CHANGES_REQUESTED`, Revision 1 and its review session remain immutable history. Later authorized authoring creates Revision 2 with:
+When Revision 1 receives qualified-human `CHANGES_REQUESTED`, Revision 1 and its review session remain immutable history. AI-assisted `CHANGES_REQUESTED` alone cannot authorize a correction. Later authorized authoring creates Revision 2 with:
 
 - the same stable package ID;
 - a new opaque revision ID;

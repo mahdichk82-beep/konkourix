@@ -1341,6 +1341,18 @@ Candidate identity, readiness, boundaries, and the unanswered Physics human-revi
 
 The workflow and boundaries are documented in [curriculum/KNOWLEDGE_PACKAGE_REVIEW.md](curriculum/KNOWLEDGE_PACKAGE_REVIEW.md).
 
+## Knowledge Phase 7.3A — AI Review Triage & Human Attestation Preparation
+
+**Status: AI EVIDENCE INTAKE AND BLANK HUMAN TRIAGE TOOLING IMPLEMENTED; NO HUMAN ATTESTATION OR PAYLOAD CHANGE**
+
+- The supplied Physics Revision 1 AI-assisted review is retained byte-for-byte as advisory `CHANGES_REQUESTED` evidence with nine findings. Controlled intake metadata classifies it as `AI_ASSISTED`; reviewer provenance is never inferred from its display name.
+- AI review cannot satisfy the qualified-human `ACCEPTED` gate or authorize a corrected revision. The real package remains Revision 1, `DRAFT`, and `PENDING` for human review.
+- Deterministic triage validation requires a qualified human to bind every `CONFIRM`, `REJECT`, or `MODIFY` decision to the exact AI session, finding, package revision, payload/package checksums, and immutable evidence checksum.
+- A deterministic attestation packet and blank JSON input expose all twelve dimensions and all nine AI findings without fabricating a human identity, answer, timestamp, or outcome.
+- No Revision 2, educational payload change, Content verification, database persistence, structural Curriculum change, approval, or publication occurred.
+
+The provenance boundary and attestation workflow are documented in [curriculum/KNOWLEDGE_PACKAGE_AI_REVIEW_TRIAGE.md](curriculum/KNOWLEDGE_PACKAGE_AI_REVIEW_TRIAGE.md).
+
 ## Next Work
 
 Phase 2 Milestone 19 remains committed at `76bc4d7`. This Phase 20 checkpoint includes the curriculum foundation, structural import tooling, and the authoring validation/conversion tooling described above. Operational source review, import into an authorized draft, governed issue resolution, and a separate review/publication workflow have not occurred. Student Progress and later domains remain dependent on a published canonical curriculum.

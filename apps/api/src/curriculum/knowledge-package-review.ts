@@ -7,6 +7,9 @@ import {
 
 export const KNOWLEDGE_PACKAGE_REVIEW_SCHEMA_VERSION = 'konkourix-knowledge-package-review/v1'
 
+export const knowledgePackageReviewerProvenances = ['HUMAN', 'AI_ASSISTED'] as const
+export type KnowledgePackageReviewerProvenance = typeof knowledgePackageReviewerProvenances[number]
+
 export const knowledgePackageReviewDimensions = [
   'TERMINOLOGY',
   'TAXONOMY_HIERARCHY',
@@ -117,6 +120,8 @@ export type KnowledgePackageReviewValidationReport = Readonly<{
   valid: boolean
   reviewSessionId: string
   reviewStatus: KnowledgePackageReviewStatus
+  reviewerProvenance: KnowledgePackageReviewerProvenance
+  qualifiedHumanEvidence: boolean
   reviewedSubject: KnowledgePackageReviewSubject
   dimensionDecisionCount: number
   findingCount: number
@@ -130,6 +135,11 @@ export type KnowledgePackageReviewHistoryReport = Readonly<{
   sessionCount: number
   sessionReports: readonly KnowledgePackageReviewValidationReport[]
   issues: readonly KnowledgePackageReviewIssue[]
+}>
+
+export type KnowledgePackageReviewEvidence = Readonly<{
+  reviewerProvenance: KnowledgePackageReviewerProvenance
+  session: KnowledgePackageReviewSession
 }>
 
 export type KnowledgePackageCorrectionResult = Readonly<{
@@ -233,8 +243,9 @@ const validateFindingTarget = (
 export const validateKnowledgePackageReviewSession = (input: {
   candidate: ProductionKnowledgePackageCandidate
   session: KnowledgePackageReviewSession
+  reviewerProvenance: KnowledgePackageReviewerProvenance
 }): KnowledgePackageReviewValidationReport => {
-  const { candidate, session } = input
+  const { candidate, session, reviewerProvenance } = input
   const issues: KnowledgePackageReviewIssue[] = []
 
   if (session.schemaVersion !== KNOWLEDGE_PACKAGE_REVIEW_SCHEMA_VERSION) {
@@ -245,6 +256,9 @@ export const validateKnowledgePackageReviewSession = (input: {
   }
   if (!knowledgePackageReviewStatuses.includes(session.reviewStatus)) {
     addIssue(issues, 'REVIEW_STATUS_UNSUPPORTED', 'Review session status is unsupported')
+  }
+  if (!knowledgePackageReviewerProvenances.includes(reviewerProvenance)) {
+    addIssue(issues, 'REVIEWER_PROVENANCE_UNSUPPORTED', 'Review evidence requires controlled reviewer provenance')
   }
   validateSubjectBinding(knowledgePackageReviewSubject(candidate), session.subject, issues)
 
@@ -365,24 +379,28 @@ export const validateKnowledgePackageReviewSession = (input: {
     valid,
     reviewSessionId: session.reviewSessionId,
     reviewStatus: session.reviewStatus,
+    reviewerProvenance,
+    qualifiedHumanEvidence: valid && reviewerProvenance === 'HUMAN',
     reviewedSubject: session.subject,
     dimensionDecisionCount: session.dimensionDecisions.length,
     findingCount: session.findings.length,
-    eligibleForReviewedTransition: valid && session.reviewStatus === 'ACCEPTED',
+    eligibleForReviewedTransition:
+      valid && reviewerProvenance === 'HUMAN' && session.reviewStatus === 'ACCEPTED',
     issues,
   }
 }
 
 export const validateKnowledgePackageReviewHistory = (input: {
   revisions: readonly ProductionKnowledgePackageCandidate[]
-  sessions: readonly KnowledgePackageReviewSession[]
+  evidence: readonly KnowledgePackageReviewEvidence[]
 }): KnowledgePackageReviewHistoryReport => {
   const issues: KnowledgePackageReviewIssue[] = []
   const sessionReports: KnowledgePackageReviewValidationReport[] = []
   const sessionIds = new Set<string>()
   const findingIds = new Set<string>()
 
-  for (const session of input.sessions) {
+  for (const entry of input.evidence) {
+    const { session } = entry
     if (sessionIds.has(session.reviewSessionId)) {
       addIssue(issues, 'DUPLICATE_REVIEW_SESSION_ID', 'Review history cannot contain duplicate session identities', session.reviewSessionId)
     }
@@ -402,7 +420,11 @@ export const validateKnowledgePackageReviewHistory = (input: {
       addIssue(issues, 'REVIEWED_REVISION_NOT_FOUND', 'Historical review must retain its exact package revision', session.reviewSessionId)
       continue
     }
-    const report = validateKnowledgePackageReviewSession({ candidate: revision, session })
+    const report = validateKnowledgePackageReviewSession({
+      candidate: revision,
+      session,
+      reviewerProvenance: entry.reviewerProvenance,
+    })
     sessionReports.push(report)
     issues.push(...report.issues)
   }
@@ -410,7 +432,7 @@ export const validateKnowledgePackageReviewHistory = (input: {
   return {
     valid: issues.length === 0,
     revisionCount: input.revisions.length,
-    sessionCount: input.sessions.length,
+    sessionCount: input.evidence.length,
     sessionReports,
     issues,
   }
@@ -418,7 +440,7 @@ export const validateKnowledgePackageReviewHistory = (input: {
 
 export const createCorrectedKnowledgePackageRevision = (input: {
   currentRevision: ProductionKnowledgePackageCandidate
-  changesRequestedReview: KnowledgePackageReviewSession
+  changesRequestedReview: KnowledgePackageReviewEvidence
   packageRevisionId: string
   taxonomyNodes: ProductionKnowledgePackageCandidate['taxonomyNodes']
   contentItems: ProductionKnowledgePackageCandidate['contentItems']
@@ -426,11 +448,15 @@ export const createCorrectedKnowledgePackageRevision = (input: {
 }): KnowledgePackageCorrectionResult => {
   const reviewReport = validateKnowledgePackageReviewSession({
     candidate: input.currentRevision,
-    session: input.changesRequestedReview,
+    session: input.changesRequestedReview.session,
+    reviewerProvenance: input.changesRequestedReview.reviewerProvenance,
   })
   const issues = [...reviewReport.issues]
-  if (input.changesRequestedReview.reviewStatus !== 'CHANGES_REQUESTED') {
+  if (input.changesRequestedReview.session.reviewStatus !== 'CHANGES_REQUESTED') {
     addIssue(issues, 'CHANGES_REQUESTED_REVIEW_REQUIRED', 'A corrected revision requires valid CHANGES_REQUESTED evidence for its exact predecessor')
+  }
+  if (input.changesRequestedReview.reviewerProvenance !== 'HUMAN') {
+    addIssue(issues, 'QUALIFIED_HUMAN_CHANGES_REQUEST_REQUIRED', 'AI-assisted findings cannot authorize creation of a corrected package revision')
   }
   if (issues.length > 0) {
     return { created: false, revision: null, reviewReport, issues }

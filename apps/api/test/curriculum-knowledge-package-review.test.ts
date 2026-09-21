@@ -91,7 +91,11 @@ const acceptedSession = (): KnowledgePackageReviewSession => session({
 const validate = (
   reviewSession: KnowledgePackageReviewSession,
   target: ProductionKnowledgePackageCandidate = candidate,
-) => validateKnowledgePackageReviewSession({ candidate: target, session: reviewSession })
+) => validateKnowledgePackageReviewSession({
+  candidate: target,
+  session: reviewSession,
+  reviewerProvenance: 'HUMAN',
+})
 
 const codes = (reviewSession: KnowledgePackageReviewSession, target = candidate): Set<string> =>
   new Set(validate(reviewSession, target).issues.map((issue) => issue.code))
@@ -108,7 +112,7 @@ const correctedRevision = (): ProductionKnowledgePackageCandidate => {
   })
   const result = createCorrectedKnowledgePackageRevision({
     currentRevision: candidate,
-    changesRequestedReview: changesRequested,
+    changesRequestedReview: { reviewerProvenance: 'HUMAN', session: changesRequested },
     packageRevisionId: 'pkg-rev-a39ac2ea-91da-4ae8-b80e-337c418f7ac2',
     taxonomyNodes: candidate.taxonomyNodes,
     contentItems: [{ ...first, title: 'Synthetic corrected fixture title' }, ...candidate.contentItems.slice(1)],
@@ -221,7 +225,7 @@ test('synthetic Revision 2 correction retains identity and resets review state',
 test('new revision creation rejects review evidence without CHANGES_REQUESTED outcome', () => {
   const result = createCorrectedKnowledgePackageRevision({
     currentRevision: candidate,
-    changesRequestedReview: acceptedSession(),
+    changesRequestedReview: { reviewerProvenance: 'HUMAN', session: acceptedSession() },
     packageRevisionId: 'pkg-rev-a39ac2ea-91da-4ae8-b80e-337c418f7ac2',
     taxonomyNodes: candidate.taxonomyNodes,
     contentItems: candidate.contentItems,
@@ -237,7 +241,7 @@ test('historical Revision 1 review remains valid evidence after synthetic Revisi
   const historicalReview = acceptedSession()
   const history = validateKnowledgePackageReviewHistory({
     revisions: [candidate, revision2],
-    sessions: [historicalReview],
+    evidence: [{ reviewerProvenance: 'HUMAN', session: historicalReview }],
   })
 
   assert.equal(history.valid, true, JSON.stringify(history.issues))

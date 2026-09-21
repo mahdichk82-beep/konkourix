@@ -216,7 +216,7 @@ const canonicalize = (value: unknown): unknown => {
   return value
 }
 
-const checksumJson = (value: unknown): string => createHash('sha256')
+export const deterministicJsonSha256 = (value: unknown): string => createHash('sha256')
   .update(JSON.stringify(canonicalize(value)), 'utf8')
   .digest('hex')
 
@@ -466,7 +466,7 @@ export const validateKnowledgeExpansionPackageSet = (input: {
 export const productionKnowledgePayloadChecksum = (payload: Pick<
 ProductionKnowledgePackageCandidate,
 'taxonomyNodes' | 'contentItems' | 'mappings'
->): string => checksumJson({
+>): string => deterministicJsonSha256({
   taxonomyNodes: payload.taxonomyNodes,
   contentItems: payload.contentItems,
   mappings: payload.mappings,
@@ -476,7 +476,7 @@ export const productionKnowledgePackageChecksum = (
   candidate: Omit<ProductionKnowledgePackageCandidate, 'packageChecksum'> | ProductionKnowledgePackageCandidate,
 ): string => {
   const { packageChecksum: _ignored, ...content } = candidate as ProductionKnowledgePackageCandidate
-  return checksumJson(content)
+  return deterministicJsonSha256(content)
 }
 
 export const buildProductionKnowledgePackageCandidate = (input: {
@@ -763,6 +763,8 @@ export const createProductionKnowledgeReadinessReport = (
   review?: Readonly<{
     valid: boolean
     reviewStatus: KnowledgePackageReviewStatus
+    reviewerProvenance: 'HUMAN' | 'AI_ASSISTED'
+    qualifiedHumanEvidence: boolean
     reviewedSubject: Readonly<{
       packageId: string
       packageRevisionId: string
@@ -774,6 +776,8 @@ export const createProductionKnowledgeReadinessReport = (
 ): ProductionKnowledgeReadinessReport => {
   const reviewMatchesRevision = Boolean(
     review?.valid
+    && review.qualifiedHumanEvidence
+    && review.reviewerProvenance === 'HUMAN'
     && review.reviewedSubject.packageId === validation.packageId
     && review.reviewedSubject.packageRevisionId === validation.packageRevisionId
     && review.reviewedSubject.packageRevision === validation.packageRevision

@@ -101,7 +101,13 @@ Review findings must create an explicit corrected revision. Machine validation m
 
 The persistence-neutral workflow is defined in [KNOWLEDGE_PACKAGE_REVIEW.md](KNOWLEDGE_PACKAGE_REVIEW.md). A qualified reviewer can use the deterministic [review packet](PHYSICS12_MOTION_REVIEW_PACKET.md) and [blank JSON input template](PHYSICS12_MOTION_REVIEW_INPUT.template.json) to record a review session bound to this exact revision and its two checksums.
 
-No packet field is a review decision. No review session or reviewer identity is committed for this candidate. The real package remains `DRAFT` / `PENDING`; an accepted future review would establish eligibility for a separate explicit `REVIEWED` transition only. It would not approve, publish, persist, rebind, or change Content verification automatically.
+No packet field is a review decision. No qualified-human review session or reviewer identity is committed for this candidate. The real package remains `DRAFT` / `PENDING`; an accepted future human review would establish eligibility for a separate explicit `REVIEWED` transition only. It would not approve, publish, persist, rebind, or change Content verification automatically.
+
+## AI-assisted review triage
+
+Revision 1 has separate AI-assisted advisory evidence with outcome `CHANGES_REQUESTED` and nine findings. The evidence is classified `AI_ASSISTED`; it is not the qualified-human review and does not change the package's real `PENDING` review state.
+
+The deterministic human-attestation preparation workflow is documented in [KNOWLEDGE_PACKAGE_AI_REVIEW_TRIAGE.md](KNOWLEDGE_PACKAGE_AI_REVIEW_TRIAGE.md). Its [attestation packet](PHYSICS12_MOTION_AI_REVIEW_ATTESTATION_PACKET.md) and [blank triage template](PHYSICS12_MOTION_AI_REVIEW_ATTESTATION.template.json) contain no human decisions. A qualified human must explicitly `CONFIRM`, `REJECT`, or `MODIFY` every AI finding and decide all twelve review dimensions before any human outcome exists. The AI outcome cannot create Revision 2.
 
 ## Future educational authoring requirements
 
